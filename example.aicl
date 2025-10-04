@@ -1,0 +1,35 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+      container {
+        image = "aicl/openrouter:1.0.0"
+        resources = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+  }
+}
+
+provider "openrouter" {
+  api_key = "sk-or-v1-abc..."
+}
+
+variable "experiment_id" {
+  type    = string
+  default = "example-exp-001"
+}
+
+resource "openrouter_model" "claude_sonnet" {
+  model         = "anthropic/claude-3.5-sonnet"
+  temperature   = 0.5
+  max_tokens    = 2048
+  system_prompt = "You are a helpful assistant."
+}
+
+output "model_id" {
+  value = openrouter_model.claude_sonnet.id
+}

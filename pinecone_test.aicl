@@ -1,0 +1,27 @@
+terraform {
+  required_providers {
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/pinecone:1.0.0"
+      }
+    }
+  }
+}
+
+variable "pinecone_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "pinecone_host_url" {
+  type = string
+}
+
+
+resource "pinecone_index" "session_memory" {
+  name      = "tofu-aicl-memory"
+  dimension = 1536 // As a starting point, matching OpenAI's text-embedding-ada-002
+  metric    = "cosine"
+}

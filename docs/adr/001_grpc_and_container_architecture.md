@@ -1,0 +1,9 @@
+# ADR 001: gRPC and Container-Based Provider Architecture
+
+**Status:** Accepted
+
+**Context:** We need a flexible and extensible architecture for managing ephemeral AI resources...
+
+**Decision:** We will use a container-native architecture where each provider is a self-contained gRPC service...
+
+**Consequences:** ...

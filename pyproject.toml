@@ -1,0 +1,14 @@
+[project]
+name = "tofu-aicl"
+version = "0.1.0"
+description = "A declarative framework for ephemeral AI infrastructure."
+dependencies = [
+    "python-hcl2>=4.0.0",
+    "docker>=7.0.0",
+    "grpcio>=1.60.0",
+    "grpcio-tools>=1.60.0",
+    "protobuf>=4.25.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

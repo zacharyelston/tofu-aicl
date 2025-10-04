@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+.venv/
+env/
+venv/
+
+# State files
+*.tfstate
+*.tfstate.backup
+
+# IDE
+.idea/
+.vscode/
