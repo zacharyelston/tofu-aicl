@@ -38,6 +38,19 @@ class AzureOpenAIProvider(provider_pb2_grpc.ProviderServicer):
         return provider_pb2.GetSchemaResponse(resources=[resource_schema])
 
     def ValidateConfig(self, request, context):
+        diagnostics = []
+        
+        config = MessageToDict(request.config) if request.config else {}
+        
+        if not config.get('deployment'):
+            diagnostics.append(self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR, 
+                "Deployment name is required for Azure OpenAI resources"
+            ))
+        
+        if diagnostics:
+            return provider_pb2.ValidateConfigResponse(diagnostics=diagnostics)
+        
         return provider_pb2.ValidateConfigResponse()
 
     def Configure(self, request, context):
@@ -210,7 +223,7 @@ class AzureOpenAIProvider(provider_pb2_grpc.ProviderServicer):
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
     def DeleteResource(self, request, context):
-        resource_id = request.resource_id
+        resource_id = request.id
         if resource_id in self.resources:
             del self.resources[resource_id]
         return provider_pb2.DeleteResourceResponse()

@@ -16,6 +16,7 @@ class Executor:
             'file_loader': 'loader',
             'text_splitter': 'splitter',
             'embedding': 'openai',
+            'azure_openai_embedding': 'azure_openai',
             'chat': 'openrouter',
             'upsert': 'pinecone',
             'query': 'pinecone',

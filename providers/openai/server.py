@@ -188,7 +188,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
     def DeleteResource(self, request, context):
-        resource_id = request.resource_id
+        resource_id = request.id
         if resource_id in self.resources:
             del self.resources[resource_id]
         return provider_pb2.DeleteResourceResponse()
