@@ -51,6 +51,20 @@ class ProviderRegistry:
                 container_image="aicl/command_assertion:1.0.0",
                 description="Validation and testing"
             ),
+            ProviderMetadata(
+                name="openai",
+                source="aicl/openai",
+                version="1.0.0",
+                container_image="aicl/openai:1.0.0",
+                description="OpenAI embeddings"
+            ),
+            ProviderMetadata(
+                name="azure_openai",
+                source="aicl/azure_openai",
+                version="1.0.0",
+                container_image="aicl/azure_openai:1.0.0",
+                description="Azure OpenAI embeddings"
+            ),
         ]
         
         for provider in default_providers:
