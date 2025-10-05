@@ -1,0 +1,21 @@
+```mermaid
+graph LR
+    subgraph "Infrastructure State (.tfstate)"
+        IS1[Pinecone Index: Created]
+        IS2[LLM Config: Active]
+    end
+    
+    subgraph "Provider State (Runtime)"
+        PS1[file_loader: Running on :50051]
+        PS2[text_splitter: Running on :50052]
+    end
+    
+    subgraph "Execution History (.execlog)"
+        EH1[Pipeline 'ingest' ran 2025-10-05]
+        EH2[-> Processed 47 chunks]
+        EH3[-> Generated 47 vectors]
+    end
+    
+    IS1 -.referenced by.-> EH1
+    PS1 -.used by.-> EH2
+```

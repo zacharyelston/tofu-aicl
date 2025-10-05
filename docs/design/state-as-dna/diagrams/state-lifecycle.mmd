@@ -1,0 +1,28 @@
+```mermaid
+stateDiagram-v2
+    [*] --> Recording: tofu apply
+    Recording --> Complete: apply finished
+    Complete --> Reading: queries/analysis
+    Reading --> Complete: (state unchanged)
+    Complete --> Destroying: tofu destroy
+    Destroying --> [*]
+    
+    note right of Recording
+        State is being written
+        Lineage grows with each step
+        "Recording the DNA"
+    end note
+    
+    note right of Complete
+        State is stable
+        Complete report available
+        "DNA fully unrolled"
+        Can be diffed, analyzed
+    end note
+    
+    note right of Destroying
+        State used to teardown
+        Read what exists
+        Delete in reverse order
+    end note
+```

@@ -1,0 +1,34 @@
+```mermaid
+sequenceDiagram
+    participant Dev A
+    participant Git Repo
+    participant Dev B
+    
+    Note over Dev A,Dev B: Collaborative Experiment Workflow
+    
+    Dev A->>Git Repo: git pull (get latest)
+    Dev A->>Dev A: tofu apply experiment.aicl
+    Note over Dev A: State: experiment.tfstate created/updated
+    Dev A->>Git Repo: git add experiment.tfstate
+    Dev A->>Git Repo: git commit -m "Exp: baseline"
+    Dev A->>Git Repo: git push
+    
+    Dev B->>Git Repo: git pull
+    Note over Dev B: Gets Dev A's experiment state
+    Dev B->>Dev B: tofu apply experiment.aicl
+    Note over Dev B: State: experiment.tfstate modified
+    Dev B->>Git Repo: git add experiment.tfstate
+    Dev B->>Git Repo: git commit
+    Dev B->>Git Repo: git push
+    
+    Note over Git Repo: Conflict if concurrent
+    
+    Dev A->>Git Repo: git pull
+    Note over Dev A: CONFLICT in experiment.tfstate
+    Dev A->>Dev A: Resolve: rerun or merge
+    Dev A->>Git Repo: git add experiment.tfstate
+    Dev A->>Git Repo: git commit -m "Resolved"
+    Dev A->>Git Repo: git push
+    
+    Note over Dev A,Dev B: Git provides explicit conflict resolution
+```
