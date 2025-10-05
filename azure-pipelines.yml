@@ -20,8 +20,8 @@ pr:
 # Common variables
 variables:
   pythonVersion: '3.11'
-  dockerRegistryServiceConnection: 'ancera'
-  containerRegistry: 'ancera.azurecr.io'
+  dockerRegistryServiceConnection: 'tofu-aicl-acr-connection'
+  containerRegistry: 'ancerallc.azurecr.io'
 
 # Pipeline stages
 stages:
