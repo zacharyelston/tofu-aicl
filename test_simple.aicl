@@ -3,9 +3,6 @@ terraform {
     loader = {
       source  = "aicl/file_loader"
       version = "~> 1.0"
-      container = {
-        image = "aicl/file_loader:1.0.0"
-      }
     }
   }
 }

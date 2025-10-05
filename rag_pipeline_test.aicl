@@ -3,16 +3,10 @@ terraform {
     loader = {
       source  = "aicl/file_loader"
       version = "~> 1.0"
-      container = {
-        image = "aicl/file_loader:1.0.0"
-      }
     }
     splitter = {
       source  = "aicl/text_splitter"
       version = "~> 1.0"
-      container = {
-        image = "aicl/text_splitter:1.0.0"
-      }
     }
   }
 }
@@ -23,7 +17,7 @@ resource "loader_files" "docs" {
 }
 
 resource "splitter_text" "chunks" {
-  documents     = resource.loader_files.docs.attributes.documents
+  documents     = "${resource.loader_files.docs.attributes.documents}"
   chunk_size    = 500
   chunk_overlap = 50
 }

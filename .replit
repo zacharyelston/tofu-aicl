@@ -23,9 +23,9 @@ args = "AICL Engine"
 name = "AICL Engine"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python run.py test_simple.aicl"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run.py rag_pipeline_test.aicl"
