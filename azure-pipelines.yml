@@ -66,7 +66,7 @@ stages:
             inputs:
               # IMPORTANT: This requires a one-time manual authorization in ADO project settings
               # to grant the pipeline's service principal the 'AcrPush' role on the ACR.
-              azureSubscription: 'ancera-service-connection'
+              azureSubscription: 'tofu-aicl-acr-connection'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               addSpnToEnvironment: true # Exposes SP_ID, SP_KEY, and TENANT_ID as env vars
