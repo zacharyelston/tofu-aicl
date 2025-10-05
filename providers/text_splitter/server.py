@@ -23,6 +23,7 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
     def ApplyResourceChange(self, request, context):
         config = dict(request.config)
         documents = config.get('documents', [])
+        print(f"--- DEBUG: Received documents: {documents} ---")
         chunk_size = int(config.get('chunk_size', 1000))
         chunk_overlap = int(config.get('chunk_overlap', 200))
 

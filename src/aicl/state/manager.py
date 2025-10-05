@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Optional, Any
+from collections import defaultdict
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 
@@ -85,14 +86,30 @@ class StateManager:
             return None
         return self.current_state.resources.get(resource_id)
 
-    def get_resource_by_name(self, name: str) -> Optional[ResourceState]:
+    def get_resource_by_name(self, resource_type: str, name: str) -> Optional[ResourceState]:
+        """Get resource by exact type and name match."""
         if not self.current_state:
             return None
+        
+        # Look for exact match using type.name pattern
         for res in self.current_state.resources.values():
-            # This is a simplification; a real implementation would handle multiple resources of the same name
-            if name in res.id:
-                return res
+            if res.type == resource_type:
+                # Extract resource name from ID (format: provider-name)
+                res_name = res.id.split('-', 1)[1] if '-' in res.id else res.id
+                if res_name == name:
+                    return res
         return None
+
+    def get_all_resources_as_dict(self) -> dict:
+        if not self.current_state:
+            return {}
+        
+        output = defaultdict(lambda: defaultdict(dict))
+        for res in self.current_state.resources.values():
+            # This is a simplification and assumes unique resource names
+            res_name = res.id.split('-')[1] if '-' in res.id else res.id
+            output[res.type][res_name] = {'attributes': res.attributes}
+        return output
 
     def remove_resource(self, resource_id: str):
         if self.current_state and resource_id in self.current_state.resources:

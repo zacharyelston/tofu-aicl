@@ -6,10 +6,12 @@ import os
 from typing import Dict, Any
 from pathlib import Path
 from google.protobuf.struct_pb2 import Struct
-from collections import defaultdict
 from google.protobuf.json_format import MessageToDict
 
 from aicl.state.manager import StateManager, ResourceState
+from aicl.parser import HCLParser
+from aicl.planner import Planner
+from aicl.executor import Executor
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
@@ -28,16 +30,13 @@ class AICLEngine:
         self.config_path = Path(config_path)
         self.docker_client = docker.from_env()
         self.provider_containers: Dict[str, ProviderContainer] = {}
-        self.parsed_config: Dict[str, Any] = {}
-        self.experiment_id = ""
         self.state_manager = StateManager()
+        self.parsed_config = self._parse_config()
+
 
     def _parse_config(self):
-        print(f"Parsing config file: {self.config_path}")
-        with open(self.config_path, 'r') as f:
-            self.parsed_config = hcl2.load(f)
-        self.experiment_id = self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp')
-        self.state_manager.load(self.experiment_id)
+        parser = HCLParser(self.config_path)
+        return parser.parse()
 
     def _start_providers(self):
         print("Starting provider containers...")
@@ -62,17 +61,33 @@ class AICLEngine:
                     ports={'50051/tcp': None},
                     environment=env_vars
                 )
-                time.sleep(3) # Simple wait for container to be ready
+                time.sleep(5) # Wait for container to be ready
                 container.reload()
+                
+                # Check container status
+                print(f"Container status: {container.status}")
+                print(f"Container logs: {container.logs().decode('utf-8')[-500:]}")
+                
                 host_port = container.ports['50051/tcp'][0]['HostPort']
-                channel = grpc.insecure_channel(f'localhost:{host_port}')
+                print(f"Connecting to provider on 127.0.0.1:{host_port}")
+                channel = grpc.insecure_channel(f'127.0.0.1:{host_port}')
                 stub = provider_pb2_grpc.ProviderStub(channel)
                 
-                # Configure the provider
-                provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
-                config_struct = self._dict_to_struct(provider_config)
-                configure_req = provider_pb2.ConfigureRequest(config=config_struct)
-                stub.Configure(configure_req)
+                # Retry connection with exponential backoff
+                max_retries = 5
+                for attempt in range(max_retries):
+                    try:
+                        # Configure the provider
+                        provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
+                        config_struct = self._dict_to_struct(provider_config)
+                        configure_req = provider_pb2.ConfigureRequest(config=config_struct)
+                        stub.Configure(configure_req)
+                        break
+                    except grpc.RpcError as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(2 ** attempt)  # Exponential backoff
+                        else:
+                            raise
 
                 self.provider_containers[name] = ProviderContainer(name, container, stub)
                 print(f"Provider '{name}' is running on port {host_port}")
@@ -86,21 +101,6 @@ class AICLEngine:
         s.update(d)
         return s
 
-    def _resolve_dependencies(self, config):
-        if isinstance(config, dict):
-            for key, value in config.items():
-                config[key] = self._resolve_dependencies(value)
-        elif isinstance(config, list):
-            for i, value in enumerate(config):
-                config[i] = self._resolve_dependencies(value)
-        elif isinstance(config, str) and config.startswith('resource.'):
-            parts = config.split('.')
-            if len(parts) == 5:
-                _, ref_type, ref_name, ref_attr, ref_key = parts
-                ref_resource_state = self.state_manager.get_resource_by_name(ref_name)
-                if ref_resource_state:
-                    return ref_resource_state.attributes.get(ref_key)
-        return config
 
     def _handle_diagnostics(self, diagnostics):
         for diag in diagnostics:
@@ -108,73 +108,16 @@ class AICLEngine:
             print(f"  [{severity}] {diag.summary}: {diag.detail}")
 
     def apply(self):
+        self.state_manager.load(self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp'))
         self._start_providers()
         print("\nApplying changes...")
         
-        adj = defaultdict(list)
-        in_degree = defaultdict(int)
-        resource_map = {}
-        all_resource_ids = []
-
-        resources = self.parsed_config.get('resource', [])
-        for res_config in resources:
-            for res_type, res_details in res_config.items():
-                for res_name, config_attrs in res_details.items():
-                    node_id = f"{res_type}.{res_name}"
-                    resource_map[node_id] = (res_type, res_name, config_attrs)
-                    all_resource_ids.append(node_id)
-                    in_degree[node_id]  # Initialize
-
-                    for value in config_attrs.values():
-                        if isinstance(value, str) and value.startswith('resource.'):
-                            parts = value.split('.')
-                            dep_id = f"{parts[1]}.{parts[2]}"
-                            adj[dep_id].append(node_id)
-                            in_degree[node_id] += 1
+        planner = Planner(self.parsed_config)
+        sorted_nodes, resource_map = planner.build_graph()
         
-        queue = [node for node in all_resource_ids if in_degree[node] == 0]
-        sorted_order = []
-        while queue:
-            node = queue.pop(0)
-            sorted_order.append(node)
-            for neighbor in adj[node]:
-                in_degree[neighbor] -= 1
-                if in_degree[neighbor] == 0:
-                    queue.append(neighbor)
-
-        if len(sorted_order) != len(all_resource_ids):
-            raise Exception("Cycle detected in resource dependencies!")
-
-        for node_id in sorted_order:
-            res_type, res_name, config_attrs = resource_map[node_id]
-            provider_name = res_type.split('_')[0]
-            provider = self.provider_containers.get(provider_name)
-            if not provider:
-                raise Exception(f"Provider '{provider_name}' not found for resource '{res_name}'")
-
-            # Re-parse with the current state to resolve dependencies
-            with open(self.config_path, 'r') as f:
-                hcl_context = {'resource': self.state_manager.get_all_resources_as_dict()}
-                resolved_config = hcl2.load(f, context=hcl_context)['resource'][0][res_type][res_name]
-
-            config_struct = self._dict_to_struct(resolved_config)
-            req = provider_pb2.ApplyResourceChangeRequest(type_name=res_type, config=config_struct)
-            
-            try:
-                response = provider.stub.ApplyResourceChange(req)
-                self._handle_diagnostics(response.diagnostics)
-                state = response.new_state
-                attributes = MessageToDict(state.attributes)
-                metadata = MessageToDict(state.metadata)
-                resource_state = ResourceState(
-                    id=state.id, type=state.type, provider=provider_name,
-                    attributes=attributes, metadata=metadata, status=state.status
-                )
-                self.state_manager.add_resource(resource_state)
-                print(f"  + Resource '{res_name}' ({state.id}) created successfully.")
-            except grpc.RpcError as e:
-                print(f"Error applying resource {res_name}: {e.details()}")
-                self.destroy()
+        executor = Executor(self.provider_containers, self.state_manager)
+        for node_id in sorted_nodes:
+            executor.execute_node(node_id, resource_map)
 
         self.state_manager.save()
         print("Apply complete.")
@@ -200,7 +143,6 @@ class AICLEngine:
 
     def run(self):
         try:
-            self._parse_config()
             self.apply()
         finally:
             self.destroy()
@@ -208,7 +150,7 @@ class AICLEngine:
     def test(self, test_config_path: str):
         print(f"--- Running Tests from {test_config_path} ---")
         self.config_path = Path(test_config_path)
-        self._parse_config()
+        self.parsed_config = self._parse_config()
         self._start_providers()
 
         try:
