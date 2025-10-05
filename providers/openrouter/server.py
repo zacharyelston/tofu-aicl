@@ -47,16 +47,9 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
         return provider_pb2.ValidateConfigResponse()
 
     def Configure(self, request, context):
-        self.api_key = request.config.get('api_key')
+        # API key is already set from environment in __init__
         if not self.api_key:
-            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "Missing 'api_key' in provider configuration")
-            return provider_pb2.ConfigureResponse(diagnostics=[diag])
-
-        try:
-            response = requests.get(f"{self.base_url}/models", headers={"Authorization": f"Bearer {self.api_key}"})
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"API key validation failed: {e}")
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "OPENROUTER_API_KEY environment variable not set")
             return provider_pb2.ConfigureResponse(diagnostics=[diag])
         
         return provider_pb2.ConfigureResponse()

@@ -3,7 +3,7 @@ import os
 from concurrent import futures
 from pathlib import Path
 from google.protobuf.struct_pb2 import Struct
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
@@ -35,7 +35,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
             
             output_attributes = {'documents': documents}
             output_struct = Struct()
-            output_struct.update(output_attributes)
+            ParseDict(output_attributes, output_struct)
 
             new_state = provider_pb2.ResourceState(
                 id=f"loader-{Path(path).name}",

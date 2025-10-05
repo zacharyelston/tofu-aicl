@@ -2,7 +2,7 @@ import grpc
 import os
 from concurrent import futures
 from google.protobuf.struct_pb2 import Struct
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
@@ -23,24 +23,31 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
 
     def ApplyResourceChange(self, request, context):
         try:
+            print(f"DEBUG: Raw config type: {type(request.config)}")
             config = MessageToDict(request.config)
+            print(f"DEBUG: Config after MessageToDict: {type(config)}")
+            print(f"DEBUG: Config keys: {config.keys() if isinstance(config, dict) else 'NOT A DICT'}")
             documents = config.get('documents', [])
+            print(f"DEBUG: Documents type: {type(documents)}, length: {len(documents) if hasattr(documents, '__len__') else 'N/A'}")
             chunk_size = int(config.get('chunk_size', 1000))
             chunk_overlap = int(config.get('chunk_overlap', 200))
 
             all_chunks = []
-            for doc in documents:
-                text = doc.get('content', '')
+            for i, doc in enumerate(documents):
+                print(f"DEBUG: Doc {i} type: {type(doc)}")
+                text = doc.get('content', '') if isinstance(doc, dict) else ''
                 chunks = self._split_text(text, chunk_size, chunk_overlap)
                 for chunk in chunks:
-                    all_chunks.append({'content': chunk, 'source': doc.get('path')})
+                    all_chunks.append({'content': chunk, 'source': doc.get('path') if isinstance(doc, dict) else ''})
         except Exception as e:
+            import traceback
             print(f"ERROR in text_splitter: {e}")
+            print(f"TRACEBACK: {traceback.format_exc()}")
             raise
 
         output_attributes = {'chunks': all_chunks}
         output_struct = Struct()
-        output_struct.update(output_attributes)
+        ParseDict(output_attributes, output_struct)
 
         new_state = provider_pb2.ResourceState(
             id="text-splitter",
