@@ -1,71 +1,46 @@
 # Bootstrap Pipeline - Run Once to Create Service Connections
-# This pipeline creates the Azure DevOps service connections needed for the main pipeline
+# This pipeline creates the Azure DevOps service connections needed for the main pipeline.
+# It uses the standardized script from the ancera-iac repository.
 
 trigger: none  # Manual trigger only
+pr: none     # Don't run on PRs
 
-pr: none  # Don't run on PRs
+resources:
+  repositories:
+    - repository: iac
+      type: git
+      name: ancera-iac/ancera-iac
 
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  - name: TF_VERSION
-    value: '1.5.0'
-
 steps:
   - checkout: self
-
-  - task: TerraformInstaller@1
-    displayName: 'Install Terraform'
-    inputs:
-      terraformVersion: '$(TF_VERSION)'
+  - checkout: iac
 
   - task: AzureCLI@2
-    displayName: 'Bootstrap: Create Service Connections'
+    displayName: 'Bootstrap: Create ACR Service Connection'
     inputs:
-      azureSubscription: 'ancera-service-connection'  # Existing service connection for bootstrap
+      # This pipeline requires a pre-existing management service connection
+      # with permissions to create other service connections.
+      azureSubscription: 'ancera-service-connection'
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
         set -e
-        
         echo "🚀 Starting tofu-aicl bootstrap..."
         
-        # Get subscription ID from Azure CLI
-        SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-        echo "Using subscription: $SUBSCRIPTION_ID"
-        
-        # Navigate to bootstrap directory
-        cd bootstrap
-        
-        # Initialize Terraform
-        echo "📦 Initializing Terraform..."
-        terraform init
-        
-        # Set Terraform variables
-        export TF_VAR_subscription_id="$SUBSCRIPTION_ID"
-        export AZDO_PERSONAL_ACCESS_TOKEN="$(System.AccessToken)"
-        
-        # Plan
-        echo "📋 Planning Terraform changes..."
-        terraform plan -out=tfplan
-        
-        # Apply
-        echo "✨ Applying Terraform configuration..."
-        terraform apply -auto-approve tfplan
-        
-        # Show outputs
-        echo "📊 Bootstrap outputs:"
-        terraform output
-        
-        echo "✅ Bootstrap complete!"
-    env:
-      AZDO_PERSONAL_ACCESS_TOKEN: $(System.AccessToken)
+        # Make the script executable
+        chmod +x ./iac/modules/bootstrap/scripts/create-acr-service-connection.sh
 
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Terraform State'
-    inputs:
-      targetPath: 'bootstrap/terraform.tfstate'
-      artifact: 'terraform-state'
-      publishLocation: 'pipeline'
-    condition: succeededOrFailed()
+        # Run the bootstrap script from ancera-iac
+        ./iac/modules/bootstrap/scripts/create-acr-service-connection.sh \
+          --project "$(System.TeamProject)" \
+          --organization "$(System.CollectionUri)" \
+          --acr-name "ancerallc" \
+          --service-connection-name "tofu-aicl-acr-connection"
+        
+        echo "✅ Bootstrap complete! Service connection 'tofu-aicl-acr-connection' is ready."
+    env:
+      # The script uses the System.AccessToken to authenticate with Azure DevOps
+      AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
