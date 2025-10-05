@@ -1,0 +1,71 @@
+# Bootstrap Pipeline - Run Once to Create Service Connections
+# This pipeline creates the Azure DevOps service connections needed for the main pipeline
+
+trigger: none  # Manual trigger only
+
+pr: none  # Don't run on PRs
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: TF_VERSION
+    value: '1.5.0'
+
+steps:
+  - checkout: self
+
+  - task: TerraformInstaller@1
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '$(TF_VERSION)'
+
+  - task: AzureCLI@2
+    displayName: 'Bootstrap: Create Service Connections'
+    inputs:
+      azureSubscription: 'ancera-service-connection'  # Existing service connection for bootstrap
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        set -e
+        
+        echo "🚀 Starting tofu-aicl bootstrap..."
+        
+        # Get subscription ID from Azure CLI
+        SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+        echo "Using subscription: $SUBSCRIPTION_ID"
+        
+        # Navigate to bootstrap directory
+        cd bootstrap
+        
+        # Initialize Terraform
+        echo "📦 Initializing Terraform..."
+        terraform init
+        
+        # Set Terraform variables
+        export TF_VAR_subscription_id="$SUBSCRIPTION_ID"
+        export AZDO_PERSONAL_ACCESS_TOKEN="$(System.AccessToken)"
+        
+        # Plan
+        echo "📋 Planning Terraform changes..."
+        terraform plan -out=tfplan
+        
+        # Apply
+        echo "✨ Applying Terraform configuration..."
+        terraform apply -auto-approve tfplan
+        
+        # Show outputs
+        echo "📊 Bootstrap outputs:"
+        terraform output
+        
+        echo "✅ Bootstrap complete!"
+    env:
+      AZDO_PERSONAL_ACCESS_TOKEN: $(System.AccessToken)
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Terraform State'
+    inputs:
+      targetPath: 'bootstrap/terraform.tfstate'
+      artifact: 'terraform-state'
+      publishLocation: 'pipeline'
+    condition: succeededOrFailed()

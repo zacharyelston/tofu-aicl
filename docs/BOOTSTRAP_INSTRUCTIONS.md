@@ -24,13 +24,37 @@ This is because the service connection doesn't exist yet. We need to create it u
 
 ## Step-by-Step Instructions
 
-### 1. Get Azure Subscription ID
+### Option 1: Automated Bootstrap (Recommended)
+
+Run the bootstrap pipeline in Azure DevOps:
+
+1. Go to Azure DevOps: https://dev.azure.com/ancerallc/tofu-aicl/_build
+2. Click "New pipeline" or "Run pipeline"
+3. Select `azure-pipelines-bootstrap.yml`
+4. Click "Run"
+
+The pipeline will:
+- ✅ Install Terraform
+- ✅ Get Azure subscription ID automatically
+- ✅ Use System.AccessToken for authentication
+- ✅ Create the service connection
+- ✅ Show outputs
+
+**Prerequisites for automated bootstrap**:
+- Existing service connection `ancera-service-connection` (for running Terraform)
+- Pipeline must have permission to create service connections
+
+### Option 2: Manual Bootstrap
+
+If you prefer to run locally:
+
+#### 1. Get Azure Subscription ID
 
 ```bash
 az account show --query id -o tsv
 ```
 
-### 2. Set Environment Variables
+#### 2. Set Environment Variables
 
 ```bash
 # Set your Azure subscription ID (from step 1)
@@ -40,7 +64,7 @@ export TF_VAR_subscription_id="your-subscription-id-here"
 export AZDO_PERSONAL_ACCESS_TOKEN="your-pat-token-here"
 ```
 
-### 3. Run Terraform Bootstrap
+#### 3. Run Terraform Bootstrap
 
 ```bash
 cd /Users/zacelston/code/tofu-aicl/bootstrap
