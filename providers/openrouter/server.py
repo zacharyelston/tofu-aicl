@@ -5,18 +5,15 @@ import uuid
 import requests
 from concurrent import futures
 from typing import Dict, Any
-from dotenv import load_dotenv
 from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
-# Load API keys from .env file
-load_dotenv()
-
 class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
     def __init__(self):
-        self.api_key = None
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1"
         self.resources: Dict[str, Dict[str, Any]] = {}  # In-memory state
 
@@ -66,9 +63,18 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
 
     # --- Resource Management ---
     def ApplyResourceChange(self, request, context):
-        resource_id = request.prior_state.id if request.prior_state and request.prior_state.id else f"or-model-{uuid.uuid4().hex[:8]}"
-        config = dict(request.config)
+        resource_id = request.prior_state.id if request.prior_state and request.prior_state.id else f"or-{uuid.uuid4().hex[:8]}"
+        config = MessageToDict(request.config)
         
+        # Handle embeddings generation
+        if request.type_name == "openrouter_embeddings":
+            return self._generate_embeddings(resource_id, config, request.type_name)
+        
+        # Handle chat/query
+        elif request.type_name == "openrouter_query":
+            return self._execute_query(resource_id, config, request.type_name)
+        
+        # Default: just store config
         self.resources[resource_id] = {
             "id": resource_id,
             "type_name": request.type_name,
@@ -76,7 +82,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
         }
 
         new_state_struct = Struct()
-        new_state_struct.update(config)
+        ParseDict(config, new_state_struct)
 
         new_state = provider_pb2.ResourceState(
             id=resource_id,
@@ -85,6 +91,138 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             status='ready'
         )
         return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+    
+    def _generate_embeddings(self, resource_id, config, type_name):
+        """Generate embeddings for text chunks"""
+        texts = config.get('texts', [])
+        model = config.get('model', 'openai/text-embedding-3-small')
+        
+        if not texts:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No texts provided for embeddings")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        embeddings = []
+        try:
+            # Extract text content from chunks
+            text_list = []
+            for item in texts:
+                if isinstance(item, dict):
+                    text_list.append(item.get('content', ''))
+                else:
+                    text_list.append(str(item))
+            
+            # Call OpenRouter embeddings API
+            response = requests.post(
+                f"{self.base_url}/embeddings",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model,
+                    "input": text_list
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            # Build embeddings with metadata
+            for i, embedding_data in enumerate(result.get('data', [])):
+                embeddings.append({
+                    'id': f"{resource_id}-{i}",
+                    'values': embedding_data['embedding'],
+                    'metadata': texts[i] if isinstance(texts[i], dict) else {'content': texts[i]}
+                })
+            
+            output_attributes = {
+                'embeddings': embeddings,
+                'model': model,
+                'count': len(embeddings)
+            }
+            
+            output_struct = Struct()
+            ParseDict(output_attributes, output_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=resource_id,
+                type=type_name,
+                attributes=output_struct,
+                status='ready'
+            )
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+            
+        except Exception as e:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Embeddings generation failed: {str(e)}")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+    
+    def _execute_query(self, resource_id, config, type_name):
+        """Execute RAG query with context"""
+        query = config.get('query', '')
+        context = config.get('context', [])
+        model = config.get('model', 'anthropic/claude-3.5-sonnet')
+        
+        if not query:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No query provided")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        try:
+            # Build context string from retrieved chunks
+            context_str = "\n\n".join([
+                f"Source: {chunk.get('source', 'unknown')}\n{chunk.get('content', '')}"
+                for chunk in context
+            ])
+            
+            # Create prompt with context
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant. Answer the question based on the provided context."
+                },
+                {
+                    "role": "user",
+                    "content": f"Context:\n{context_str}\n\nQuestion: {query}"
+                }
+            ]
+            
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "temperature": config.get('temperature', 0.7),
+                    "max_tokens": config.get('max_tokens', 1024)
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            answer = result['choices'][0]['message']['content']
+            
+            output_attributes = {
+                'query': query,
+                'answer': answer,
+                'model': model,
+                'context_count': len(context)
+            }
+            
+            output_struct = Struct()
+            ParseDict(output_attributes, output_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=resource_id,
+                type=type_name,
+                attributes=output_struct,
+                status='ready'
+            )
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+            
+        except Exception as e:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query execution failed: {str(e)}")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
     def ReadResource(self, request, context):
         resource = self.resources.get(request.id)

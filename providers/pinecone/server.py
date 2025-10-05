@@ -2,13 +2,11 @@ import grpc
 import os
 import requests
 from concurrent import futures
-from dotenv import load_dotenv
 from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
-
-load_dotenv()
 
 class PineconeProvider(provider_pb2_grpc.ProviderServicer):
     def __init__(self):
@@ -27,11 +25,26 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "PINECONE_API_KEY and PINECONE_HOST_URL must be set.")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
-        if request.type_name != "pinecone_index":
+        config = MessageToDict(request.config)
+        
+        # Handle upsert operation
+        if request.type_name == "pinecone_upsert":
+            return self._upsert_vectors(config, request.type_name)
+        
+        # Handle query operation
+        elif request.type_name == "pinecone_query":
+            return self._query_vectors(config, request.type_name)
+        
+        # Handle index creation (legacy)
+        elif request.type_name == "pinecone_index":
+            return self._create_index(config, request.type_name)
+        
+        else:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Unsupported resource type: {request.type_name}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-
-        config = dict(request.config)
+    
+    def _create_index(self, config, type_name):
+        """Create a new Pinecone index"""
         index_name = config.get('name')
         dimension = int(config.get('dimension'))
         metric = config.get('metric', 'cosine')
@@ -49,7 +62,6 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
         }
 
         try:
-            # Create is a special case that goes to the controller host
             controller_host = "https://api.pinecone.io"
             response = requests.post(
                 f"{controller_host}/indexes",
@@ -59,17 +71,128 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             response.raise_for_status()
 
             new_state_struct = Struct()
-            new_state_struct.update(config)
+            ParseDict(config, new_state_struct)
             new_state = provider_pb2.ResourceState(
                 id=index_name,
-                type=request.type_name,
+                type=type_name,
                 attributes=new_state_struct,
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
         except requests.exceptions.RequestException as e:
-            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Failed to create Pinecone index: {e.response.text}", str(e))
+            error_msg = e.response.text if hasattr(e, 'response') else str(e)
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Failed to create Pinecone index: {error_msg}")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+    
+    def _upsert_vectors(self, config, type_name):
+        """Upsert vectors to Pinecone index"""
+        vectors = config.get('vectors', [])
+        namespace = config.get('namespace', '')
+        
+        if not vectors:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No vectors provided for upsert")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        try:
+            # Format vectors for Pinecone API
+            formatted_vectors = []
+            for vec in vectors:
+                formatted_vectors.append({
+                    'id': vec.get('id', ''),
+                    'values': vec.get('values', []),
+                    'metadata': vec.get('metadata', {})
+                })
+            
+            payload = {'vectors': formatted_vectors}
+            if namespace:
+                payload['namespace'] = namespace
+            
+            response = requests.post(
+                f"{self.host_url}/vectors/upsert",
+                headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
+                json=payload
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            output_attributes = {
+                'upserted_count': result.get('upsertedCount', len(vectors)),
+                'namespace': namespace,
+                'vectors': vectors
+            }
+            
+            output_struct = Struct()
+            ParseDict(output_attributes, output_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=f"upsert-{namespace or 'default'}",
+                type=type_name,
+                attributes=output_struct,
+                status='ready'
+            )
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+            
+        except Exception as e:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Upsert failed: {str(e)}")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+    
+    def _query_vectors(self, config, type_name):
+        """Query vectors from Pinecone index"""
+        vector = config.get('vector', [])
+        top_k = config.get('top_k', 5)
+        namespace = config.get('namespace', '')
+        include_metadata = config.get('include_metadata', True)
+        
+        if not vector:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No query vector provided")
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        try:
+            payload = {
+                'vector': vector,
+                'topK': top_k,
+                'includeMetadata': include_metadata
+            }
+            if namespace:
+                payload['namespace'] = namespace
+            
+            response = requests.post(
+                f"{self.host_url}/query",
+                headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
+                json=payload
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            # Extract matches
+            matches = []
+            for match in result.get('matches', []):
+                matches.append({
+                    'id': match.get('id'),
+                    'score': match.get('score'),
+                    'metadata': match.get('metadata', {})
+                })
+            
+            output_attributes = {
+                'matches': matches,
+                'namespace': namespace,
+                'count': len(matches)
+            }
+            
+            output_struct = Struct()
+            ParseDict(output_attributes, output_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=f"query-{namespace or 'default'}",
+                type=type_name,
+                attributes=output_struct,
+                status='ready'
+            )
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+            
+        except Exception as e:
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
     def DeleteResource(self, request, context):

@@ -1,0 +1,41 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "loader_files" "source_code" {
+  path = "./src"
+  glob = "**/*.py"
+}
+
+resource "splitter_text" "chunks" {
+  documents     = "${resource.loader_files.source_code.attributes.documents}"
+  chunk_size    = 1000
+  chunk_overlap = 100
+}
+
+resource "openrouter_embeddings" "vectors" {
+  texts = "${resource.splitter_text.chunks.attributes.chunks}"
+  model = "openai/text-embedding-3-small"
+}
+
+resource "pinecone_upsert" "store" {
+  vectors   = "${resource.openrouter_embeddings.vectors.attributes.embeddings}"
+  namespace = "aicl-source"
+}

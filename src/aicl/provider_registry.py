@@ -35,14 +35,14 @@ class ProviderRegistry:
                 source="aicl/openrouter",
                 version="1.0.0",
                 container_image="aicl/openrouter:1.0.0",
-                description="Access AI models via OpenRouter"
+                description="AI models via OpenRouter (embeddings, chat, query)"
             ),
             ProviderMetadata(
                 name="pinecone",
                 source="aicl/pinecone",
                 version="1.0.0",
                 container_image="aicl/pinecone:1.0.0",
-                description="Vector database for RAG"
+                description="Vector database (upsert, query, index)"
             ),
             ProviderMetadata(
                 name="command_assertion",
