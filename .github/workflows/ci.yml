@@ -1,0 +1,144 @@
+name: tofu-aicl CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  CONTAINER_REGISTRY: 'ancerallc.azurecr.io'
+
+jobs:
+  validate:
+    name: 'Code Validation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black
+
+      - name: Lint with flake8
+        run: flake8 src/ --count --show-source --statistics
+        continue-on-error: true
+
+      - name: Check code formatting
+        run: black --check src/
+        continue-on-error: true
+
+  build:
+    name: 'Build Provider Containers'
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.CONTAINER_REGISTRY }}
+          username: ${{ secrets.CONTAINER_REGISTRY_USERNAME }}
+          password: ${{ secrets.CONTAINER_REGISTRY_PASSWORD }}
+
+      - name: Build file_loader provider
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: providers/file_loader/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.CONTAINER_REGISTRY }}/aicl/file_loader:${{ github.run_id }}
+            ${{ env.CONTAINER_REGISTRY }}/aicl/file_loader:latest
+
+      - name: Build text_splitter provider
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: providers/text_splitter/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.CONTAINER_REGISTRY }}/aicl/text_splitter:${{ github.run_id }}
+            ${{ env.CONTAINER_REGISTRY }}/aicl/text_splitter:latest
+
+      - name: Build openrouter provider
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: providers/openrouter/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.CONTAINER_REGISTRY }}/aicl/openrouter:${{ github.run_id }}
+            ${{ env.CONTAINER_REGISTRY }}/aicl/openrouter:latest
+
+      - name: Build pinecone provider
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: providers/pinecone/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.CONTAINER_REGISTRY }}/aicl/pinecone:${{ github.run_id }}
+            ${{ env.CONTAINER_REGISTRY }}/aicl/pinecone:latest
+
+      - name: Build command_assertion provider
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: providers/command_assertion/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.CONTAINER_REGISTRY }}/aicl/command_assertion:${{ github.run_id }}
+            ${{ env.CONTAINER_REGISTRY }}/aicl/command_assertion:latest
+
+  test:
+    name: 'Run Tests'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov
+
+      - name: Run tests
+        run: pytest tests/ --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: junit/
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            htmlcov/
