@@ -13,6 +13,7 @@ from aicl.state.manager import StateManager, ResourceState
 from aicl.parser import HCLParser
 from aicl.planner import Planner
 from aicl.executor import Executor
+from aicl.provider_registry import get_registry
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
@@ -67,15 +68,20 @@ class AICLEngine:
     def _start_providers_subprocess(self):
         print("Starting providers in subprocess mode...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
+        registry = get_registry()
+        
         for name, config in providers.items():
             print(f"Starting subprocess for provider '{name}'...")
             try:
-                # Extract the actual provider name from the source field
+                # Get provider metadata from registry
                 source = config.get('source', '')
-                if '/' in source:
-                    provider_name = source.split('/')[-1]
+                provider_metadata = registry.get(source)
+                
+                if not provider_metadata:
+                    print(f"Warning: Provider '{source}' not found in registry, using source name directly")
+                    provider_name = source.split('/')[-1] if '/' in source else name
                 else:
-                    provider_name = name
+                    provider_name = provider_metadata.name
                 
                 # Find the provider server script
                 provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / provider_name
@@ -150,8 +156,20 @@ class AICLEngine:
     def _start_providers_docker(self):
         print("Starting provider containers...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
+        registry = get_registry()
+        
         for name, config in providers.items():
-            image = config['container']['image']
+            # Try to get image from registry first, fall back to HCL config
+            source = config.get('source', '')
+            provider_metadata = registry.get(source)
+            
+            if provider_metadata:
+                image = provider_metadata.container_image
+            elif 'container' in config and 'image' in config['container']:
+                image = config['container']['image']
+            else:
+                raise ValueError(f"No container image found for provider '{name}' in registry or config")
+            
             print(f"Starting container for provider '{name}' with image '{image}'...")
             try:
                 env_vars = {}
