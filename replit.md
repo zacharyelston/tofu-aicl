@@ -48,6 +48,12 @@ The "AICL Engine" workflow runs `demo_simple.aicl`, demonstrating:
 3. Execution with declarative configuration
 4. Automatic cleanup/teardown
 
+### MCP Integration (Model Context Protocol)
+AICL can be exposed as an MCP server for use with Windsurf, Claude Desktop, and other MCP-compatible AI editors:
+- **Server**: `mcp_server.py` - Exposes AICL capabilities as AI tools
+- **Tools**: Query codebase, run configs, list examples, get provider info
+- **Setup Guide**: See `MCP_WINDSURF_SETUP.md` for complete configuration instructions
+
 ## Recent Changes (October 5, 2025)
 
 ### Core Framework
