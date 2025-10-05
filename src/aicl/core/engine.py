@@ -234,20 +234,67 @@ class AICLEngine:
             severity = provider_pb2.Diagnostic.Severity.Name(diag.severity)
             print(f"  [{severity}] {diag.summary}: {diag.detail}")
 
+    def _display_plan(self, sorted_nodes, resource_map):
+        """Display Terraform-style plan"""
+        print("\n" + "=" * 80)
+        print(f"AICL Plan: {self.config_path.name}")
+        print("=" * 80)
+        
+        # Show query if present
+        for node_id in sorted_nodes:
+            res_type, res_name, config_attrs = resource_map[node_id]
+            if res_type == 'embedding' and 'text' in config_attrs:
+                query_text = config_attrs['text']
+                print(f"\n📋 Query: \"{query_text}\"")
+                print()
+                break
+        
+        print(f"Plan: {len(sorted_nodes)} to add, 0 to change, 0 to destroy.\n")
+        
+        for node_id in sorted_nodes:
+            res_type, res_name, config_attrs = resource_map[node_id]
+            print(f"  + {res_type}.{res_name}")
+            
+            # Show key config attributes
+            if res_type == 'loader_files':
+                print(f"      path: {config_attrs.get('path', 'N/A')}")
+                print(f"      glob: {config_attrs.get('glob', '**/*')}")
+            elif res_type == 'text_splitter':
+                print(f"      chunk_size: {config_attrs.get('chunk_size', 1000)}")
+            elif res_type == 'embedding':
+                print(f"      model: {config_attrs.get('model', 'N/A')}")
+            elif res_type == 'chat':
+                print(f"      model: {config_attrs.get('model', 'N/A')}")
+                print(f"      max_tokens: {config_attrs.get('max_tokens', 1000)}")
+            elif res_type == 'query':
+                print(f"      top_k: {config_attrs.get('top_k', 5)}")
+                print(f"      namespace: {config_attrs.get('namespace', 'default')}")
+            elif res_type == 'upsert':
+                print(f"      namespace: {config_attrs.get('namespace', 'default')}")
+            print()
+        
+        print("=" * 80)
+    
     def apply(self):
         self.state_manager.load(self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp'))
-        self._start_providers()
-        print("\nApplying changes...")
-
+        
+        # Plan phase
         planner = Planner(self.parsed_config)
         sorted_nodes, resource_map = planner.build_graph()
+        self._display_plan(sorted_nodes, resource_map)
+        
+        # Apply phase
+        self._start_providers()
+        print("\nApplying changes...")
 
         executor = Executor(self.provider_containers, self.state_manager)
         for node_id in sorted_nodes:
             executor.execute_node(node_id, resource_map)
 
         self.state_manager.save()
-        print("Apply complete.")
+        print("\n" + "=" * 80)
+        print("Apply complete: {} resources created.".format(len(sorted_nodes)))
+        print("=" * 80)
 
     def destroy(self):
         print("\nDestroying resources and stopping containers...")
