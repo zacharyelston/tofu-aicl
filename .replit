@@ -28,4 +28,4 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python run.py replit_rag_index.aicl"
+args = "python run.py replit_rag_query.aicl"
