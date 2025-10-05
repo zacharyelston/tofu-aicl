@@ -69,37 +69,37 @@ class AICLEngine:
         print("Starting providers in subprocess mode...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
         registry = get_registry()
-        
+
         for name, config in providers.items():
             print(f"Starting subprocess for provider '{name}'...")
             try:
                 # Get provider metadata from registry
                 source = config.get('source', '')
                 provider_metadata = registry.get(source)
-                
+
                 if not provider_metadata:
                     print(f"Warning: Provider '{source}' not found in registry, using source name directly")
                     provider_name = source.split('/')[-1] if '/' in source else name
                 else:
                     provider_name = provider_metadata.name
-                
+
                 # Find the provider server script
                 provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / provider_name
                 server_script = provider_dir / 'server.py'
-                
+
                 if not server_script.exists():
                     raise FileNotFoundError(f"Provider server script not found: {server_script}")
 
                 # Load environment variables
                 env_vars = os.environ.copy()
-                
+
                 # Add workspace root to PYTHONPATH so providers can find proto files
                 workspace_root = str(Path(__file__).parent.parent.parent.parent)
                 if 'PYTHONPATH' in env_vars:
                     env_vars['PYTHONPATH'] = f"{workspace_root}:{env_vars['PYTHONPATH']}"
                 else:
                     env_vars['PYTHONPATH'] = workspace_root
-                
+
                 env_file_path = self.config_path.parent / '.env'
                 if env_file_path.exists():
                     with open(env_file_path, 'r') as f:
@@ -121,15 +121,15 @@ class AICLEngine:
                     stderr=subprocess.STDOUT,
                     text=True
                 )
-                
+
                 # Wait for the provider to start
                 time.sleep(2)
-                
+
                 # Connect to the provider
                 print(f"Connecting to provider on 127.0.0.1:{port}")
                 channel = grpc.insecure_channel(f'127.0.0.1:{port}')
                 stub = provider_pb2_grpc.ProviderStub(channel)
-                
+
                 # Retry connection with exponential backoff
                 max_retries = 5
                 for attempt in range(max_retries):
@@ -157,19 +157,19 @@ class AICLEngine:
         print("Starting provider containers...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
         registry = get_registry()
-        
+
         for name, config in providers.items():
             # Try to get image from registry first, fall back to HCL config
             source = config.get('source', '')
             provider_metadata = registry.get(source)
-            
+
             if provider_metadata:
                 image = provider_metadata.container_image
             elif 'container' in config and 'image' in config['container']:
                 image = config['container']['image']
             else:
                 raise ValueError(f"No container image found for provider '{name}' in registry or config")
-            
+
             print(f"Starting container for provider '{name}' with image '{image}'...")
             try:
                 env_vars = {}
@@ -190,16 +190,16 @@ class AICLEngine:
                 )
                 time.sleep(5) # Wait for container to be ready
                 container.reload()
-                
+
                 # Check container status
                 print(f"Container status: {container.status}")
                 print(f"Container logs: {container.logs().decode('utf-8')[-500:]}")
-                
+
                 host_port = container.ports['50051/tcp'][0]['HostPort']
                 print(f"Connecting to provider on 127.0.0.1:{host_port}")
                 channel = grpc.insecure_channel(f'127.0.0.1:{host_port}')
                 stub = provider_pb2_grpc.ProviderStub(channel)
-                
+
                 # Retry connection with exponential backoff
                 max_retries = 5
                 for attempt in range(max_retries):
@@ -238,10 +238,10 @@ class AICLEngine:
         self.state_manager.load(self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp'))
         self._start_providers()
         print("\nApplying changes...")
-        
+
         planner = Planner(self.parsed_config)
         sorted_nodes, resource_map = planner.build_graph()
-        
+
         executor = Executor(self.provider_containers, self.state_manager)
         for node_id in sorted_nodes:
             executor.execute_node(node_id, resource_map)
@@ -296,7 +296,7 @@ class AICLEngine:
                             'input': config_attrs.get('input')
                         })
                         req = provider_pb2.ValidateRequest(input=input_struct)
-                        
+
                         response = provider.stub.Validate(req)
                         self._handle_diagnostics(response.diagnostics)
 

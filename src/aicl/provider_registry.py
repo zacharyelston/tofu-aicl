@@ -13,7 +13,7 @@ class ProviderRegistry:
     def __init__(self):
         self._providers: Dict[str, ProviderMetadata] = {}
         self._load_default_providers()
-    
+
     def _load_default_providers(self):
         default_providers = [
             ProviderMetadata(
@@ -66,28 +66,28 @@ class ProviderRegistry:
                 description="Azure OpenAI embeddings"
             ),
         ]
-        
+
         for provider in default_providers:
             self.register(provider)
-    
+
     def register(self, provider: ProviderMetadata):
         self._providers[provider.source] = provider
         self._providers[provider.name] = provider
-    
+
     def get(self, source_or_name: str) -> Optional[ProviderMetadata]:
         return self._providers.get(source_or_name)
-    
+
     def list_all(self) -> Dict[str, ProviderMetadata]:
         unique_providers = {}
         for provider in self._providers.values():
             if provider.source not in unique_providers:
                 unique_providers[provider.source] = provider
         return unique_providers
-    
+
     def get_container_image(self, source_or_name: str) -> Optional[str]:
         provider = self.get(source_or_name)
         return provider.container_image if provider else None
-    
+
     def get_provider_name(self, source: str) -> Optional[str]:
         provider = self.get(source)
         return provider.name if provider else None

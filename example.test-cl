@@ -18,7 +18,7 @@ variable "code_to_test" {
 resource "command_assertion" "python_execution" {
   command = "python"
   input   = var.code_to_test
-  
+
   assert {
     condition     = self.output.exit_code == 0
     error_message = "Generated Python code failed to execute. Stderr: ${self.output.stderr}"

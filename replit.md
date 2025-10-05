@@ -3,7 +3,7 @@
 ## Project Overview
 A declarative, container-based framework for defining and provisioning AI infrastructure (RAG pipelines, agents, etc.) using HCL syntax. Think "Terraform for AI workflows."
 
-**Repository**: https://github.com/zacharyelston/tofu-aicl  
+**Repository**: https://github.com/zacharyelston/tofu-aicl
 **License**: GPL-3.0
 
 ## Core Concepts
@@ -70,7 +70,7 @@ The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrati
 - **OpenRouter Provider Enhanced**: Added embedding generation (single text & arrays) and chat completion support
 - **Pinecone Provider Enhanced**: Added vector upsert and query operations with metadata
 - **Resource-to-Provider Mapping**: Clean resource types (embedding, chat, query) map to providers (openrouter, pinecone)
-- **RAG Pipelines Created**: 
+- **RAG Pipelines Created**:
   - `rag_index.aicl`: Index AICL source code into vector database
   - `rag_query.aicl`: Query indexed code and generate answers
 

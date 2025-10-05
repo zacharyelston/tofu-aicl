@@ -51,31 +51,31 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
         if not self.api_key:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "OPENROUTER_API_KEY environment variable not set")
             return provider_pb2.ConfigureResponse(diagnostics=[diag])
-        
+
         return provider_pb2.ConfigureResponse()
 
     # --- Resource Management ---
     def ApplyResourceChange(self, request, context):
         config = MessageToDict(request.config)
-        
+
         # Use resource name from AICL config for consistent IDs
         resource_name = config.get('aiclResourceName', '')
-        
+
         if request.prior_state and request.prior_state.id:
             resource_id = request.prior_state.id
         elif resource_name:
             resource_id = f"{request.type_name}-{resource_name}"
         else:
             resource_id = f"or-{uuid.uuid4().hex[:8]}"
-        
+
         # Handle embeddings generation
         if request.type_name in ["embedding", "openrouter_embeddings"]:
             return self._generate_embeddings(resource_id, config, request.type_name)
-        
+
         # Handle chat/query
         elif request.type_name in ["chat", "openrouter_query"]:
             return self._execute_chat(resource_id, config, request.type_name)
-        
+
         # Default: just store config
         self.resources[resource_id] = {
             "id": resource_id,
@@ -93,22 +93,22 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             status='ready'
         )
         return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-    
+
     def _generate_embeddings(self, resource_id, config, type_name):
         """Generate embeddings for text chunks"""
         # Handle both single text and array of texts
         single_text = config.get('text')
         texts = config.get('texts', [])
-        
+
         if single_text:
             texts = [single_text]
-        
+
         model = config.get('model', 'openai/text-embedding-3-small')
-        
+
         if not texts:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No text or texts provided for embeddings")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         embeddings = []
         try:
             # Extract text content from chunks
@@ -118,7 +118,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                     text_list.append(item.get('content', ''))
                 else:
                     text_list.append(str(item))
-            
+
             # Call OpenRouter embeddings API
             response = requests.post(
                 f"{self.base_url}/embeddings",
@@ -133,7 +133,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             # Build embeddings with metadata
             for i, embedding_data in enumerate(result.get('data', [])):
                 embeddings.append({
@@ -141,20 +141,20 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                     'values': embedding_data['embedding'],
                     'metadata': texts[i] if isinstance(texts[i], dict) else {'content': texts[i]}
                 })
-            
+
             output_attributes = {
                 'embeddings': embeddings,
                 'model': model,
                 'count': len(embeddings)
             }
-            
+
             # For single text query, also include the vector directly
             if single_text and len(embeddings) > 0:
                 output_attributes['vector'] = embeddings[0]['values']
-            
+
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
@@ -162,24 +162,24 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Embeddings generation failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-    
+
     def _execute_chat(self, resource_id, config, type_name):
         """Execute chat completion with messages"""
         messages = config.get('messages', [])
         model = config.get('model', 'anthropic/claude-3.5-sonnet')
-        
+
         if not messages:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No messages provided")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         try:
             print(f"DEBUG OpenRouter: Executing chat with model {model}")
             print(f"DEBUG OpenRouter: Messages: {messages}")
-            
+
             response = requests.post(
                 f"{self.base_url}/chat/completions",
                 headers={
@@ -195,18 +195,18 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             answer = result['choices'][0]['message']['content']
-            
+
             output_attributes = {
                 'response': answer,
                 'model': model,
                 'message_count': len(messages)
             }
-            
+
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
@@ -214,31 +214,31 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except Exception as e:
             import traceback
             print(f"ERROR OpenRouter chat: {e}")
             print(f"TRACEBACK: {traceback.format_exc()}")
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Chat execution failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-    
+
     def _execute_query(self, resource_id, config, type_name):
         """Execute RAG query with context"""
         query = config.get('query', '')
         context = config.get('context', [])
         model = config.get('model', 'anthropic/claude-3.5-sonnet')
-        
+
         if not query:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No query provided")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         try:
             # Build context string from retrieved chunks
             context_str = "\n\n".join([
                 f"Source: {chunk.get('source', 'unknown')}\n{chunk.get('content', '')}"
                 for chunk in context
             ])
-            
+
             # Create prompt with context
             messages = [
                 {
@@ -250,7 +250,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                     "content": f"Context:\n{context_str}\n\nQuestion: {query}"
                 }
             ]
-            
+
             response = requests.post(
                 f"{self.base_url}/chat/completions",
                 headers={
@@ -266,19 +266,19 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             answer = result['choices'][0]['message']['content']
-            
+
             output_attributes = {
                 'query': query,
                 'answer': answer,
                 'model': model,
                 'context_count': len(context)
             }
-            
+
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
@@ -286,7 +286,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query execution failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
@@ -337,7 +337,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             output_struct = Struct()
             output_struct.update(result)
             yield provider_pb2.ExecuteResponse(data=output_struct)

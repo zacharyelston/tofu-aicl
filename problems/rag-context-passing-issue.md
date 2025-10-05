@@ -44,10 +44,10 @@ content = "Context: ${resource.query.relevant_chunks.attributes.results}\n\nQues
 for resource_id, resource_state in self.state_manager.current_state.resources.items():
     res_type = resource_state.type
     res_name = resource_id.split('-', 1)[1] if '-' in resource_id else resource_id
-    
+
     if res_type not in context['resource']:
         context['resource'][res_type] = {}
-    
+
     context['resource'][res_type][res_name] = {
         'attributes': resource_state.attributes,
         ...

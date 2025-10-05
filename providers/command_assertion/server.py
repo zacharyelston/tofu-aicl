@@ -26,20 +26,20 @@ class CommandAssertionProvider(provider_pb2_grpc.ProviderServicer):
 
         try:
             process = subprocess.run(
-                command, 
-                input=input_data, 
-                text=True, 
-                capture_output=True, 
+                command,
+                input=input_data,
+                text=True,
+                capture_output=True,
                 shell=True # Use with caution
             )
-            
+
             output_struct = Struct()
             output_struct.update({
                 "stdout": process.stdout,
                 "stderr": process.stderr,
                 "exit_code": process.returncode
             })
-            
+
             return provider_pb2.ValidateResponse(success=True, output=output_struct)
 
         except Exception as e:
@@ -62,7 +62,7 @@ class CommandAssertionProvider(provider_pb2_grpc.ProviderServicer):
 
     def Execute(self, request, context):
         yield provider_pb2.ExecuteResponse(log="Execute is not applicable for this provider.")
-        
+
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 

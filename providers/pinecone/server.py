@@ -26,26 +26,26 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
         config = MessageToDict(request.config)
-        
+
         # Get resource name for consistent ID generation
         resource_name = config.get('aiclResourceName', '')
-        
+
         # Handle upsert operation
         if request.type_name in ["upsert", "pinecone_upsert"]:
             return self._upsert_vectors(config, request.type_name, resource_name)
-        
+
         # Handle query operation
         elif request.type_name in ["query", "pinecone_query"]:
             return self._query_vectors(config, request.type_name, resource_name)
-        
+
         # Handle index creation (legacy)
         elif request.type_name == "pinecone_index":
             return self._create_index(config, request.type_name)
-        
+
         else:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Unsupported resource type: {request.type_name}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-    
+
     def _create_index(self, config, type_name):
         """Create a new Pinecone index"""
         index_name = config.get('name')
@@ -87,16 +87,16 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             error_msg = e.response.text if hasattr(e, 'response') else str(e)
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Failed to create Pinecone index: {error_msg}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-    
+
     def _upsert_vectors(self, config, type_name, resource_name=''):
         """Upsert vectors to Pinecone index"""
         vectors = config.get('vectors', [])
         namespace = config.get('namespace', '')
-        
+
         if not vectors:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No vectors provided for upsert")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         try:
             # Format vectors for Pinecone API
             formatted_vectors = []
@@ -106,11 +106,11 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
                     'values': vec.get('values', []),
                     'metadata': vec.get('metadata', {})
                 })
-            
+
             payload = {'vectors': formatted_vectors}
             if namespace:
                 payload['namespace'] = namespace
-            
+
             response = requests.post(
                 f"{self.host_url}/vectors/upsert",
                 headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
@@ -118,19 +118,19 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             output_attributes = {
                 'upserted_count': result.get('upsertedCount', len(vectors)),
                 'namespace': namespace,
                 'vectors': vectors
             }
-            
+
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
-            
+
             # Use resource name from AICL config for consistent IDs
             resource_id = f"{type_name}-{resource_name}" if resource_name else f"upsert-{namespace or 'default'}"
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
@@ -138,22 +138,22 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Upsert failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-    
+
     def _query_vectors(self, config, type_name, resource_name=''):
         """Query vectors from Pinecone index"""
         vector = config.get('vector', [])
         top_k = config.get('top_k', 5)
         namespace = config.get('namespace', '')
         include_metadata = config.get('include_metadata', True)
-        
+
         if not vector:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No query vector provided")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         try:
             payload = {
                 'vector': vector,
@@ -162,7 +162,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             }
             if namespace:
                 payload['namespace'] = namespace
-            
+
             response = requests.post(
                 f"{self.host_url}/query",
                 headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
@@ -170,7 +170,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             # Extract matches
             matches = []
             results = []
@@ -187,20 +187,20 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
                     'source': metadata.get('source', ''),
                     'score': match.get('score', 0)
                 })
-            
+
             output_attributes = {
                 'matches': matches,
                 'results': results,  # Formatted for easy use
                 'namespace': namespace,
                 'count': len(matches)
             }
-            
+
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
-            
+
             # Use resource name from AICL config for consistent IDs
             resource_id = f"{type_name}-{resource_name}" if resource_name else f"query-{namespace or 'default'}"
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
@@ -208,7 +208,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
                 status='ready'
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])

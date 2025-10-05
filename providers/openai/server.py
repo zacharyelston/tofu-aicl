@@ -41,7 +41,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
     def Configure(self, request, context):
         if not self.api_key:
             diag = self._create_diagnostic(
-                provider_pb2.Diagnostic.ERROR, 
+                provider_pb2.Diagnostic.ERROR,
                 "OPENAI_API_KEY environment variable not set"
             )
             return provider_pb2.ConfigureResponse(diagnostics=[diag])
@@ -49,21 +49,21 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
 
     def ApplyResourceChange(self, request, context):
         config = MessageToDict(request.config)
-        
+
         # Use resource name from AICL config for consistent IDs
         resource_name = config.get('aiclResourceName', '')
-        
+
         if request.prior_state and request.prior_state.id:
             resource_id = request.prior_state.id
         elif resource_name:
             resource_id = f"{request.type_name}-{resource_name}"
         else:
             resource_id = f"openai-{uuid.uuid4().hex[:8]}"
-        
+
         # Handle embeddings
         if request.type_name in ["embedding", "openai_embedding"]:
             return self._generate_embeddings(resource_id, config, request.type_name)
-        
+
         # Default: just store config
         self.resources[resource_id] = {
             "id": resource_id,
@@ -81,26 +81,26 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             status='ready'
         )
         return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-    
+
     def _generate_embeddings(self, resource_id, config, type_name):
         """Generate embeddings using OpenAI API"""
         # Handle both single text and array of texts
         single_text = config.get('text')
         texts = config.get('texts', [])
-        
+
         if single_text:
             texts = [single_text]
-        
+
         model = config.get('model', 'text-embedding-3-small')
         dimensions = config.get('dimensions')
-        
+
         if not texts:
             diag = self._create_diagnostic(
-                provider_pb2.Diagnostic.ERROR, 
+                provider_pb2.Diagnostic.ERROR,
                 "No text or texts provided for embeddings"
             )
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
-        
+
         try:
             # Extract text content from chunks
             text_list = []
@@ -109,7 +109,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
                     text_list.append(item.get('content', ''))
                 else:
                     text_list.append(str(item))
-            
+
             # Prepare request payload
             payload = {
                 "model": model,
@@ -117,7 +117,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             }
             if dimensions:
                 payload["dimensions"] = dimensions
-            
+
             # Call OpenAI API
             response = requests.post(
                 f"{self.base_url}/embeddings",
@@ -129,7 +129,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             # Extract embeddings
             embeddings = []
             for i, item in enumerate(result.get('data', [])):
@@ -141,37 +141,37 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
                 if isinstance(texts[i], dict):
                     embedding_data['metadata'] = texts[i].get('metadata', {})
                 embeddings.append(embedding_data)
-            
+
             # Store result
             result_data = {
                 'embeddings': embeddings,
                 'model': model,
                 'usage': result.get('usage', {})
             }
-            
+
             # Handle single vs multiple embeddings
             if single_text and embeddings:
                 result_data['embedding'] = embeddings[0]['embedding']
-            
+
             self.resources[resource_id] = {
                 "id": resource_id,
                 "type_name": type_name,
                 "attributes": result_data
             }
-            
+
             # Create response
             new_state_struct = Struct()
             ParseDict(result_data, new_state_struct)
-            
+
             new_state = provider_pb2.ResourceState(
                 id=resource_id,
                 type=type_name,
                 attributes=new_state_struct,
                 status='ready'
             )
-            
+
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
-            
+
         except requests.exceptions.RequestException as e:
             diag = self._create_diagnostic(
                 provider_pb2.Diagnostic.ERROR,

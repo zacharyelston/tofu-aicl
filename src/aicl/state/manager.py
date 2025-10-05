@@ -90,7 +90,7 @@ class StateManager:
         """Get resource by exact type and name match."""
         if not self.current_state:
             return None
-        
+
         # Look for exact match using type.name pattern
         for res in self.current_state.resources.values():
             if res.type == resource_type:
@@ -103,7 +103,7 @@ class StateManager:
     def get_all_resources_as_dict(self) -> dict:
         if not self.current_state:
             return {}
-        
+
         output = defaultdict(lambda: defaultdict(dict))
         for res in self.current_state.resources.values():
             # This is a simplification and assumes unique resource names

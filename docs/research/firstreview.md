@@ -88,7 +88,7 @@ Issues:
 - State is loaded once at start, but resources are added during execution
 - If execution fails mid-way, partial state is saved (no transactions)
 
-**Solution:** 
+**Solution:**
 - Use exact lookups with a resource registry: `{(type, name) -> resource_id}`
 - Implement state locking or make operations atomic
 - Consider transaction-like semantics (rollback on failure)
@@ -290,7 +290,7 @@ Before I focus only on problems, here's what you've done RIGHT:
 
 Before moving forward, the development team should decide:
 
-1. **Is this a provisioning tool or an execution engine?** 
+1. **Is this a provisioning tool or an execution engine?**
    - If both, how do you clearly separate the two modes?
 
 2. **Should pipelines be first-class citizens?**
