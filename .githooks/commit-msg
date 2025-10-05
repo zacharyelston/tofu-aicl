@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# Commit-msg hook to validate commit message format
+# Follows Conventional Commits 1.0.0 specification
+# Format: type[optional scope]: <description> [optional body] [optional footer(s)]
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+echo "🔍 Validating commit message format (Conventional Commits 1.0.0)..."
+
+# Skip validation if this is a merge commit or empty message
+if [[ "$COMMIT_MSG" == Merge* ]] || [[ "$COMMIT_MSG" == *skip*validation* ]] || [ -z "$COMMIT_MSG" ]; then
+    echo "✅ Skipping validation"
+    exit 0
+fi
+
+# Split message into lines for analysis
+IFS=$'\n' read -rd '' -a LINES <<<"$COMMIT_MSG"
+
+# First line is the subject line (required)
+SUBJECT="${LINES[0]}"
+
+# Check if subject line exists and is not empty
+if [ -z "$SUBJECT" ]; then
+    echo "❌ Empty commit message"
+    exit 1
+fi
+
+# Check if message is single line (no body/footer)
+LINE_COUNT=$(echo "$COMMIT_MSG" | wc -l)
+if [ "$LINE_COUNT" -gt 1 ]; then
+    # Multi-line message - validate body/footer format if present
+    BODY_START=2
+
+    # Check if there's a body (starts after blank line)
+    if [ ${#LINES[@]} -gt 1 ] && [ -n "${LINES[1]}" ]; then
+        echo "❌ Multi-line commit message with body detected!"
+        echo ""
+        echo "Current message:"
+        echo "$COMMIT_MSG"
+        echo ""
+        echo "💡 Conventional Commits allows:"
+        echo "  - Single line: type(scope): description"
+        echo "  - With body: type(scope): description\\n\\nBody text"
+        echo "  - With footer: type(scope): description\\n\\nFooter: value"
+        echo ""
+        echo "📖 See CONTRIBUTING.md for format guidelines"
+        exit 1
+    fi
+fi
+
+# Validate subject line format: type[optional scope]: <description>
+# Must start with type, followed by optional scope in parentheses, then colon and space
+if [[ ! "$SUBJECT" =~ ^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert|BREAKING\ CHANGE|build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-zA-Z0-9_-]+\))?:\ [a-zA-Z0-9].* ]]; then
+    echo "❌ Invalid commit message format!"
+    echo ""
+    echo "Current: $SUBJECT"
+    echo ""
+    echo "💡 Required format: type(scope): description"
+    echo ""
+    echo "Valid types:"
+    echo "  • feat     - A new feature"
+    echo "  • fix      - A bug fix"
+    echo "  • docs     - Documentation only changes"
+    echo "  • style    - Changes that do not affect the meaning of the code"
+    echo "  • refactor - A code change that neither fixes a bug nor adds a feature"
+    echo "  • test     - Adding missing tests or correcting existing tests"
+    echo "  • chore    - Changes to the build process or auxiliary tools"
+    echo "  • ci       - Changes to our CI configuration files and scripts"
+    echo "  • build    - Changes that affect the build system"
+    echo "  • perf     - A code change that improves performance"
+    echo "  • revert   - Reverts a previous commit"
+    echo ""
+    echo "Scope (optional): (api), (ui), (docs), etc."
+    echo "Description: Imperative mood, start with lowercase"
+    echo ""
+    echo "Examples:"
+    echo "  ✅ feat(api): add user authentication endpoint"
+    echo "  ✅ fix(pipeline): correct Terraform state lock issue"
+    echo "  ✅ docs(readme): update deployment instructions"
+    echo "  ✅ refactor(auth): simplify password validation logic"
+    echo ""
+    echo "📖 See CONTRIBUTING.md for complete guidelines"
+    exit 1
+fi
+
+# Check for common style issues
+if [[ "$SUBJECT" =~ ^[A-Z] ]]; then
+    echo "⚠️  Style: Description should start with lowercase (imperative mood)"
+    echo "   Current: $SUBJECT"
+    echo "   Should be: ${SUBJECT,}"
+    echo ""
+    echo "💡 You can fix this or continue (style warning only)"
+fi
+
+if [[ "$SUBJECT" =~ \ $ ]]; then
+    echo "⚠️  Style: Trailing space at end of commit message"
+    echo "💡 You can fix this or continue"
+fi
+
+# Check for breaking change indicator (!)
+if [[ "$SUBJECT" =~ !: ]]; then
+    echo "✅ Breaking change detected (indicated by !)"
+fi
+
+echo "✅ Valid commit message (Conventional Commits 1.0.0)"
+exit 0

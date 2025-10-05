@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Pre-commit hook for code quality checks
+
+echo "🔍 Running pre-commit checks..."
+
+# Check for Python syntax errors
+echo "📝 Checking Python syntax..."
+python_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
+
+if [ -n "$python_files" ]; then
+    for file in $python_files; do
+        python3 -m py_compile "$file" 2>/dev/null
+        if [ $? -ne 0 ]; then
+            echo "❌ Python syntax error in $file"
+            python3 -m py_compile "$file"
+            exit 1
+        fi
+    done
+    echo "✅ Python syntax check passed"
+fi
+
+# Check for trailing whitespace
+echo "🧹 Checking for trailing whitespace..."
+if git diff --cached --check; then
+    echo "✅ No trailing whitespace"
+else
+    echo "❌ Trailing whitespace found"
+    echo "💡 Fix with: git diff --cached --check"
+    exit 1
+fi
+
+# Check for large files (>1MB)
+echo "📦 Checking file sizes..."
+large_files=$(git diff --cached --name-only --diff-filter=ACM | while read file; do
+    if [ -f "$file" ]; then
+        size=$(wc -c < "$file")
+        if [ $size -gt 1048576 ]; then
+            echo "$file ($(numfmt --to=iec-i --suffix=B $size))"
+        fi
+    fi
+done)
+
+if [ -n "$large_files" ]; then
+    echo "⚠️  Warning: Large files detected:"
+    echo "$large_files"
+    echo "💡 Consider using Git LFS for large files"
+fi
+
+echo "✅ Pre-commit checks passed"
+exit 0
