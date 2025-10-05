@@ -39,18 +39,30 @@ The project originally used Docker containers for provider isolation. In Replit 
 python run.py <config_file.aicl>
 ```
 
-Example: `python run.py test_simple.aicl`
+Example: `python run.py rag_pipeline_test.aicl`
 
 ### Workflow
-The "AICL Engine" workflow runs the test configuration, demonstrating:
+The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrating:
 1. Provider startup (subprocess mode)
-2. Resource provisioning
-3. Execution
+2. Resource provisioning (file loading → text splitting)
+3. Execution with interpolation resolution
 4. Automatic cleanup/teardown
 
-## Recent Changes
+## Recent Changes (October 5, 2025)
+- **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
+- **HCL Evaluator**: Native interpolation resolution for `${resource.type.name.attributes.field}` syntax with proper support for complex nested data structures (lists of dicts)
+- **Protobuf Serialization**: Updated to use `ParseDict`/`MessageToDict` for correct handling of nested structures between engine and providers
 - **Subprocess Provider Mode**: Replaced Docker containers with Python subprocess execution
 - **PYTHONPATH Configuration**: Added workspace root to allow providers to import proto modules
 - **Provider Name Resolution**: Fixed source field parsing (e.g., "aicl/file_loader" → "file_loader")
 - **Secrets Integration**: Using Replit Secrets for API key management
 - **Proto Compilation**: Generated gRPC stubs from provider.proto
+
+## Architecture Components
+- **Parser** (`parser.py`): HCL configuration parsing
+- **Provider Registry** (`provider_registry.py`): Centralized provider metadata
+- **Evaluator** (`evaluator.py`): HCL interpolation and expression resolution
+- **Planner** (`planner.py`): Dependency resolution and topological sorting
+- **Executor** (`executor.py`): Resource provisioning and state management
+- **State Manager** (`state/manager.py`): Persistent state tracking
+- **Engine** (`core/engine.py`): Orchestration and lifecycle management
