@@ -1,9 +1,14 @@
 # Bootstrap Pipeline - Run Once to Create Service Connections
 # This pipeline creates the Azure DevOps service connections needed for the main pipeline.
-# It uses the standardized script from the ancera-iac repository.
 
 trigger: none  # Manual trigger only
 pr: none     # Don't run on PRs
+
+parameters:
+  - name: managementServiceConnection
+    displayName: 'Management Azure RM Service Connection'
+    type: string
+    default: 'ancera-service-connection' # Default, but can be overridden at runtime
 
 resources:
   repositories:
@@ -21,9 +26,7 @@ steps:
   - task: AzureCLI@2
     displayName: 'Bootstrap: Create ACR Service Connection'
     inputs:
-      # This pipeline requires a pre-existing management service connection
-      # with permissions to create other service connections.
-      azureSubscription: 'ancera-service-connection'
+      azureSubscription: ${{ parameters.managementServiceConnection }}
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
@@ -42,5 +45,4 @@ steps:
         
         echo "✅ Bootstrap complete! Service connection 'tofu-aicl-acr-connection' is ready."
     env:
-      # The script uses the System.AccessToken to authenticate with Azure DevOps
       AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

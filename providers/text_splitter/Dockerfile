@@ -3,11 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY providers/text_splitter/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy proto files and generate code
-COPY ./proto/ ./proto/
+COPY proto/ ./proto/
 RUN python -m grpc_tools.protoc \
     -I. \
     --python_out=. \
@@ -15,7 +15,7 @@ RUN python -m grpc_tools.protoc \
     proto/provider.proto
 
 # Copy provider code
-COPY server.py .
+COPY providers/text_splitter/server.py .
 
 EXPOSE 50051
 
