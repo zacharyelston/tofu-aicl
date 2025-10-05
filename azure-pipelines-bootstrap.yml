@@ -9,6 +9,7 @@ parameters:
     displayName: 'Management Azure RM Service Connection'
     type: string
     default: 'tofu-aicl-acr-connection'
+
 resources:
   repositories:
     - repository: iac
