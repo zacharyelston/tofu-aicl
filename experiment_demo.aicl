@@ -1,0 +1,112 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    evaluator = {
+      source  = "aicl/evaluator"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# Experiment 1: Claude's response to a technical question
+resource "chat" "claude_technical" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Explain how authentication tokens work in REST APIs. Include: 1) what tokens are, 2) how they're generated, 3) security best practices."
+    }
+  ]
+  max_tokens = 400
+}
+
+# Experiment 2: GPT-4's response to the same question
+resource "chat" "gpt4_technical" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "user"
+      content = "Explain how authentication tokens work in REST APIs. Include: 1) what tokens are, 2) how they're generated, 3) security best practices."
+    }
+  ]
+  max_tokens = 400
+}
+
+# Grade Claude's response
+resource "grade" "claude_evaluation" {
+  response = "${resource.chat.claude_technical.attributes.response}"
+  context = ""
+  criteria = [
+    {
+      name = "explains_tokens"
+      type = "contains"
+      value = "token"
+      weight = 2
+    },
+    {
+      name = "mentions_generation"
+      type = "contains"
+      value = "generate"
+      weight = 2
+    },
+    {
+      name = "discusses_security"
+      type = "contains"
+      value = "security"
+      weight = 2
+    },
+    {
+      name = "mentions_https"
+      type = "contains"
+      value = "https"
+      weight = 1
+    },
+    {
+      name = "reasonable_length"
+      type = "min_length"
+      value = "200"
+      weight = 1
+    }
+  ]
+}
+
+# Grade GPT-4's response
+resource "grade" "gpt4_evaluation" {
+  response = "${resource.chat.gpt4_technical.attributes.response}"
+  context = ""
+  criteria = [
+    {
+      name = "explains_tokens"
+      type = "contains"
+      value = "token"
+      weight = 2
+    },
+    {
+      name = "mentions_generation"
+      type = "contains"
+      value = "generate"
+      weight = 2
+    },
+    {
+      name = "discusses_security"
+      type = "contains"
+      value = "security"
+      weight = 2
+    },
+    {
+      name = "mentions_https"
+      type = "contains"
+      value = "https"
+      weight = 1
+    },
+    {
+      name = "reasonable_length"
+      type = "min_length"
+      value = "200"
+      weight = 1
+    }
+  ]
+}

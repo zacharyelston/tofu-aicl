@@ -19,6 +19,9 @@ class Executor:
             'chat': 'openrouter',
             'upsert': 'pinecone',
             'query': 'pinecone',
+            'grade': 'evaluator',
+            'experiment': 'evaluator',
+            'compare': 'evaluator',
         }
 
     def execute_node(self, node_id, resource_map):
@@ -171,6 +174,54 @@ class Executor:
                 print(f"    → Upserted {upserted_count} vector(s) to namespace '{namespace}'")
                 if dimension != 'unknown':
                     print(f"    → Vector dimension: {dimension}")
+        
+        # Grade
+        elif res_type == 'grade':
+            total_score = attributes.get('total_score', 0)
+            max_score = attributes.get('max_score', 0)
+            percentage = attributes.get('percentage', 0)
+            passed = attributes.get('passed', False)
+            characteristics = attributes.get('characteristics', {})
+            
+            status = "✅ PASSED" if passed else "❌ FAILED"
+            print(f"    → Score: {total_score}/{max_score} ({percentage:.1f}%) {status}")
+            
+            if characteristics:
+                word_count = characteristics.get('word_count', 0)
+                contains_code = characteristics.get('contains_code', False)
+                print(f"    → Response: {word_count} words" + (" (contains code)" if contains_code else ""))
+        
+        # Experiment
+        elif res_type == 'experiment':
+            exp_id = attributes.get('experiment_id', 'unknown')
+            model = attributes.get('model', 'unknown')
+            context_type = attributes.get('context_type', 'unknown')
+            word_count = attributes.get('word_count', 0)
+            
+            print(f"    → Experiment ID: {exp_id}")
+            print(f"    → Model: {model}, Context: {context_type}")
+            print(f"    → Response: {word_count} words")
+        
+        # Compare
+        elif res_type == 'compare':
+            total_exp = attributes.get('total_experiments', 0)
+            results = attributes.get('results', [])
+            avg_pct = attributes.get('avg_percentage', 0)
+            max_pct = attributes.get('max_percentage', 0)
+            min_pct = attributes.get('min_percentage', 0)
+            all_passed = attributes.get('all_passed', False)
+            
+            print(f"    → Compared {total_exp} experiment(s)")
+            
+            # Extract and show models
+            models = [r.get('model', 'unknown') for r in results]
+            if models:
+                print(f"    → Models: {', '.join(models)}")
+            
+            if avg_pct > 0:
+                print(f"    → Scores: avg={avg_pct:.1f}%, max={max_pct:.1f}%, min={min_pct:.1f}%")
+                status = "✅ All passed" if all_passed else "⚠️ Some failed"
+                print(f"    → Status: {status}")
     
     def _dict_to_struct(self, d: dict) -> Struct:
         s = Struct()

@@ -51,6 +51,13 @@ class ProviderRegistry:
                 container_image="aicl/command_assertion:1.0.0",
                 description="Validation and testing"
             ),
+            ProviderMetadata(
+                name="evaluator",
+                source="aicl/evaluator",
+                version="1.0.0",
+                container_image="aicl/evaluator:1.0.0",
+                description="Grade responses, run experiments, compare results"
+            ),
         ]
 
         for provider in default_providers:

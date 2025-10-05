@@ -1,0 +1,112 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    evaluator = {
+      source  = "aicl/evaluator"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# Load rule documentation
+resource "loader_files" "rule_docs" {
+  path = "./APIDocs/replit"
+  glob = "**/rules*.md"
+}
+
+# Load API documentation
+resource "loader_files" "api_docs" {
+  path = "./APIDocs/replit"
+  glob = "**/api*.md"
+}
+
+# Test Claude with rule docs
+resource "chat" "claude_rules" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert documenter. Read the following rules and summarize the key points."
+    },
+    {
+      role = "user"
+      content = "Documentation:\n\n${resource.loader_files.rule_docs.attributes.documents}\n\nProvide a concise summary of the most important rules."
+    }
+  ]
+  max_tokens = 500
+}
+
+# Test GPT-4 with same rule docs
+resource "chat" "gpt4_rules" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert documenter. Read the following rules and summarize the key points."
+    },
+    {
+      role = "user"
+      content = "Documentation:\n\n${resource.loader_files.rule_docs.attributes.documents}\n\nProvide a concise summary of the most important rules."
+    }
+  ]
+  max_tokens = 500
+}
+
+# Grade Claude's response
+resource "grade" "claude_score" {
+  response = "${resource.chat.claude_rules.attributes.response}"
+  context = "${resource.loader_files.rule_docs.attributes.documents}"
+  criteria = [
+    {
+      name = "mentions_authentication"
+      type = "contains"
+      value = "auth"
+      weight = 2
+    },
+    {
+      name = "mentions_permissions"
+      type = "contains"
+      value = "permission"
+      weight = 2
+    },
+    {
+      name = "concise"
+      type = "max_length"
+      value = "600"
+      weight = 1
+    }
+  ]
+}
+
+# Grade GPT-4's response
+resource "grade" "gpt4_score" {
+  response = "${resource.chat.gpt4_rules.attributes.response}"
+  context = "${resource.loader_files.rule_docs.attributes.documents}"
+  criteria = [
+    {
+      name = "mentions_authentication"
+      type = "contains"
+      value = "auth"
+      weight = 2
+    },
+    {
+      name = "mentions_permissions"
+      type = "contains"
+      value = "permission"
+      weight = 2
+    },
+    {
+      name = "concise"
+      type = "max_length"
+      value = "600"
+      weight = 1
+    }
+  ]
+}

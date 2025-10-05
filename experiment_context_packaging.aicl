@@ -1,0 +1,102 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    evaluator = {
+      source  = "aicl/evaluator"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# Test 1: Full directory context
+resource "loader_files" "full_context" {
+  path = "./APIDocs/replit"
+  glob = "**/*.md"
+}
+
+resource "chat" "with_full_context" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Based on this documentation:\n\n${resource.loader_files.full_context.attributes.documents}\n\nHow do I authenticate a user?"
+    }
+  ]
+  max_tokens = 300
+}
+
+# Test 2: Trimmed context (auth files only)
+resource "loader_files" "trimmed_context" {
+  path = "./APIDocs/replit"
+  glob = "**/*auth*.md"
+}
+
+resource "chat" "with_trimmed_context" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Based on this documentation:\n\n${resource.loader_files.trimmed_context.attributes.documents}\n\nHow do I authenticate a user?"
+    }
+  ]
+  max_tokens = 300
+}
+
+# Grade full context response
+resource "grade" "full_context_grade" {
+  response = "${resource.chat.with_full_context.attributes.response}"
+  context = "${resource.loader_files.full_context.attributes.documents}"
+  criteria = [
+    {
+      name = "mentions_token"
+      type = "contains"
+      value = "token"
+      weight = 2
+    },
+    {
+      name = "mentions_api"
+      type = "contains"
+      value = "api"
+      weight = 1
+    },
+    {
+      name = "focused"
+      type = "max_length"
+      value = "400"
+      weight = 1
+    }
+  ]
+}
+
+# Grade trimmed context response
+resource "grade" "trimmed_context_grade" {
+  response = "${resource.chat.with_trimmed_context.attributes.response}"
+  context = "${resource.loader_files.trimmed_context.attributes.documents}"
+  criteria = [
+    {
+      name = "mentions_token"
+      type = "contains"
+      value = "token"
+      weight = 2
+    },
+    {
+      name = "mentions_api"
+      type = "contains"
+      value = "api"
+      weight = 1
+    },
+    {
+      name = "focused"
+      type = "max_length"
+      value = "400"
+      weight = 1
+    }
+  ]
+}
