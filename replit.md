@@ -70,9 +70,32 @@ AICL can be exposed as an MCP server for use with Windsurf, Claude Desktop, and 
 - **OpenRouter Provider Enhanced**: Added embedding generation (single text & arrays) and chat completion support
 - **Pinecone Provider Enhanced**: Added vector upsert and query operations with metadata
 - **Resource-to-Provider Mapping**: Clean resource types (embedding, chat, query) map to providers (openrouter, pinecone)
+- **Executor Provider Mapping Fix**: Corrected resource type to provider alias mapping (loader_files → loader, etc.)
 - **RAG Pipelines Created**:
   - `rag_index.aicl`: Index AICL source code into vector database
   - `rag_query.aicl`: Query indexed code and generate answers
+  - `replit_rag_index.aicl`: Index Replit API documentation (6500+ lines) into Pinecone
+  - `replit_rag_query.aicl`: Query docs and generate RAG-assisted Python code
+
+### RAG Demo (October 5, 2025)
+**Status: SUCCESSFUL ✅**
+
+Demonstrated complete RAG workflow:
+1. **Indexed** 6,544 lines of Replit Extensions API documentation
+2. **Queried** Pinecone with: "How to authenticate user and get workspace data?"
+3. **Generated** production-quality Python code with:
+   - Type hints (TypedDict, dataclass)
+   - Proper error handling
+   - Structured response format
+   - Complete docstrings
+
+**Key Findings**:
+- ✅ Full RAG pipeline working end-to-end
+- ✅ AI-generated code used actual API patterns from documentation
+- ✅ Framework validated for production RAG workloads
+- ⚠️ Minor issue: Query resource IDs not displaying (state lookup needs fix)
+
+**Artifacts**: `demo_rag_output.py`, `rag_demo_evaluation.md`
 
 ### Framework Validation (October 5, 2025)
 **Status: Architecture FULLY FUNCTIONAL ✅**

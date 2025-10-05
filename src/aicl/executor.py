@@ -60,11 +60,66 @@ class Executor:
             )
             self.state_manager.add_resource(resource_state)
             print(f"  + Resource '{res_name}' ({state.id}) created successfully.")
+            
+            # Display output abstract
+            self._display_output_abstract(res_type, res_name, attributes)
         except grpc.RpcError as e:
             print(f"Error applying resource {res_name}: {e.details()}")
             # self.destroy() # This should be handled in the engine
             raise
 
+    def _display_output_abstract(self, res_type, res_name, attributes):
+        """Display a summary of resource output"""
+        
+        # Chat responses
+        if res_type == 'chat':
+            response = attributes.get('response', '')
+            if response:
+                preview = response[:150] + '...' if len(response) > 150 else response
+                print(f"    → Response: {preview}")
+        
+        # Query results
+        elif res_type == 'query':
+            matches = attributes.get('matches', [])
+            results = attributes.get('results', [])
+            count = attributes.get('count', len(matches))
+            if count > 0:
+                print(f"    → Retrieved {count} document(s)")
+                if results and len(results) > 0:
+                    top_result = results[0]
+                    score = top_result.get('score', 0)
+                    source = top_result.get('source', 'unknown')[:50]
+                    print(f"    → Top match: {source} (score: {score:.3f})")
+        
+        # Embeddings
+        elif res_type == 'embedding':
+            embeddings = attributes.get('embeddings', [])
+            vector = attributes.get('vector', [])
+            count = attributes.get('count', len(embeddings))
+            if count > 0:
+                print(f"    → Generated {count} embedding(s)")
+            elif vector:
+                print(f"    → Generated 1 embedding vector ({len(vector)} dimensions)")
+        
+        # File loader
+        elif res_type == 'loader_files':
+            documents = attributes.get('documents', [])
+            if documents:
+                print(f"    → Loaded {len(documents)} document(s)")
+        
+        # Text splitter
+        elif res_type == 'text_splitter':
+            chunks = attributes.get('chunks', [])
+            if chunks:
+                print(f"    → Created {len(chunks)} chunk(s)")
+        
+        # Upsert
+        elif res_type == 'upsert':
+            upserted_count = attributes.get('upserted_count', 0)
+            namespace = attributes.get('namespace', 'default')
+            if upserted_count > 0:
+                print(f"    → Upserted {upserted_count} vector(s) to namespace '{namespace}'")
+    
     def _dict_to_struct(self, d: dict) -> Struct:
         s = Struct()
         ParseDict(d, s)
