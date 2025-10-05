@@ -41,16 +41,17 @@ class Executor:
         resolved_config = self.evaluator.resolve_config(config_attrs, context)
         
         # Add resource metadata for provider to use in ID generation
-        resolved_config['_aicl_resource_name'] = res_name
-        resolved_config['_aicl_resource_type'] = res_type
+        # Use camelCase to avoid Protobuf field name transformation issues
+        resolved_config['aiclResourceName'] = res_name
+        resolved_config['aiclResourceType'] = res_type
 
         config_struct = self._dict_to_struct(resolved_config)
         req = provider_pb2.ApplyResourceChangeRequest(type_name=res_type, config=config_struct)
         
         try:
             response = provider.stub.ApplyResourceChange(req)
-            # self._handle_diagnostics(response.diagnostics) # This should be handled in the engine
             state = response.new_state
+            
             attributes = MessageToDict(state.attributes)
             metadata = MessageToDict(state.metadata)
             resource_state = ResourceState(

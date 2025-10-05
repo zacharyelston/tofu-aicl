@@ -49,6 +49,8 @@ The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrati
 4. Automatic cleanup/teardown
 
 ## Recent Changes (October 5, 2025)
+
+### Core Framework
 - **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
 - **HCL Evaluator**: Native interpolation resolution for `${resource.type.name.attributes.field}` syntax with proper support for complex nested data structures (lists of dicts)
 - **Protobuf Serialization**: Updated to use `ParseDict`/`MessageToDict` for correct handling of nested structures between engine and providers
@@ -57,6 +59,15 @@ The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrati
 - **Provider Name Resolution**: Fixed source field parsing (e.g., "aicl/file_loader" → "file_loader")
 - **Secrets Integration**: Using Replit Secrets for API key management
 - **Proto Compilation**: Generated gRPC stubs from provider.proto
+
+### RAG Implementation
+- **OpenRouter Provider Enhanced**: Added embedding generation (single text & arrays) and chat completion support
+- **Pinecone Provider Enhanced**: Added vector upsert and query operations with metadata
+- **Resource-to-Provider Mapping**: Clean resource types (embedding, chat, query) map to providers (openrouter, pinecone)
+- **RAG Pipelines Created**: 
+  - `rag_index.aicl`: Index AICL source code into vector database
+  - `rag_query.aicl`: Query indexed code and generate answers
+- **Known Issue**: Resource ID propagation between executor and providers (see `problems/rag-context-passing-issue.md`)
 
 ## Architecture Components
 - **Parser** (`parser.py`): HCL configuration parsing

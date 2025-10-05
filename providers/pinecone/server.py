@@ -28,7 +28,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
         config = MessageToDict(request.config)
         
         # Get resource name for consistent ID generation
-        resource_name = config.get('_aicl_resource_name', '')
+        resource_name = config.get('aiclResourceName', '')
         
         # Handle upsert operation
         if request.type_name in ["upsert", "pinecone_upsert"]:

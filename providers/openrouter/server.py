@@ -58,11 +58,8 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
     def ApplyResourceChange(self, request, context):
         config = MessageToDict(request.config)
         
-        print(f"DEBUG OpenRouter: Config keys: {list(config.keys())}")
-        
         # Use resource name from AICL config for consistent IDs
-        resource_name = config.get('_aicl_resource_name', config.get('aicl_resource_name', ''))
-        print(f"DEBUG OpenRouter: resource_name = '{resource_name}'")
+        resource_name = config.get('aiclResourceName', '')
         
         if request.prior_state and request.prior_state.id:
             resource_id = request.prior_state.id
@@ -70,8 +67,6 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             resource_id = f"{request.type_name}-{resource_name}"
         else:
             resource_id = f"or-{uuid.uuid4().hex[:8]}"
-        
-        print(f"DEBUG OpenRouter: Generated resource_id = '{resource_id}'")
         
         # Handle embeddings generation
         if request.type_name in ["embedding", "openrouter_embeddings"]:
