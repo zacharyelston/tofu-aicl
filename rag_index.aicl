@@ -8,8 +8,8 @@ terraform {
       source  = "aicl/text_splitter"
       version = "~> 1.0"
     }
-    openrouter = {
-      source  = "aicl/openrouter"
+    openai = {
+      source  = "aicl/openai"
       version = "~> 1.0"
     }
     pinecone = {
@@ -30,12 +30,12 @@ resource "splitter_text" "chunks" {
   chunk_overlap = 100
 }
 
-resource "openrouter_embeddings" "vectors" {
+resource "embedding" "vectors" {
   texts = "${resource.splitter_text.chunks.attributes.chunks}"
-  model = "openai/text-embedding-3-small"
+  model = "text-embedding-3-small"
 }
 
 resource "pinecone_upsert" "store" {
-  vectors   = "${resource.openrouter_embeddings.vectors.attributes.embeddings}"
+  vectors   = "${resource.embedding.vectors.attributes.embeddings}"
   namespace = "aicl-source"
 }

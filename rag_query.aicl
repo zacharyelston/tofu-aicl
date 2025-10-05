@@ -1,5 +1,8 @@
 terraform {
   required_providers {
+    openai = {
+      source = "aicl/openai"
+    }
     openrouter = {
       source = "aicl/openrouter"
     }
@@ -11,11 +14,11 @@ terraform {
 
 resource "embedding" "question_vector" {
   text = "What are the main components of the AICL engine and how do they interact?"
-  model = "openai/text-embedding-3-small"
+  model = "text-embedding-3-small"
 }
 
 resource "query" "relevant_chunks" {
-  vector = "${resource.embedding.question_vector.vector}"
+  vector = "${resource.embedding.question_vector.attributes.embedding}"
   top_k = 5
   namespace = "aicl-source"
 }
