@@ -1,9 +1,10 @@
 import hcl2
-import docker
 import grpc
 import time
 import os
-from typing import Dict, Any
+import subprocess
+import sys
+from typing import Dict, Any, Optional
 from pathlib import Path
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.json_format import MessageToDict
@@ -15,23 +16,42 @@ from aicl.executor import Executor
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
+USE_SUBPROCESS_MODE = os.getenv("AICL_SUBPROCESS_MODE", "true").lower() == "true"
+
 class ProviderContainer:
-    def __init__(self, name, container, grpc_stub):
+    def __init__(self, name, process_or_container, grpc_stub, is_subprocess=False):
         self.name = name
-        self.container = container
+        self.process_or_container = process_or_container
         self.stub = grpc_stub
+        self.is_subprocess = is_subprocess
 
     def stop(self):
-        print(f"Stopping provider container: {self.name}")
-        self.container.stop()
+        print(f"Stopping provider: {self.name}")
+        if self.is_subprocess:
+            if hasattr(self.process_or_container, 'terminate'):
+                self.process_or_container.terminate()
+                try:
+                    self.process_or_container.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.process_or_container.kill()
+        else:
+            self.process_or_container.stop()
 
 class AICLEngine:
     def __init__(self, config_path: str):
         self.config_path = Path(config_path)
-        self.docker_client = docker.from_env()
+        self.docker_client = None
+        if not USE_SUBPROCESS_MODE:
+            try:
+                import docker
+                self.docker_client = docker.from_env()
+            except Exception as e:
+                print(f"Warning: Docker not available: {e}")
+                print("Falling back to subprocess mode")
         self.provider_containers: Dict[str, ProviderContainer] = {}
         self.state_manager = StateManager()
         self.parsed_config = self._parse_config()
+        self.next_port = 50051
 
 
     def _parse_config(self):
@@ -39,6 +59,80 @@ class AICLEngine:
         return parser.parse()
 
     def _start_providers(self):
+        if USE_SUBPROCESS_MODE or self.docker_client is None:
+            self._start_providers_subprocess()
+        else:
+            self._start_providers_docker()
+
+    def _start_providers_subprocess(self):
+        print("Starting providers in subprocess mode...")
+        providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
+        for name, config in providers.items():
+            print(f"Starting subprocess for provider '{name}'...")
+            try:
+                # Find the provider server script
+                provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / name
+                server_script = provider_dir / 'server.py'
+                
+                if not server_script.exists():
+                    raise FileNotFoundError(f"Provider server script not found: {server_script}")
+
+                # Load environment variables
+                env_vars = os.environ.copy()
+                env_file_path = self.config_path.parent / '.env'
+                if env_file_path.exists():
+                    with open(env_file_path, 'r') as f:
+                        for line in f:
+                            if '=' in line and not line.strip().startswith('#'):
+                                key, value = line.strip().split('=', 1)
+                                env_vars[key] = value
+
+                # Assign a port
+                port = self.next_port
+                self.next_port += 1
+                env_vars['PORT'] = str(port)
+
+                # Start the provider as a subprocess
+                process = subprocess.Popen(
+                    [sys.executable, str(server_script)],
+                    env=env_vars,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                
+                # Wait for the provider to start
+                time.sleep(2)
+                
+                # Connect to the provider
+                print(f"Connecting to provider on 127.0.0.1:{port}")
+                channel = grpc.insecure_channel(f'127.0.0.1:{port}')
+                stub = provider_pb2_grpc.ProviderStub(channel)
+                
+                # Retry connection with exponential backoff
+                max_retries = 5
+                for attempt in range(max_retries):
+                    try:
+                        # Configure the provider
+                        provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
+                        config_struct = self._dict_to_struct(provider_config)
+                        configure_req = provider_pb2.ConfigureRequest(config=config_struct)
+                        stub.Configure(configure_req)
+                        break
+                    except grpc.RpcError as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(2 ** attempt)  # Exponential backoff
+                        else:
+                            raise
+
+                self.provider_containers[name] = ProviderContainer(name, process, stub, is_subprocess=True)
+                print(f"Provider '{name}' is running on port {port}")
+            except Exception as e:
+                print(f"Error starting provider {name}: {e}")
+                self.destroy()
+                raise
+
+    def _start_providers_docker(self):
         print("Starting provider containers...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
         for name, config in providers.items():
@@ -89,7 +183,7 @@ class AICLEngine:
                         else:
                             raise
 
-                self.provider_containers[name] = ProviderContainer(name, container, stub)
+                self.provider_containers[name] = ProviderContainer(name, container, stub, is_subprocess=False)
                 print(f"Provider '{name}' is running on port {host_port}")
             except Exception as e:
                 print(f"Error starting provider {name}: {e}")
