@@ -34,6 +34,7 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
             for chunk in chunks:
                 all_chunks.append({'content': chunk, 'source': doc.get('path')})
 
+        output_attributes = {'chunks': all_chunks}
         output_struct = Struct()
         output_struct.update(output_attributes)
 

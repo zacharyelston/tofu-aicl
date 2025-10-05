@@ -70,8 +70,15 @@ class AICLEngine:
         for name, config in providers.items():
             print(f"Starting subprocess for provider '{name}'...")
             try:
+                # Extract the actual provider name from the source field
+                source = config.get('source', '')
+                if '/' in source:
+                    provider_name = source.split('/')[-1]
+                else:
+                    provider_name = name
+                
                 # Find the provider server script
-                provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / name
+                provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / provider_name
                 server_script = provider_dir / 'server.py'
                 
                 if not server_script.exists():
@@ -79,6 +86,14 @@ class AICLEngine:
 
                 # Load environment variables
                 env_vars = os.environ.copy()
+                
+                # Add workspace root to PYTHONPATH so providers can find proto files
+                workspace_root = str(Path(__file__).parent.parent.parent.parent)
+                if 'PYTHONPATH' in env_vars:
+                    env_vars['PYTHONPATH'] = f"{workspace_root}:{env_vars['PYTHONPATH']}"
+                else:
+                    env_vars['PYTHONPATH'] = workspace_root
+                
                 env_file_path = self.config_path.parent / '.env'
                 if env_file_path.exists():
                     with open(env_file_path, 'r') as f:
@@ -97,7 +112,7 @@ class AICLEngine:
                     [sys.executable, str(server_script)],
                     env=env_vars,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
                     text=True
                 )
                 
