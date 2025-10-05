@@ -20,7 +20,7 @@ To create a service connection, the bootstrap pipeline itself needs permission t
 
 1.  **Go to Azure DevOps**: Navigate to the `tofu-aicl` project.
 2.  **Run the Bootstrap Pipeline**: Find `azure-pipelines-bootstrap.yml` and click "Run".
-3.  **Authorize Resources**: The pipeline will pause and ask for permission to use the `example-service-connection`. An administrator must approve this. This is a one-time action.
+3.  **Authorize Resources**: The pipeline will pause and ask for permission to use the `service-connection-placeholder`. An administrator must approve this. This is a one-time action.
 4.  **Completion**: Once approved, the pipeline will run the script and create the `tofu-aicl-acr-connection`.
 
 ### After Bootstrap
