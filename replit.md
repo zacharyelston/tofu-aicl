@@ -23,16 +23,22 @@ The project originally used Docker containers for provider isolation. In Replit 
 - **Dependencies**: python-hcl2, grpcio, grpcio-tools, protobuf, requests, python-dotenv
 
 ### API Secrets (Stored in Replit Secrets)
+- `OPENAI_API_KEY`: For OpenAI embeddings API
 - `OPENROUTER_API_KEY`: For AI model access via OpenRouter
 - `PINECONE_API_KEY`: Vector database authentication
 - `PINECONE_HOST_URL`: Pinecone index endpoint
+- `AZURE_OPENAI_API_KEY`: (Optional) For Azure OpenAI embeddings
+- `AZURE_OPENAI_ENDPOINT`: (Optional) Azure OpenAI endpoint URL
+- `AZURE_OPENAI_API_VERSION`: (Optional) Azure API version (default: 2024-02-01)
 
 ### Available Providers
 1. **file_loader** - Load documents from filesystem
 2. **text_splitter** - Chunk text for embeddings
-3. **openrouter** - Access AI models (Claude, GPT-4, etc.)
-4. **pinecone** - Vector database for RAG
-5. **command_assertion** - Validation and testing
+3. **openai** - OpenAI embeddings (text-embedding-3-small)
+4. **azure_openai** - Azure OpenAI embeddings
+5. **openrouter** - AI models via OpenRouter (chat, completions)
+6. **pinecone** - Vector database for RAG
+7. **command_assertion** - Validation and testing
 
 ### Running the Engine
 ```bash
@@ -79,12 +85,15 @@ Through comprehensive debugging, validated:
 - ✅ Error handling and diagnostic propagation
 - ✅ Chat completion resources work correctly
 
-**API Integration Issues** (see `problems/rag-api-integration-issues.md`):
-- OpenRouter `/embeddings` endpoint returns JSON parse errors (likely unsupported)
-- Pinecone queries fail with 400 errors due to invalid vectors from failed embeddings
-- Chat completions work perfectly, proving provider architecture is sound
+**Solution Implemented** (October 5, 2025):
+- ✅ Created dedicated OpenAI provider for embeddings (text-embedding-3-small)
+- ✅ Created Azure OpenAI provider for enterprise embeddings
+- ✅ Updated RAG pipelines to use OpenAI embeddings instead of OpenRouter
+- ✅ End-to-end RAG pipeline now fully functional
+- ✅ All resources created and destroyed successfully
 
-**Solution Path**: Switch to supported embedding provider (OpenAI direct, Cohere, Voyage AI)
+**Known Issues**:
+- OpenRouter doesn't support `/embeddings` endpoint (documented in `problems/rag-api-integration-issues.md`)
 
 ## Architecture Components
 - **Parser** (`parser.py`): HCL configuration parsing
