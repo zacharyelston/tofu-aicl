@@ -2,6 +2,7 @@ import grpc
 import os
 from concurrent import futures
 from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
@@ -21,18 +22,21 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
         return chunks
 
     def ApplyResourceChange(self, request, context):
-        config = dict(request.config)
-        documents = config.get('documents', [])
-        print(f"--- DEBUG: Received documents: {documents} ---")
-        chunk_size = int(config.get('chunk_size', 1000))
-        chunk_overlap = int(config.get('chunk_overlap', 200))
+        try:
+            config = MessageToDict(request.config)
+            documents = config.get('documents', [])
+            chunk_size = int(config.get('chunk_size', 1000))
+            chunk_overlap = int(config.get('chunk_overlap', 200))
 
-        all_chunks = []
-        for doc in documents:
-            text = doc.get('content', '')
-            chunks = self._split_text(text, chunk_size, chunk_overlap)
-            for chunk in chunks:
-                all_chunks.append({'content': chunk, 'source': doc.get('path')})
+            all_chunks = []
+            for doc in documents:
+                text = doc.get('content', '')
+                chunks = self._split_text(text, chunk_size, chunk_overlap)
+                for chunk in chunks:
+                    all_chunks.append({'content': chunk, 'source': doc.get('path')})
+        except Exception as e:
+            print(f"ERROR in text_splitter: {e}")
+            raise
 
         output_attributes = {'chunks': all_chunks}
         output_struct = Struct()

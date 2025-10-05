@@ -3,6 +3,7 @@ import os
 from concurrent import futures
 from pathlib import Path
 from google.protobuf.struct_pb2 import Struct
+from google.protobuf.json_format import MessageToDict
 
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
@@ -17,7 +18,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Unsupported resource type: {request.type_name}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
-        config = dict(request.config)
+        config = MessageToDict(request.config)
         path = config.get('path', '.')
         glob = config.get('glob', '**/*')
 

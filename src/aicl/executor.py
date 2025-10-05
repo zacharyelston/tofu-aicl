@@ -1,4 +1,4 @@
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict
 from google.protobuf.struct_pb2 import Struct
 import grpc
 import proto.provider_pb2 as provider_pb2
@@ -46,5 +46,5 @@ class Executor:
 
     def _dict_to_struct(self, d: dict) -> Struct:
         s = Struct()
-        s.update(d)
+        ParseDict(d, s)
         return s

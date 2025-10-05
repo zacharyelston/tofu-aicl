@@ -12,21 +12,21 @@ class HCLEvaluator:
         
         if self.state_manager.current_state:
             for resource_id, resource_state in self.state_manager.current_state.resources.items():
-                parts = resource_id.split('.')
-                if len(parts) >= 2:
-                    res_type = parts[0]
-                    res_name = parts[1]
-                    
-                    if res_type not in context['resource']:
-                        context['resource'][res_type] = {}
-                    
-                    context['resource'][res_type][res_name] = {
-                        'id': resource_state.id,
-                        'type': resource_state.type,
-                        'attributes': resource_state.attributes,
-                        'metadata': resource_state.metadata,
-                        'status': resource_state.status
-                    }
+                # Resource type is stored in resource_state.type (e.g., "loader_files")
+                # Resource name is extracted from ID (e.g., "loader-docs" -> "docs")
+                res_type = resource_state.type
+                res_name = resource_id.split('-', 1)[1] if '-' in resource_id else resource_id
+                
+                if res_type not in context['resource']:
+                    context['resource'][res_type] = {}
+                
+                context['resource'][res_type][res_name] = {
+                    'id': resource_state.id,
+                    'type': resource_state.type,
+                    'attributes': resource_state.attributes,
+                    'metadata': resource_state.metadata,
+                    'status': resource_state.status
+                }
         
         return context
     
@@ -34,16 +34,21 @@ class HCLEvaluator:
         if not isinstance(value, str):
             return value
         
-        def replace_interpolation(match):
-            expr = match.group(1).strip()
-            return str(self._evaluate_expression(expr, context))
+        # Check if the entire value is a single interpolation
+        full_match = self.interpolation_pattern.fullmatch(value.strip())
+        if full_match:
+            expr = full_match.group(1).strip()
+            # Return the actual value without converting to string
+            return self._evaluate_expression(expr, context)
         
+        # Handle partial interpolations (string with embedded ${...})
         if '${' in value:
+            def replace_interpolation(match):
+                expr = match.group(1).strip()
+                result = self._evaluate_expression(expr, context)
+                return str(result) if result is not None else ''
+            
             resolved = self.interpolation_pattern.sub(replace_interpolation, value)
-            if resolved == value:
-                return value
-            if resolved.replace('${', '').replace('}', '') == value.replace('${', '').replace('}', ''):
-                return resolved
             return resolved
         
         return value
