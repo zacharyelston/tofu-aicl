@@ -15,8 +15,7 @@ class Executor:
         self.resource_to_provider = {
             'file_loader': 'loader',
             'text_splitter': 'splitter',
-            'embedding': 'openai',
-            'azure_openai_embedding': 'azure_openai',
+            'embedding': 'openrouter',
             'chat': 'openrouter',
             'upsert': 'pinecone',
             'query': 'pinecone',

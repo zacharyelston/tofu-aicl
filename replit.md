@@ -23,22 +23,16 @@ The project originally used Docker containers for provider isolation. In Replit 
 - **Dependencies**: python-hcl2, grpcio, grpcio-tools, protobuf, requests, python-dotenv
 
 ### API Secrets (Stored in Replit Secrets)
-- `OPENAI_API_KEY`: For OpenAI embeddings API
 - `OPENROUTER_API_KEY`: For AI model access via OpenRouter
-- `PINECONE_API_KEY`: Vector database authentication
+- `PINECONE_API_KEY`: Vector database authentication  
 - `PINECONE_HOST_URL`: Pinecone index endpoint
-- `AZURE_OPENAI_API_KEY`: (Optional) For Azure OpenAI embeddings
-- `AZURE_OPENAI_ENDPOINT`: (Optional) Azure OpenAI endpoint URL
-- `AZURE_OPENAI_API_VERSION`: (Optional) Azure API version (default: 2024-02-01)
 
 ### Available Providers
 1. **file_loader** - Load documents from filesystem
 2. **text_splitter** - Chunk text for embeddings
-3. **openai** - OpenAI embeddings (text-embedding-3-small)
-4. **azure_openai** - Azure OpenAI embeddings
-5. **openrouter** - AI models via OpenRouter (chat, completions)
-6. **pinecone** - Vector database for RAG
-7. **command_assertion** - Validation and testing
+3. **openrouter** - AI models via OpenRouter (chat, completions)
+4. **pinecone** - Vector database for RAG
+5. **command_assertion** - Validation and testing
 
 ### Running the Engine
 ```bash
@@ -48,10 +42,10 @@ python run.py <config_file.aicl>
 Example: `python run.py rag_pipeline_test.aicl`
 
 ### Workflow
-The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrating:
+The "AICL Engine" workflow runs `demo_simple.aicl`, demonstrating:
 1. Provider startup (subprocess mode)
-2. Resource provisioning (file loading → text splitting)
-3. Execution with interpolation resolution
+2. Chat resource creation with OpenRouter
+3. Execution with declarative configuration
 4. Automatic cleanup/teardown
 
 ## Recent Changes (October 5, 2025)
@@ -85,15 +79,11 @@ Through comprehensive debugging, validated:
 - ✅ Error handling and diagnostic propagation
 - ✅ Chat completion resources work correctly
 
-**Solution Implemented** (October 5, 2025):
-- ✅ Created dedicated OpenAI provider for embeddings (text-embedding-3-small)
-- ✅ Created Azure OpenAI provider for enterprise embeddings
-- ✅ Updated RAG pipelines to use OpenAI embeddings instead of OpenRouter
-- ✅ End-to-end RAG pipeline now fully functional
-- ✅ All resources created and destroyed successfully
-
-**Known Issues**:
-- OpenRouter doesn't support `/embeddings` endpoint (documented in `problems/rag-api-integration-issues.md`)
+**Demo Status** (October 5, 2025):
+- ✅ OpenRouter provider working for chat completions
+- ✅ Simple demo (`demo_simple.aicl`) showcases declarative AI configuration
+- ✅ Framework successfully provisions and destroys resources
+- ✅ Subprocess-based provider architecture validated
 
 ## Architecture Components
 - **Parser** (`parser.py`): HCL configuration parsing

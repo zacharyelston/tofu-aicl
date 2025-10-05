@@ -6,13 +6,13 @@ terraform {
   }
 }
 
-resource "chat" "answer" {
+resource "chat" "greeting" {
   model = "anthropic/claude-3.5-sonnet"
   messages = [
     {
       role = "user"
-      content = "What are the main components of the AICL engine and how do they interact? Please provide a detailed technical explanation."
+      content = "Explain what AICL (AI Configuration Language) is in 2-3 sentences."
     }
   ]
-  max_tokens = 1000
+  max_tokens = 200
 }

@@ -4,38 +4,25 @@ terraform {
       source  = "aicl/file_loader"
       version = "~> 1.0"
     }
-    splitter = {
-      source  = "aicl/text_splitter"
-      version = "~> 1.0"
-    }
-    openai = {
-      source  = "aicl/openai"
-      version = "~> 1.0"
-    }
-    pinecone = {
-      source  = "aicl/pinecone"
+    openrouter = {
+      source  = "aicl/openrouter"
       version = "~> 1.0"
     }
   }
 }
 
-resource "loader_files" "source_code" {
-  path = "./src"
-  glob = "**/*.py"
+resource "loader_files" "docs" {
+  path = "./docs"
+  glob = "**/*.md"
 }
 
-resource "splitter_text" "chunks" {
-  documents     = "${resource.loader_files.source_code.attributes.documents}"
-  chunk_size    = 1000
-  chunk_overlap = 100
-}
-
-resource "embedding" "vectors" {
-  texts = "${resource.splitter_text.chunks.attributes.chunks}"
-  model = "text-embedding-3-small"
-}
-
-resource "pinecone_upsert" "store" {
-  vectors   = "${resource.embedding.vectors.attributes.embeddings}"
-  namespace = "aicl-source"
+resource "chat" "summary" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Summarize the following documentation:\n\n${resource.loader_files.docs.attributes.documents}"
+    }
+  ]
+  max_tokens = 500
 }
