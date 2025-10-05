@@ -11,10 +11,10 @@ class Executor:
         self.state_manager = state_manager
         self.evaluator = HCLEvaluator(state_manager)
 
-        # Map resource types to provider names
+        # Map resource types to provider names (using aliases from HCL config)
         self.resource_to_provider = {
-            'file_loader': 'loader',
-            'text_splitter': 'splitter',
+            'loader_files': 'loader',
+            'text_splitter': 'text_splitter',
             'embedding': 'openrouter',
             'chat': 'openrouter',
             'upsert': 'pinecone',

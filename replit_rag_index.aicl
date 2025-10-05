@@ -1,0 +1,41 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    text_splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "loader_files" "replit_docs" {
+  path = "./APIDocs/replit"
+  glob = "**/*.md"
+}
+
+resource "text_splitter" "chunks" {
+  documents = "${resource.loader_files.replit_docs.attributes.documents}"
+  chunk_size = 1000
+  chunk_overlap = 200
+}
+
+resource "embedding" "doc_embeddings" {
+  model = "openai/text-embedding-3-small"
+  texts = "${resource.text_splitter.chunks.attributes.chunks}"
+}
+
+resource "upsert" "index_docs" {
+  vectors = "${resource.embedding.doc_embeddings.attributes.embeddings}"
+  namespace = "replit-api-docs"
+}

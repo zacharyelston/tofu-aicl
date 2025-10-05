@@ -1,0 +1,39 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "embedding" "query_vector" {
+  model = "openai/text-embedding-3-small"
+  text = "How do I authenticate a user and get their workspace data using the Replit Extensions API?"
+}
+
+resource "query" "search_docs" {
+  vector = "${resource.embedding.query_vector.attributes.vector}"
+  top_k = 5
+  namespace = "replit-api-docs"
+  include_metadata = true
+}
+
+resource "chat" "write_feature" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert developer helping to implement a new feature. Use the provided documentation context to write accurate, complete code."
+    },
+    {
+      role = "user"
+      content = "Based on this Replit Extensions API documentation:\n\n${resource.query.search_docs.attributes.results}\n\nWrite a complete Python function that:\n1. Authenticates a Replit user\n2. Gets their workspace data\n3. Returns a structured response with user info and workspace details\n\nInclude proper error handling and type hints."
+    }
+  ]
+  max_tokens = 2000
+}
