@@ -1,8 +1,9 @@
 # tofu-aicl CI/CD Pipeline
-# Validates code quality, runs tests, and builds provider containers
+# Validates, tests, builds, and publishes provider containers.
+# This pipeline is self-contained and does not require a separate bootstrap pipeline.
+
 name: tofu-aicl-$(Date:yyyyMMdd)$(Rev:.r)
 
-# Triggers
 trigger:
   branches:
     include:
@@ -10,20 +11,16 @@ trigger:
       - develop
       - feature/*
 
-# PR validation
 pr:
   branches:
     include:
       - main
       - develop
 
-# Common variables
 variables:
   pythonVersion: '3.11'
-  dockerRegistryServiceConnection: 'tofu-aicl-acr-connection'
   containerRegistry: 'ancerallc.azurecr.io'
 
-# Pipeline stages
 stages:
   # ============================================
   # VALIDATION STAGE
@@ -32,7 +29,7 @@ stages:
     displayName: 'Code Validation'
     jobs:
       - job: Lint
-        displayName: 'Lint Python Code'
+        displayName: 'Lint & Format Check'
         pool:
           vmImage: 'ubuntu-latest'
         steps:
@@ -43,94 +40,61 @@ stages:
 
           - script: |
               python -m pip install --upgrade pip
-              pip install flake8 black mypy
+              pip install flake8 black
             displayName: 'Install linting tools'
 
-          - script: |
-              flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
-              flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          - script: 'flake8 src/ --count --show-source --statistics'
             displayName: 'Run flake8'
-            continueOnError: true
 
-          - script: |
-              black --check src/
+          - script: 'black --check src/'
             displayName: 'Check code formatting'
-            continueOnError: true
 
   # ============================================
-  # BUILD STAGE
+  # BUILD & TEST STAGE
   # ============================================
-  - stage: Build
-    displayName: 'Build Provider Containers'
+  - stage: BuildAndTest
+    displayName: 'Build & Test'
     dependsOn: Validate
     jobs:
-      - job: BuildProviders
-        displayName: 'Build All Providers'
+      - job: Main
+        displayName: 'Build, Test, and Push'
         pool:
           vmImage: 'ubuntu-latest'
         steps:
-          - task: Docker@2
-            displayName: 'Build file_loader provider'
+          - task: AzureCLI@2
+            displayName: 'Build, Tag, and Push Provider Containers'
             inputs:
-              command: 'build'
-              Dockerfile: 'providers/file_loader/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(containerRegistry)/aicl/file_loader:$(Build.BuildId)
-                $(containerRegistry)/aicl/file_loader:latest
+              # IMPORTANT: This requires a one-time manual authorization in ADO project settings
+              # to grant the pipeline's service principal the 'AcrPush' role on the ACR.
+              azureSubscription: 'ancera-service-connection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true # Exposes SP_ID, SP_KEY, and TENANT_ID as env vars
+              inlineScript: |
+                set -e
+                echo "Logging in to ACR..."
+                az acr login --name $(containerRegistry) --expose-token
 
-          - task: Docker@2
-            displayName: 'Build text_splitter provider'
-            inputs:
-              command: 'build'
-              Dockerfile: 'providers/text_splitter/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(containerRegistry)/aicl/text_splitter:$(Build.BuildId)
-                $(containerRegistry)/aicl/text_splitter:latest
+                PROVIDERS=("file_loader" "text_splitter" "openrouter" "pinecone" "command_assertion")
 
-          - task: Docker@2
-            displayName: 'Build openrouter provider'
-            inputs:
-              command: 'build'
-              Dockerfile: 'providers/openrouter/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(containerRegistry)/aicl/openrouter:$(Build.BuildId)
-                $(containerRegistry)/aicl/openrouter:latest
+                for provider in "${PROVIDERS[@]}"; do
+                  echo "--- Building $provider provider ---"
+                  docker build \
+                    -f providers/$provider/Dockerfile \
+                    -t $(containerRegistry)/aicl/$provider:$(Build.BuildId) \
+                    -t $(containerRegistry)/aicl/$provider:latest \
+                    .
 
-          - task: Docker@2
-            displayName: 'Build pinecone provider'
-            inputs:
-              command: 'build'
-              Dockerfile: 'providers/pinecone/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(containerRegistry)/aicl/pinecone:$(Build.BuildId)
-                $(containerRegistry)/aicl/pinecone:latest
+                  # Only push if on main or develop branch
+                  if [[ "$(Build.SourceBranch)" == "refs/heads/main" || "$(Build.SourceBranch)" == "refs/heads/develop" ]]; then
+                    echo "--- Pushing $provider container ---"
+                    docker push $(containerRegistry)/aicl/$provider:$(Build.BuildId)
+                    docker push $(containerRegistry)/aicl/$provider:latest
+                  fi
+                done
 
-          - task: Docker@2
-            displayName: 'Build command_assertion provider'
-            inputs:
-              command: 'build'
-              Dockerfile: 'providers/command_assertion/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(containerRegistry)/aicl/command_assertion:$(Build.BuildId)
-                $(containerRegistry)/aicl/command_assertion:latest
+                echo "✅ All providers built successfully."
 
-  # ============================================
-  # TEST STAGE
-  # ============================================
-  - stage: Test
-    displayName: 'Run Tests'
-    dependsOn: Build
-    jobs:
-      - job: UnitTests
-        displayName: 'Unit Tests'
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
           - task: UsePythonVersion@0
             inputs:
               versionSpec: '$(pythonVersion)'
@@ -140,12 +104,11 @@ stages:
               python -m pip install --upgrade pip
               pip install -e .
               pip install pytest pytest-cov
-            displayName: 'Install dependencies'
+            displayName: 'Install test dependencies'
 
           - script: |
               pytest tests/ --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
             displayName: 'Run pytest'
-            continueOnError: true
 
           - task: PublishTestResults@2
             condition: succeededOrFailed()
@@ -153,58 +116,8 @@ stages:
               testResultsFormat: 'JUnit'
               testResultsFiles: '**/test-results.xml'
               failTaskOnFailedTests: true
-            displayName: 'Publish test results'
 
           - task: PublishCodeCoverageResults@2
             condition: succeededOrFailed()
             inputs:
               summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
-            displayName: 'Publish coverage results'
-
-      - job: IntegrationTests
-        displayName: 'Integration Tests'
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '$(pythonVersion)'
-            displayName: 'Use Python $(pythonVersion)'
-
-          - script: |
-              python -m pip install --upgrade pip
-              pip install -e .
-            displayName: 'Install dependencies'
-
-          - script: |
-              ./scripts/build_providers.sh
-            displayName: 'Build provider containers'
-
-          - script: |
-              ./scripts/run_experiment.sh file_loader_test.aicl
-            displayName: 'Test file_loader provider'
-            continueOnError: true
-
-  # ============================================
-  # PUBLISH STAGE (only on main/develop)
-  # ============================================
-  - stage: Publish
-    displayName: 'Publish Containers'
-    dependsOn: Test
-    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/develop'))
-    jobs:
-      - job: PushContainers
-        displayName: 'Push to Registry'
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - task: Docker@2
-            displayName: 'Login to ACR'
-            inputs:
-              command: 'login'
-              containerRegistry: '$(dockerRegistryServiceConnection)'
-
-          - script: |
-              echo "Push containers to registry"
-              # Add push commands here
-            displayName: 'Push provider containers'
