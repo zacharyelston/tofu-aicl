@@ -45,7 +45,11 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
             print(f"TRACEBACK: {traceback.format_exc()}")
             raise
 
-        output_attributes = {'chunks': all_chunks}
+        output_attributes = {
+            'chunks': all_chunks,
+            'chunk_size': chunk_size,
+            'chunk_overlap': chunk_overlap
+        }
         output_struct = Struct()
         ParseDict(output_attributes, output_struct)
 

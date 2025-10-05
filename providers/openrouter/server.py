@@ -197,11 +197,15 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             result = response.json()
 
             answer = result['choices'][0]['message']['content']
+            
+            # Extract usage/token information if available
+            usage = result.get('usage', {})
 
             output_attributes = {
                 'response': answer,
                 'model': model,
-                'message_count': len(messages)
+                'message_count': len(messages),
+                'usage': usage
             }
 
             output_struct = Struct()

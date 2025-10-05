@@ -118,10 +118,14 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
+            
+            # Get dimension from first vector
+            dimension = len(vectors[0].get('values', [])) if vectors else 0
 
             output_attributes = {
                 'upserted_count': result.get('upsertedCount', len(vectors)),
                 'namespace': namespace,
+                'dimension': dimension,
                 'vectors': vectors
             }
 

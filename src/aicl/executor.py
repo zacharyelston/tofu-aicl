@@ -61,64 +61,116 @@ class Executor:
             self.state_manager.add_resource(resource_state)
             print(f"  + Resource '{res_name}' ({state.id}) created successfully.")
             
+            # Merge config with attributes for metadata display (config has original values)
+            display_attrs = {**resolved_config, **attributes}
+            
             # Display output abstract
-            self._display_output_abstract(res_type, res_name, attributes)
+            self._display_output_abstract(res_type, res_name, display_attrs)
         except grpc.RpcError as e:
             print(f"Error applying resource {res_name}: {e.details()}")
             # self.destroy() # This should be handled in the engine
             raise
 
     def _display_output_abstract(self, res_type, res_name, attributes):
-        """Display a summary of resource output"""
+        """Display a summary of resource output with metadata"""
         
         # Chat responses
         if res_type == 'chat':
             response = attributes.get('response', '')
+            model = attributes.get('model', 'unknown')
+            usage = attributes.get('usage', {})
+            
             if response:
                 preview = response[:150] + '...' if len(response) > 150 else response
                 print(f"    → Response: {preview}")
+            
+            # Show model and token usage if available
+            if model:
+                print(f"    → Model: {model}")
+            if usage:
+                prompt_tokens = usage.get('prompt_tokens', 0)
+                completion_tokens = usage.get('completion_tokens', 0)
+                total_tokens = usage.get('total_tokens', prompt_tokens + completion_tokens)
+                if total_tokens > 0:
+                    print(f"    → Tokens: {total_tokens} total ({prompt_tokens} prompt + {completion_tokens} completion)")
         
         # Query results
         elif res_type == 'query':
             matches = attributes.get('matches', [])
             results = attributes.get('results', [])
             count = attributes.get('count', len(matches))
+            namespace = attributes.get('namespace', 'default')
+            
             if count > 0:
-                print(f"    → Retrieved {count} document(s)")
+                print(f"    → Retrieved {count} document(s) from namespace '{namespace}'")
+                
+                # Show top matches with scores
                 if results and len(results) > 0:
-                    top_result = results[0]
-                    score = top_result.get('score', 0)
-                    source = top_result.get('source', 'unknown')[:50]
-                    print(f"    → Top match: {source} (score: {score:.3f})")
+                    for i, result in enumerate(results[:3]):  # Show top 3
+                        score = result.get('score', 0)
+                        source = result.get('source', 'unknown')
+                        # Truncate long source paths
+                        if len(source) > 60:
+                            source = '...' + source[-57:]
+                        print(f"    → Match #{i+1}: {source} (score: {score:.3f})")
         
         # Embeddings
         elif res_type == 'embedding':
             embeddings = attributes.get('embeddings', [])
             vector = attributes.get('vector', [])
+            model = attributes.get('model', 'unknown')
             count = attributes.get('count', len(embeddings))
+            
             if count > 0:
                 print(f"    → Generated {count} embedding(s)")
+                print(f"    → Model: {model}")
+                if embeddings and len(embeddings) > 0:
+                    dims = len(embeddings[0].get('vector', []))
+                    if dims > 0:
+                        print(f"    → Dimensions: {dims}")
             elif vector:
-                print(f"    → Generated 1 embedding vector ({len(vector)} dimensions)")
+                print(f"    → Generated 1 embedding vector")
+                print(f"    → Model: {model}")
+                print(f"    → Dimensions: {len(vector)}")
         
         # File loader
         elif res_type == 'loader_files':
             documents = attributes.get('documents', [])
+            path = attributes.get('path', 'unknown')
+            total_chars = sum(len(doc.get('content', '')) for doc in documents)
+            
             if documents:
-                print(f"    → Loaded {len(documents)} document(s)")
+                print(f"    → Loaded {len(documents)} document(s) from '{path}'")
+                print(f"    → Total size: {total_chars:,} characters")
+                # Show sample filenames
+                if len(documents) > 0:
+                    sources = [doc.get('source', '') for doc in documents[:3]]
+                    for src in sources:
+                        if src:
+                            print(f"    → File: {src}")
         
         # Text splitter
         elif res_type == 'text_splitter':
             chunks = attributes.get('chunks', [])
+            chunk_size = attributes.get('chunk_size', 'unknown')
+            overlap = attributes.get('chunk_overlap', 'unknown')
+            
             if chunks:
+                total_chars = sum(len(chunk.get('content', '')) for chunk in chunks)
                 print(f"    → Created {len(chunks)} chunk(s)")
+                print(f"    → Chunk size: {chunk_size}, overlap: {overlap}")
+                print(f"    → Total size: {total_chars:,} characters")
         
         # Upsert
         elif res_type == 'upsert':
             upserted_count = attributes.get('upserted_count', 0)
             namespace = attributes.get('namespace', 'default')
+            dimension = attributes.get('dimension', 'unknown')
+            
             if upserted_count > 0:
                 print(f"    → Upserted {upserted_count} vector(s) to namespace '{namespace}'")
+                if dimension != 'unknown':
+                    print(f"    → Vector dimension: {dimension}")
     
     def _dict_to_struct(self, d: dict) -> Struct:
         s = Struct()

@@ -33,7 +33,11 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
                         'content': content
                     })
 
-            output_attributes = {'documents': documents}
+            output_attributes = {
+                'documents': documents,
+                'path': path,
+                'glob': glob
+            }
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
 

@@ -42,11 +42,22 @@ python run.py <config_file.aicl>
 Example: `python run.py rag_pipeline_test.aicl`
 
 ### Workflow
-The "AICL Engine" workflow runs `demo_simple.aicl`, demonstrating:
-1. Provider startup (subprocess mode)
-2. Chat resource creation with OpenRouter
-3. Execution with declarative configuration
+The "AICL Engine" workflow runs `replit_rag_query.aicl`, demonstrating:
+1. Terraform-style plan output showing query and resources before execution
+2. Provider startup (subprocess mode)
+3. RAG pipeline execution with enhanced metadata display
 4. Automatic cleanup/teardown
+
+### Output Format (October 5, 2025)
+**Terraform-Style Plan & Apply**:
+- **Plan Phase**: Shows query, resource count, and configuration details before execution
+- **Apply Phase**: Displays enhanced metadata for each resource:
+  - **Chat**: Response preview, model used, token usage (prompt + completion)
+  - **Query**: Document count, namespace, top matches with similarity scores  
+  - **Embedding**: Model, dimensions, vector count
+  - **File Loader**: Path, file count, total character size, sample filenames
+  - **Text Splitter**: Chunk count, size/overlap settings, total characters
+  - **Upsert**: Vector count, namespace, dimensions
 
 ### MCP Integration (Model Context Protocol)
 AICL can be exposed as an MCP server for use with Windsurf, Claude Desktop, and other MCP-compatible AI editors:
@@ -55,6 +66,17 @@ AICL can be exposed as an MCP server for use with Windsurf, Claude Desktop, and 
 - **Setup Guide**: See `MCP_WINDSURF_SETUP.md` for complete configuration instructions
 
 ## Recent Changes (October 5, 2025)
+
+### UX Enhancements (October 5, 2025)
+- **Terraform-Style Output**: Plan phase shows query and resources before execution
+- **Enhanced Resource Metadata**: Rich output abstracts display:
+  - Chat: Model, token usage breakdown (prompt/completion)
+  - Query: Namespace, top 3 matches with scores
+  - Embedding: Model, dimensions
+  - File Loader: Path, file count, character count, sample filenames
+  - Text Splitter: Chunk settings, total size
+  - Upsert: Vector count, dimensions, namespace
+- **Comprehensive Demo Guide**: `RAG_DEMO_GUIDE.md` with step-by-step tutorial for new users
 
 ### Core Framework
 - **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
