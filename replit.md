@@ -32,7 +32,8 @@ The project originally used Docker containers for provider isolation. In Replit 
 2. **text_splitter** - Chunk text for embeddings
 3. **openrouter** - AI models via OpenRouter (chat, completions)
 4. **pinecone** - Vector database for RAG
-5. **command_assertion** - Validation and testing
+5. **evaluator** - Grade responses, run experiments, compare models
+6. **command_assertion** - Validation and testing
 
 ### Running the Engine
 ```bash
@@ -76,7 +77,19 @@ AICL can be exposed as an MCP server for use with Windsurf, Claude Desktop, and 
   - File Loader: Path, file count, character count, sample filenames
   - Text Splitter: Chunk settings, total size
   - Upsert: Vector count, dimensions, namespace
+  - Grade: Score breakdown, pass/fail status, response characteristics
+  - Experiment: Model tested, context type, word count
+  - Compare: Multi-model comparison with avg/max/min scores
 - **Comprehensive Demo Guide**: `RAG_DEMO_GUIDE.md` with step-by-step tutorial for new users
+
+### Evaluation Framework (October 5, 2025)
+- **Model Comparison**: Test multiple AI models (Claude, GPT-4, etc.) against identical prompts and criteria
+- **Context Experiments**: Compare full directory vs. trimmed context packaging for optimal results
+- **Objective Grading**: Score responses with weighted criteria (contains, min/max length, etc.)
+- **Metrics Capture**: Track token usage, word count, code detection, focus keywords
+- **Experiment Configs**: `experiment_demo.aicl`, `experiment_model_comparison.aicl`, `experiment_context_packaging.aicl`
+- **Usage Guide**: `EXPERIMENT_GUIDE.md` with patterns and best practices
+- **Evaluator Provider**: New provider for grading, experiments, and comparisons
 
 ### Core Framework
 - **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
