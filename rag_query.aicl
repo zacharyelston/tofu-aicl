@@ -1,0 +1,36 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source = "aicl/openrouter"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+    }
+  }
+}
+
+resource "embedding" "question_vector" {
+  text = "What are the main components of the AICL engine and how do they interact?"
+  model = "openai/text-embedding-3-small"
+}
+
+resource "query" "relevant_chunks" {
+  vector = "${resource.embedding.question_vector.vector}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+resource "chat" "answer" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful assistant that answers questions based on provided code documentation. Use only the provided context to answer questions."
+    },
+    {
+      role = "user"
+      content = "Context: ${resource.query.relevant_chunks.attributes.results}\n\nQuestion: What are the main components of the AICL engine and how do they interact?"
+    }
+  ]
+  max_tokens = 1000
+}

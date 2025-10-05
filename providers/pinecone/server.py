@@ -27,13 +27,16 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
 
         config = MessageToDict(request.config)
         
+        # Get resource name for consistent ID generation
+        resource_name = config.get('_aicl_resource_name', '')
+        
         # Handle upsert operation
-        if request.type_name == "pinecone_upsert":
-            return self._upsert_vectors(config, request.type_name)
+        if request.type_name in ["upsert", "pinecone_upsert"]:
+            return self._upsert_vectors(config, request.type_name, resource_name)
         
         # Handle query operation
-        elif request.type_name == "pinecone_query":
-            return self._query_vectors(config, request.type_name)
+        elif request.type_name in ["query", "pinecone_query"]:
+            return self._query_vectors(config, request.type_name, resource_name)
         
         # Handle index creation (legacy)
         elif request.type_name == "pinecone_index":
@@ -85,7 +88,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Failed to create Pinecone index: {error_msg}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
     
-    def _upsert_vectors(self, config, type_name):
+    def _upsert_vectors(self, config, type_name, resource_name=''):
         """Upsert vectors to Pinecone index"""
         vectors = config.get('vectors', [])
         namespace = config.get('namespace', '')
@@ -125,8 +128,11 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
             
+            # Use resource name from AICL config for consistent IDs
+            resource_id = f"{type_name}-{resource_name}" if resource_name else f"upsert-{namespace or 'default'}"
+            
             new_state = provider_pb2.ResourceState(
-                id=f"upsert-{namespace or 'default'}",
+                id=resource_id,
                 type=type_name,
                 attributes=output_struct,
                 status='ready'
@@ -137,7 +143,7 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Upsert failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
     
-    def _query_vectors(self, config, type_name):
+    def _query_vectors(self, config, type_name, resource_name=''):
         """Query vectors from Pinecone index"""
         vector = config.get('vector', [])
         top_k = config.get('top_k', 5)
@@ -167,15 +173,24 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             
             # Extract matches
             matches = []
+            results = []
             for match in result.get('matches', []):
+                metadata = match.get('metadata', {})
                 matches.append({
                     'id': match.get('id'),
                     'score': match.get('score'),
-                    'metadata': match.get('metadata', {})
+                    'metadata': metadata
+                })
+                # Format for easy consumption by chat
+                results.append({
+                    'content': metadata.get('content', ''),
+                    'source': metadata.get('source', ''),
+                    'score': match.get('score', 0)
                 })
             
             output_attributes = {
                 'matches': matches,
+                'results': results,  # Formatted for easy use
                 'namespace': namespace,
                 'count': len(matches)
             }
@@ -183,8 +198,11 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             output_struct = Struct()
             ParseDict(output_attributes, output_struct)
             
+            # Use resource name from AICL config for consistent IDs
+            resource_id = f"{type_name}-{resource_name}" if resource_name else f"query-{namespace or 'default'}"
+            
             new_state = provider_pb2.ResourceState(
-                id=f"query-{namespace or 'default'}",
+                id=resource_id,
                 type=type_name,
                 attributes=output_struct,
                 status='ready'
