@@ -1,0 +1,85 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/file_loader:1.0.0"
+      }
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/text_splitter:1.0.0"
+      }
+    }
+    azure_openai = {
+      source  = "aicl/azure_openai"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/azure_openai:1.0.0"
+      }
+    }
+  }
+}
+
+variable "source_path" {
+  type        = string
+  description = "Path to source documents"
+  default     = "./src"
+}
+
+variable "context_size" {
+  type        = string
+  description = "Context size configuration"
+  default     = "small"
+}
+
+variable "chunk_size" {
+  type        = number
+  description = "Text chunk size"
+  default     = 1000
+}
+
+variable "chunk_overlap" {
+  type        = number
+  description = "Text chunk overlap"
+  default     = 100
+}
+
+# Load source documents
+resource "loader_files" "source_docs" {
+  path = var.source_path
+  glob = "**/*.py"
+}
+
+# Split documents into chunks
+resource "splitter_text" "chunks" {
+  documents     = resource.loader_files.source_docs.attributes.documents
+  chunk_size    = var.chunk_size
+  chunk_overlap = var.chunk_overlap
+}
+
+# Generate embeddings using Azure OpenAI
+resource "azure_openai_embedding" "vectors" {
+  texts = resource.splitter_text.chunks.attributes.chunks
+  model = "text-embedding-ada-002"
+}
+
+# Output results for analysis
+output "embedding_count" {
+  value = length(resource.azure_openai_embedding.vectors.attributes.embeddings)
+}
+
+output "total_cost" {
+  value = resource.azure_openai_embedding.vectors.attributes.usage.total_tokens * 0.00010
+}
+
+output "model_used" {
+  value = "text-embedding-ada-002"
+}
+
+output "provider" {
+  value = "azure"
+}

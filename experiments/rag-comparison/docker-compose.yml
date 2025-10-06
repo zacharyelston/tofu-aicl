@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # AICL Engine
+  aicl-engine:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    environment:
+      - AICL_SUBPROCESS_MODE=false
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+    depends_on:
+      - openai-provider
+      - openrouter-provider
+      - file-loader-provider
+      - text-splitter-provider
+    networks:
+      - aicl-network
+
+  # OpenAI Provider
+  openai-provider:
+    image: aicl/openai:1.0.0
+    ports:
+      - "50051:50051"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - aicl-network
+
+  # OpenRouter Provider  
+  openrouter-provider:
+    image: aicl/openrouter:1.0.0
+    ports:
+      - "50052:50051"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    networks:
+      - aicl-network
+
+  # File Loader Provider
+  file-loader-provider:
+    image: aicl/file_loader:1.0.0
+    ports:
+      - "50053:50051"
+    volumes:
+      - ../..:/workspace
+    networks:
+      - aicl-network
+
+  # Text Splitter Provider
+  text-splitter-provider:
+    image: aicl/text_splitter:1.0.0
+    ports:
+      - "50054:50051"
+    networks:
+      - aicl-network
+
+networks:
+  aicl-network:
+    driver: bridge

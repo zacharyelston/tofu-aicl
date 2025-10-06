@@ -1,0 +1,85 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/file_loader:1.0.0"
+      }
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/text_splitter:1.0.0"
+      }
+    }
+    openai = {
+      source  = "aicl/openai"
+      version = "~> 1.0"
+      container = {
+        image = "aicl/openai:1.0.0"
+      }
+    }
+  }
+}
+
+variable "source_path" {
+  type        = string
+  description = "Path to source documents"
+  default     = "./src"
+}
+
+variable "context_size" {
+  type        = string
+  description = "Context size configuration"
+  default     = "small"
+}
+
+variable "chunk_size" {
+  type        = number
+  description = "Text chunk size"
+  default     = 1000
+}
+
+variable "chunk_overlap" {
+  type        = number
+  description = "Text chunk overlap"
+  default     = 100
+}
+
+# Load source documents
+resource "loader_files" "source_docs" {
+  path = var.source_path
+  glob = "**/*.py"
+}
+
+# Split documents into chunks
+resource "splitter_text" "chunks" {
+  documents     = resource.loader_files.source_docs.attributes.documents
+  chunk_size    = var.chunk_size
+  chunk_overlap = var.chunk_overlap
+}
+
+# Generate embeddings using OpenAI
+resource "embedding" "vectors" {
+  texts = resource.splitter_text.chunks.attributes.chunks
+  model = "text-embedding-3-small"
+}
+
+# Output results for analysis
+output "embedding_count" {
+  value = length(resource.embedding.vectors.attributes.embeddings)
+}
+
+output "total_cost" {
+  value = resource.embedding.vectors.attributes.usage.total_tokens * 0.00002
+}
+
+output "model_used" {
+  value = "text-embedding-3-small"
+}
+
+output "provider" {
+  value = "openai"
+}

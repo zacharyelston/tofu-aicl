@@ -1,0 +1,154 @@
+{
+  "generated_at": "2025-10-06T00:17:24.316582",
+  "analysis_type": "rag_provider_comparison",
+  "git_context": {
+    "git_sha": "d1bc565",
+    "git_branch": "feature/972-phase1-lineage-tracking"
+  },
+  "provider_comparison": {
+    "openai": {
+      "experiment_count": 2,
+      "total_cost_usd": 0.0655,
+      "avg_cost_per_experiment": 0.0328,
+      "total_duration_ms": 1345,
+      "avg_duration_per_experiment": 672,
+      "avg_relevance_score": 0.0,
+      "avg_latency_ms": 0.0,
+      "avg_overall_score": 0.85,
+      "experiments": [
+        "phase2_openai_small_d1bc565",
+        "phase2_openai_tiny_d1bc565"
+      ]
+    },
+    "azure": {
+      "experiment_count": 2,
+      "total_cost_usd": 0.0655,
+      "avg_cost_per_experiment": 0.0328,
+      "total_duration_ms": 1341,
+      "avg_duration_per_experiment": 670,
+      "avg_relevance_score": 0.0,
+      "avg_latency_ms": 0.0,
+      "avg_overall_score": 0.85,
+      "experiments": [
+        "phase2_azure_tiny_d1bc565",
+        "phase2_azure_small_d1bc565"
+      ]
+    }
+  },
+  "context_size_analysis": {
+    "small": {
+      "experiment_count": 2,
+      "provider_count": 2,
+      "providers": [
+        "azure",
+        "openai"
+      ],
+      "avg_relevance_score": 0.0,
+      "avg_latency_ms": 0.0,
+      "avg_overall_score": 0.85,
+      "avg_cost_usd": 0.033,
+      "experiments": [
+        "phase2_openai_small_d1bc565",
+        "phase2_azure_small_d1bc565"
+      ]
+    },
+    "tiny": {
+      "experiment_count": 2,
+      "provider_count": 2,
+      "providers": [
+        "azure",
+        "openai"
+      ],
+      "avg_relevance_score": 0.0,
+      "avg_latency_ms": 0.0,
+      "avg_overall_score": 0.85,
+      "avg_cost_usd": 0.0325,
+      "experiments": [
+        "phase2_openai_tiny_d1bc565",
+        "phase2_azure_tiny_d1bc565"
+      ]
+    }
+  },
+  "lineage_analysis": {
+    "total_experiments": 4,
+    "total_actions_across_all": 48,
+    "total_cost_across_all": 0.131,
+    "total_duration_across_all": 2686,
+    "action_type_distribution": {
+      "provision": 8,
+      "execute": 40
+    },
+    "provider_action_patterns": {
+      "openai": {
+        "total_actions": 24,
+        "total_cost": 0.0655,
+        "total_duration": 1345,
+        "experiments": 2
+      },
+      "azure": {
+        "total_actions": 24,
+        "total_cost": 0.0655,
+        "total_duration": 1341,
+        "experiments": 2
+      }
+    },
+    "git_sha_distribution": {
+      "d1bc565": 4
+    },
+    "phase_distribution": {
+      "2": 4
+    },
+    "avg_actions_per_experiment": 12.0,
+    "avg_cost_per_experiment": 0.03275,
+    "avg_duration_per_experiment": 671.5
+  },
+  "recommendations": [
+    "\ud83c\udfc6 **Best Overall Provider**: Openai (score: 0.850)",
+    "\ud83d\udcb0 **Most Cost-Effective**: Openai ($0.0328 per experiment)",
+    "\ud83d\udccf **Optimal Context Size**: Small (score: 0.850)",
+    "\u2696\ufe0f  **Openai Efficiency Ratio**: 25.9 (score/cost)",
+    "\u2696\ufe0f  **Azure Efficiency Ratio**: 25.9 (score/cost)"
+  ],
+  "experiment_details": [
+    {
+      "filename": "phase2_openai_small_d1bc565",
+      "provider": "openai",
+      "context_size": "small",
+      "phase": 2,
+      "git_sha": "d1bc565",
+      "overall_score": 0.85,
+      "total_cost": 0.033,
+      "total_actions": 12
+    },
+    {
+      "filename": "phase2_openai_tiny_d1bc565",
+      "provider": "openai",
+      "context_size": "tiny",
+      "phase": 2,
+      "git_sha": "d1bc565",
+      "overall_score": 0.85,
+      "total_cost": 0.0325,
+      "total_actions": 12
+    },
+    {
+      "filename": "phase2_azure_tiny_d1bc565",
+      "provider": "azure",
+      "context_size": "tiny",
+      "phase": 2,
+      "git_sha": "d1bc565",
+      "overall_score": 0.85,
+      "total_cost": 0.0325,
+      "total_actions": 12
+    },
+    {
+      "filename": "phase2_azure_small_d1bc565",
+      "provider": "azure",
+      "context_size": "small",
+      "phase": 2,
+      "git_sha": "d1bc565",
+      "overall_score": 0.85,
+      "total_cost": 0.033,
+      "total_actions": 12
+    }
+  ]
+}
