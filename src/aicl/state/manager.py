@@ -15,6 +15,16 @@ class ResourceState:
     metadata: Dict[str, Any] = field(default_factory=dict)
     status: str = "unknown"
 
+    def __init__(self, **kwargs):
+        # Use introspection to set fields defined in the dataclass
+        for f in self.__class__.__dataclass_fields__:
+            if f in kwargs:
+                setattr(self, f, kwargs[f])
+
+        # Handle legacy fields gracefully
+        if 'created_at' in kwargs and 'created_at' not in self.metadata:
+            self.metadata['created_at'] = kwargs['created_at']
+
 @dataclass
 class StateFile:
     version: str = "1.0"
@@ -90,7 +100,7 @@ class StateManager:
         """Get resource by exact type and name match."""
         if not self.current_state:
             return None
-        
+
         # Look for exact match using type.name pattern
         for res in self.current_state.resources.values():
             if res.type == resource_type:
@@ -103,12 +113,11 @@ class StateManager:
     def get_all_resources_as_dict(self) -> dict:
         if not self.current_state:
             return {}
-        
+
         output = defaultdict(lambda: defaultdict(dict))
-        for res in self.current_state.resources.values():
-            # This is a simplification and assumes unique resource names
-            res_name = res.id.split('-')[1] if '-' in res.id else res.id
-            output[res.type][res_name] = {'attributes': res.attributes}
+        # Now that we're using AICL resource names as IDs, this is straightforward
+        for res_id, res_state in self.current_state.resources.items():
+            output[res_state.type][res_id] = asdict(res_state)
         return output
 
     def remove_resource(self, resource_id: str):

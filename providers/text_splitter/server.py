@@ -62,7 +62,7 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
 
     def Validate(self, request, context):
         return provider_pb2.ValidateResponse(success=True)
-        
+
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 

@@ -3,7 +3,7 @@ Name: tofu-aicl
 Version: 0.1.0
 Summary: A declarative framework for ephemeral AI infrastructure.
 Requires-Dist: python-hcl2>=4.0.0
-Requires-Dist: docker>=7.0.0
-Requires-Dist: grpcio>=1.60.0
-Requires-Dist: grpcio-tools>=1.60.0
-Requires-Dist: protobuf>=4.25.0
+Requires-Dist: docker>=5.0.0
+Requires-Dist: grpcio>=1.39.0
+Requires-Dist: grpcio-tools>=1.39.0
+Requires-Dist: protobuf>=3.19.0

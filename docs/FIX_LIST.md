@@ -115,7 +115,7 @@ print(f"{provider_name} provider listening on port {port}...", file=sys.stderr, 
 ### 11. Separate Protobuf and Domain Models
 **Issue**: Confusion between `provider_pb2.ResourceState` (protobuf) and `ResourceState` (dataclass)
 
-**Solution**: 
+**Solution**:
 - Rename dataclass to `ManagedResourceState`
 - Add clear conversion methods between protobuf and domain models
 
@@ -124,7 +124,7 @@ print(f"{provider_name} provider listening on port {port}...", file=sys.stderr, 
 
 **Coverage**:
 - Test file_loader provider independently
-- Test text_splitter provider independently  
+- Test text_splitter provider independently
 - Test two-stage pipeline with mocked dependencies
 - Test full pipeline end-to-end
 

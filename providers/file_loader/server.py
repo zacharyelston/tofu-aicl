@@ -31,7 +31,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
                         'path': str(file_path),
                         'content': content
                     })
-            
+
             output_attributes = {'documents': documents}
             output_struct = Struct()
             output_struct.update(output_attributes)
@@ -64,7 +64,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
 
     def Validate(self, request, context):
         return provider_pb2.ValidateResponse(success=True)
-        
+
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 

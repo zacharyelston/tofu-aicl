@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # AICL Engine for Indexing
+  indexer:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace/experiments
+    env_file:
+      - ../.env
+    command: ["python3", "../run.py", "index_codebase_to_pinecone.aicl"]
+    depends_on:
+      - loader
+      - splitter
+      - openrouter
+      - pinecone
+    networks:
+      - aicl-net
+
+  # Provider Containers
+  loader:
+    image: aicl/file_loader:1.0.0
+    networks:
+      - aicl-net
+
+  splitter:
+    image: aicl/text_splitter:1.0.0
+    networks:
+      - aicl-net
+
+  openrouter:
+    image: aicl/openrouter:1.0.0
+    env_file:
+      - ../.env
+    networks:
+      - aicl-net
+
+  pinecone:
+    image: aicl/pinecone:1.0.0
+    env_file:
+      - ../.env
+    networks:
+      - aicl-net
+
+networks:
+  aicl-net:
+    driver: bridge

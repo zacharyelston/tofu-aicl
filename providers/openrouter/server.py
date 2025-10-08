@@ -61,14 +61,14 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
         except requests.exceptions.RequestException as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"API key validation failed: {e}")
             return provider_pb2.ConfigureResponse(diagnostics=[diag])
-        
+
         return provider_pb2.ConfigureResponse()
 
     # --- Resource Management ---
     def ApplyResourceChange(self, request, context):
         resource_id = request.prior_state.id if request.prior_state and request.prior_state.id else f"or-model-{uuid.uuid4().hex[:8]}"
         config = dict(request.config)
-        
+
         self.resources[resource_id] = {
             "id": resource_id,
             "type_name": request.type_name,
@@ -132,7 +132,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
-            
+
             output_struct = Struct()
             output_struct.update(result)
             yield provider_pb2.ExecuteResponse(data=output_struct)

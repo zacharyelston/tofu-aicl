@@ -1,0 +1,62 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+  }
+}
+
+variable "pinecone_index_name" {
+  type    = string
+  default = "tofu-aicl-codebase"
+}
+
+# 1. Load all Python source files from the 'src' directory
+resource "loader_files" "aicl_source" {
+  path = "./src"
+  glob = "**/*.py"
+}
+
+# 2. Split the loaded code into manageable chunks
+resource "splitter_text" "code_chunks" {
+  documents     = resource.loader_files.aicl_source.attributes.documents
+  chunk_size    = 1500
+  chunk_overlap = 150
+}
+
+# 3. Generate embeddings for each code chunk using OpenRouter
+resource "openrouter_embeddings" "code_vectors" {
+  texts = resource.splitter_text.code_chunks.attributes.chunks
+  model = "text-embedding-3-small"
+}
+
+# 4. Upsert the generated vectors into your Pinecone index
+resource "pinecone_upsert" "codebase_index" {
+  index_name = var.pinecone_index_name
+  vectors    = resource.openrouter_embeddings.code_vectors.attributes.embeddings
+  namespace  = "source-code"
+}
+
+# Output a summary of the indexing process
+output "indexing_summary" {
+  value = {
+    files_indexed   = length(resource.loader_files.aicl_source.attributes.documents)
+    chunks_created  = length(resource.splitter_text.code_chunks.attributes.chunks)
+    vectors_upserted = resource.pinecone_upsert.codebase_index.attributes.upserted_count
+    pinecone_index  = var.pinecone_index_name
+    total_cost      = resource.openrouter_embeddings.code_vectors.attributes.usage.total_cost
+  }
+}

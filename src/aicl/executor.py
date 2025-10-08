@@ -16,25 +16,29 @@ class Executor:
         if not provider:
             raise Exception(f"Provider '{provider_name}' not found for resource '{res_name}'")
 
-        # Manual dependency resolution
+        # Robust dependency resolution
+        all_resources = self.state_manager.get_all_resources_as_dict()
         for key, value in config_attrs.items():
             if isinstance(value, str) and 'resource.' in value:
-                # Strip ${} wrapper if present
                 clean_value = value.strip('${}').strip()
-                if clean_value.startswith('resource.'):
-                    parts = clean_value.split('.')
-                    if len(parts) >= 5:
-                        ref_type, ref_name, ref_attr, ref_key = parts[1], parts[2], parts[3], parts[4]
-                        
-                        ref_resource_state = self.state_manager.get_resource_by_name(ref_type, ref_name)
-                        if ref_resource_state:
-                            config_attrs[key] = ref_resource_state.attributes.get(ref_key)
+                parts = clean_value.split('.')[1:]  # Skip 'resource'
+
+                try:
+                    # Start traversal from the root of the resource dictionary
+                    resolved_value = all_resources
+                    for part in parts:
+                        if isinstance(resolved_value, dict):
+                            resolved_value = resolved_value[part]
                         else:
-                            raise Exception(f"Referenced resource '{ref_type}.{ref_name}' not found in state")
+                            # This case should not be hit with correct HCL
+                            raise KeyError(f"Cannot traverse non-dict for part '{part}'")
+                    config_attrs[key] = resolved_value
+                except KeyError as e:
+                    raise Exception(f"Could not resolve reference '{value}'. Part '{e.args[0]}' not found.")
 
         config_struct = self._dict_to_struct(config_attrs)
         req = provider_pb2.ApplyResourceChangeRequest(type_name=res_type, config=config_struct)
-        
+
         try:
             response = provider.stub.ApplyResourceChange(req)
             # self._handle_diagnostics(response.diagnostics) # This should be handled in the engine
@@ -42,7 +46,7 @@ class Executor:
             attributes = MessageToDict(state.attributes)
             metadata = MessageToDict(state.metadata)
             resource_state = ResourceState(
-                id=state.id, type=state.type, provider=provider_name,
+                id=res_name, type=state.type, provider=provider_name,
                 attributes=attributes, metadata=metadata, status=state.status
             )
             self.state_manager.add_resource(resource_state)

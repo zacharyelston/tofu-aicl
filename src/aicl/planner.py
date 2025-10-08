@@ -29,7 +29,7 @@ class Planner:
                                     dep_id = f"{parts[1]}.{parts[2]}"
                                     adj[dep_id].append(node_id)
                                     in_degree[node_id] += 1
-        
+
         queue = [node for node in all_resource_ids if in_degree[node] == 0]
         sorted_order = []
         while queue:

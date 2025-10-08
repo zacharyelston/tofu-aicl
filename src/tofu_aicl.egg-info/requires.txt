@@ -1,5 +1,5 @@
 python-hcl2>=4.0.0
-docker>=7.0.0
-grpcio>=1.60.0
-grpcio-tools>=1.60.0
-protobuf>=4.25.0
+docker>=5.0.0
+grpcio>=1.39.0
+grpcio-tools>=1.39.0
+protobuf>=3.19.0
