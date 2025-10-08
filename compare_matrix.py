@@ -73,7 +73,8 @@ def compare_experiments(results_dir="experiments/matrix-results"):
     print("├─" + "─" * 78 + "┤")
     
     for comp in comparisons:
-        print(f"│ 🧪 {comp['id']:<30} │ Resources: {comp['resources_count']:<10} │ Serial: {comp['serial']:<10} │")
+        serial = comp.get('serial', 'N/A') or 'N/A'
+        print(f"│ 🧪 {comp['id']:<30} │ Resources: {comp['resources_count']:<10} │ Serial: {str(serial):<10} │")
         
         # Show resource details
         for res_id, res_data in list(comp['resources'].items())[:3]:  # Show first 3
