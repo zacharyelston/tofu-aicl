@@ -1,0 +1,19 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "chat" "test_response" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "user"
+      content = "Explain REST APIs in one sentence"
+    }
+  ]
+  max_tokens = 100
+}
