@@ -47,7 +47,7 @@ def generate_report():
         tokens = int(exp['usage'].get('total_tokens', 0))
         time_ms = int(exp['performance'].get('response_time_ms', 0))
         tok_per_sec = int(exp['performance'].get('tokens_per_second', 0))
-        cost = exp['cost'].get('estimated_usd', 0.0)
+        cost = exp['cost'].get('total_usd', exp['cost'].get('estimated_usd', 0.0))
         length = exp['response_length']
         
         print(f"│ {model:<19}│ {tokens:<7}│ {time_ms:<10}│ {tok_per_sec:<8}│ {cost:<11.6f}│ {length:<15}│")
@@ -78,10 +78,13 @@ def generate_report():
         
         # Cost breakdown
         cost = exp['cost']
-        print(f"\n💰 Cost Breakdown:")
-        print(f"  • Prompt Cost: ${cost.get('prompt_cost', 0):.6f}")
-        print(f"  • Completion Cost: ${cost.get('completion_cost', 0):.6f}")
-        print(f"  • Total: ${cost.get('estimated_usd', 0):.6f}")
+        total_cost = cost.get('total_usd', cost.get('estimated_usd', 0))
+        cost_source = cost.get('source', 'estimated')
+        print(f"\n💰 Cost:")
+        print(f"  • Total: ${total_cost:.6f} ({cost_source})")
+        if 'prompt_cost' in cost:
+            print(f"  • Prompt: ${cost.get('prompt_cost', 0):.6f}")
+            print(f"  • Completion: ${cost.get('completion_cost', 0):.6f}")
         
         # Response quality
         print(f"\n📝 Response:")
@@ -126,8 +129,8 @@ def generate_report():
             print(f"  • GPT-4: {gpt4_tps} tok/s vs Claude: {claude_tps} tok/s")
         
         # Cost comparison
-        claude_cost = claude['cost'].get('estimated_usd', 0)
-        gpt4_cost = gpt4['cost'].get('estimated_usd', 0)
+        claude_cost = claude['cost'].get('total_usd', claude['cost'].get('estimated_usd', 0))
+        gpt4_cost = gpt4['cost'].get('total_usd', gpt4['cost'].get('estimated_usd', 0))
         print(f"\n💰 Cost:")
         if claude_cost > gpt4_cost:
             pct = ((claude_cost - gpt4_cost) / gpt4_cost) * 100
@@ -164,8 +167,8 @@ def generate_report():
         claude = experiments[0]
         gpt4 = experiments[1]
         
-        claude_cost = claude['cost'].get('estimated_usd', 0)
-        gpt4_cost = gpt4['cost'].get('estimated_usd', 0)
+        claude_cost = claude['cost'].get('total_usd', claude['cost'].get('estimated_usd', 0))
+        gpt4_cost = gpt4['cost'].get('total_usd', gpt4['cost'].get('estimated_usd', 0))
         
         if claude_cost < gpt4_cost:
             print("📌 Choose Claude 3.5 Sonnet (RECOMMENDED):")

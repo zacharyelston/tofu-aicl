@@ -204,34 +204,58 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
 
             answer = result['choices'][0]['message']['content']
             
-            # Extract usage metrics
+            # Extract usage metrics from standard response
             usage = result.get('usage', {})
-            
-            # Calculate cost estimates with model-specific pricing
             prompt_tokens = usage.get('prompt_tokens', 0)
             completion_tokens = usage.get('completion_tokens', 0)
             total_tokens = usage.get('total_tokens', prompt_tokens + completion_tokens)
             
-            # Model-specific pricing (OpenRouter rates, per 1k tokens)
-            # Source: https://openrouter.ai/models
-            pricing_map = {
-                'anthropic/claude-3.5-sonnet': {'input': 0.003, 'output': 0.015},
-                'anthropic/claude-sonnet-4': {'input': 0.003, 'output': 0.015},
-                'openai/gpt-4': {'input': 0.03, 'output': 0.06},  # Legacy GPT-4
-                'openai/gpt-4o': {'input': 0.0025, 'output': 0.01},
-                'openai/gpt-4o-mini': {'input': 0.00015, 'output': 0.0006},
-                'openai/o1': {'input': 0.015, 'output': 0.06},
-                'openai/o1-mini': {'input': 0.0011, 'output': 0.0044},
-                'anthropic/claude-3-opus': {'input': 0.015, 'output': 0.075},
-                'anthropic/claude-3-haiku': {'input': 0.00025, 'output': 0.00125},
-            }
+            # Check if OpenRouter provided extended metadata in headers or response
+            # OpenRouter returns generation stats in X-OpenRouter-* headers or generation field
+            openrouter_data = {}
             
-            # Get model-specific pricing or use fallback
-            model_pricing = pricing_map.get(model, {'input': 0.003, 'output': 0.015})
-            cost_per_1k_input = model_pricing['input']
-            cost_per_1k_output = model_pricing['output']
+            # Try to get OpenRouter-specific response data (when available)
+            if hasattr(response, 'headers'):
+                # Some OpenRouter responses include generation metadata
+                pass
             
-            estimated_cost = (prompt_tokens / 1000 * cost_per_1k_input) + (completion_tokens / 1000 * cost_per_1k_output)
+            # For streaming=false, OpenRouter may include generation data
+            # Default to calculated values if not provided
+            actual_cost = None
+            generation_time_ms = None
+            latency_ms = None
+            
+            # If response has OpenRouter metadata (check common locations)
+            if 'generation' in result:
+                gen_data = result['generation']
+                actual_cost = gen_data.get('usage')  # Real cost in USD
+                generation_time_ms = gen_data.get('generation_time')
+                latency_ms = gen_data.get('latency')
+            
+            # Use actual cost if available, otherwise estimate
+            if actual_cost is not None:
+                total_cost = actual_cost
+            else:
+                # Fallback: estimate with model-specific pricing
+                pricing_map = {
+                    'anthropic/claude-3.5-sonnet': {'input': 0.003, 'output': 0.015},
+                    'anthropic/claude-sonnet-4': {'input': 0.003, 'output': 0.015},
+                    'openai/gpt-4': {'input': 0.03, 'output': 0.06},
+                    'openai/gpt-4o': {'input': 0.0025, 'output': 0.01},
+                    'openai/gpt-4o-mini': {'input': 0.00015, 'output': 0.0006},
+                    'openai/o1': {'input': 0.015, 'output': 0.06},
+                    'openai/o1-mini': {'input': 0.0011, 'output': 0.0044},
+                    'anthropic/claude-3-opus': {'input': 0.015, 'output': 0.075},
+                    'anthropic/claude-3-haiku': {'input': 0.00025, 'output': 0.00125},
+                }
+                model_pricing = pricing_map.get(model, {'input': 0.003, 'output': 0.015})
+                total_cost = (prompt_tokens / 1000 * model_pricing['input']) + (completion_tokens / 1000 * model_pricing['output'])
+            
+            # Use real timings if available, otherwise use measured
+            if generation_time_ms is None:
+                generation_time_ms = int(response_time * 1000)
+            if latency_ms is None:
+                latency_ms = int(response_time * 1000)
 
             output_attributes = {
                 'response': answer,
@@ -243,13 +267,13 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                     'total_tokens': total_tokens
                 },
                 'performance': {
-                    'response_time_ms': int(response_time * 1000),
-                    'tokens_per_second': int(completion_tokens / response_time) if response_time > 0 else 0
+                    'response_time_ms': generation_time_ms,
+                    'latency_ms': latency_ms,
+                    'tokens_per_second': int(completion_tokens / (generation_time_ms / 1000)) if generation_time_ms > 0 else 0
                 },
                 'cost': {
-                    'estimated_usd': round(estimated_cost, 6),
-                    'prompt_cost': round(prompt_tokens / 1000 * cost_per_1k_input, 6),
-                    'completion_cost': round(completion_tokens / 1000 * cost_per_1k_output, 6)
+                    'total_usd': round(total_cost, 6),
+                    'source': 'actual' if actual_cost is not None else 'estimated'
                 }
             }
 
