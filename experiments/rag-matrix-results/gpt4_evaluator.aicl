@@ -1,0 +1,73 @@
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openai = {
+      source  = "aicl/openai"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# Load source code
+resource "loader_files" "src" {
+  path = "src/aicl"
+  pattern = "*.py"
+  recursive = true
+}
+
+# Split into chunks
+resource "splitter_text" "chunks" {
+  documents = "$${resource.loader_files.src.attributes.documents}"
+  chunk_size = 1000
+  chunk_overlap = 200
+}
+
+# Generate embeddings
+resource "embedding" "vectors" {
+  texts = "$${resource.splitter_text.chunks.attributes.chunks}"
+  model = "text-embedding-3-small"
+}
+
+# Store in vector database
+resource "pinecone_upsert" "index" {
+  vectors = "$${resource.embedding.vectors.attributes.embeddings}"
+  namespace = "code-analysis"
+}
+
+# Query for relevant code
+resource "pinecone_query" "search" {
+  vector = "$${resource.embedding.vectors.attributes.embeddings[0].values}"
+  top_k = 3
+  namespace = "code-analysis"
+}
+
+# Ask question about the code
+resource "chat" "analysis" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "system"
+      content = "You are a code review expert. Analyze the provided code and suggest specific improvements."
+    },
+    {
+      role = "user"
+      content = "Suggest improvements to the evaluator.py file"
+    }
+  ]
+  max_tokens = 500
+}

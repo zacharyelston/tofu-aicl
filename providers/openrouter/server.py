@@ -169,6 +169,8 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
 
     def _execute_chat(self, resource_id, config, type_name):
         """Execute chat completion with messages"""
+        import time
+        
         messages = config.get('messages', [])
         model = config.get('model', 'anthropic/claude-3.5-sonnet')
 
@@ -180,6 +182,8 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             print(f"DEBUG OpenRouter: Executing chat with model {model}")
             print(f"DEBUG OpenRouter: Messages: {messages}")
 
+            start_time = time.time()
+            
             response = requests.post(
                 f"{self.base_url}/chat/completions",
                 headers={
@@ -193,15 +197,60 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                     "max_tokens": config.get('max_tokens', 1024)
                 }
             )
+            
+            response_time = time.time() - start_time
             response.raise_for_status()
             result = response.json()
 
             answer = result['choices'][0]['message']['content']
+            
+            # Extract usage metrics
+            usage = result.get('usage', {})
+            
+            # Calculate cost estimates with model-specific pricing
+            prompt_tokens = usage.get('prompt_tokens', 0)
+            completion_tokens = usage.get('completion_tokens', 0)
+            total_tokens = usage.get('total_tokens', prompt_tokens + completion_tokens)
+            
+            # Model-specific pricing (OpenRouter rates, per 1k tokens)
+            # Source: https://openrouter.ai/models
+            pricing_map = {
+                'anthropic/claude-3.5-sonnet': {'input': 0.003, 'output': 0.015},
+                'anthropic/claude-sonnet-4': {'input': 0.003, 'output': 0.015},
+                'openai/gpt-4': {'input': 0.03, 'output': 0.06},  # Legacy GPT-4
+                'openai/gpt-4o': {'input': 0.0025, 'output': 0.01},
+                'openai/gpt-4o-mini': {'input': 0.00015, 'output': 0.0006},
+                'openai/o1': {'input': 0.015, 'output': 0.06},
+                'openai/o1-mini': {'input': 0.0011, 'output': 0.0044},
+                'anthropic/claude-3-opus': {'input': 0.015, 'output': 0.075},
+                'anthropic/claude-3-haiku': {'input': 0.00025, 'output': 0.00125},
+            }
+            
+            # Get model-specific pricing or use fallback
+            model_pricing = pricing_map.get(model, {'input': 0.003, 'output': 0.015})
+            cost_per_1k_input = model_pricing['input']
+            cost_per_1k_output = model_pricing['output']
+            
+            estimated_cost = (prompt_tokens / 1000 * cost_per_1k_input) + (completion_tokens / 1000 * cost_per_1k_output)
 
             output_attributes = {
                 'response': answer,
                 'model': model,
-                'message_count': len(messages)
+                'message_count': len(messages),
+                'usage': {
+                    'prompt_tokens': prompt_tokens,
+                    'completion_tokens': completion_tokens,
+                    'total_tokens': total_tokens
+                },
+                'performance': {
+                    'response_time_ms': int(response_time * 1000),
+                    'tokens_per_second': int(completion_tokens / response_time) if response_time > 0 else 0
+                },
+                'cost': {
+                    'estimated_usd': round(estimated_cost, 6),
+                    'prompt_cost': round(prompt_tokens / 1000 * cost_per_1k_input, 6),
+                    'completion_cost': round(completion_tokens / 1000 * cost_per_1k_output, 6)
+                }
             }
 
             output_struct = Struct()
