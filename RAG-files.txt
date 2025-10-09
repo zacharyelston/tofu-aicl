@@ -1,0 +1,17 @@
+# RAG Files List
+# List files to index in Pinecone (one per line)
+# Lines starting with # are ignored
+# Paths are relative to project root
+
+# Core AICL Framework
+src/aicl/parser.py
+src/aicl/evaluator.py
+src/aicl/planner.py
+src/aicl/executor.py
+src/aicl/core/engine.py
+src/aicl/state/manager.py
+src/aicl/provider_registry.py
+
+# Documentation (optional - will be deprioritized in retrieval)
+# README.md
+# docs/architecture.md

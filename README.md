@@ -198,19 +198,177 @@ The project runs in Replit with providers as Python subprocesses (no Docker need
 | Claude 3 Opus | $15 | $75 |
 | Claude 3 Haiku | $0.25 | $1.25 |
 
-## RAG Testing Scripts
+## RAG Testing & Evaluation System
 
-Quick scripts to test RAG functionality:
+### Overview
 
+The RAG testing system evaluates retrieval quality and model performance with **LLM-as-a-Judge** evaluation:
+
+- **Code-Prioritized Retrieval**: Automatically prioritizes `.py` files over documentation
+- **Multi-Model Comparison**: Tests Claude 3.5 Sonnet vs GPT-4
+- **Automated Evaluation**: Claude judges answers on accuracy, completeness, clarity, and code specificity
+- **Comprehensive Reports**: JSON + Markdown outputs with unique run IDs
+
+### Quick Start
+
+**1. Load your codebase into Pinecone:**
 ```bash
-# Load codebase into Pinecone
+export $(grep -v '^#' .env | xargs)
 python scripts/load_codebase_to_pinecone.py
-
-# Run RAG query test
-python scripts/test_rag_query.py
 ```
 
-Results are saved to `experiments/rag_test_results.json` with actual OpenRouter costs and performance metrics.
+**2. Create a questions file (`questions.txt`):**
+```
+# RAG Test Questions
+# One question per line, lines starting with # are ignored
+
+How does the HCL evaluator resolve interpolations?
+What is the role of the StateManager?
+Explain the parsing flow from HCL input to executable plan.
+```
+
+**3. Run RAG evaluation:**
+```bash
+python scripts/test_rag_query.py questions.txt
+```
+
+### Example Output
+
+**Console Output:**
+```
+🔍 Testing 1 question(s)
+🆔 Test Run ID: 551730223cde
+📅 Timestamp: 2025-10-09T10:47:54
+
+📄 Retrieved chunks:
+  [1] src/aicl/parser.py (score: 0.404)
+  [2] src/aicl/planner.py (score: 0.371)
+  [3] src/aicl/evaluator.py (score: 0.347)
+
+✅ Using 3 code chunks + 0 doc chunks
+
+🤖 Claude 3.5 Sonnet...
+   ✅ Response: 1247 chars, 9127ms
+
+🤖 GPT-4...
+   ✅ Response: 1559 chars, 16370ms
+
+📊 LLM Judge Evaluation:
+  claude-3.5-sonnet:
+    Accuracy: 8/10
+    Completeness: 7/10
+    Clarity: 9/10
+    Code Specificity: 6/10
+    Total: 30/40
+
+  gpt-4:
+    Accuracy: 9/10
+    Completeness: 8/10
+    Clarity: 8/10
+    Code Specificity: 9/10
+    Total: 34/40
+
+  🏆 Winner: gpt-4
+```
+
+### Generated Reports
+
+**Markdown Report (`experiments/rag_test_{run_id}.md`):**
+```markdown
+# RAG Test Report
+
+**Run ID:** `551730223cde`
+**Total Questions:** 1
+
+## Summary
+
+| Question | Winner | Claude Score | GPT-4 Score |
+|----------|--------|--------------|-------------|
+| Q1: Explain the parsing flow... | gpt-4 | 30/40 | 34/40 |
+
+## Question 1
+
+**Question:** Explain the parsing flow from HCL input to executable plan
+
+### Answers
+
+#### claude-3.5-sonnet
+- **Response Time:** 9127ms
+- **Tokens:** 800
+
+[Full answer with technical details...]
+
+#### gpt-4
+- **Response Time:** 16370ms
+- **Tokens:** 697
+
+[Full answer with code references...]
+
+### LLM Judge Evaluation
+
+| Model | Accuracy | Completeness | Clarity | Code Specificity | Total |
+|-------|----------|--------------|---------|------------------|-------|
+| claude-3.5-sonnet | 8/10 | 7/10 | 9/10 | 6/10 | **30/40** |
+| gpt-4 | 9/10 | 8/10 | 8/10 | 9/10 | **34/40** |
+
+**Winner:** 🏆 gpt-4
+```
+
+**JSON Report (`experiments/rag_test_{run_id}.json`):**
+```json
+{
+  "run_id": "551730223cde",
+  "timestamp": "2025-10-09T10:47:54.719091",
+  "questions_file": "questions.txt",
+  "total_questions": 1,
+  "models_tested": ["anthropic/claude-3.5-sonnet", "openai/gpt-4"],
+  "questions": [
+    {
+      "question": "Explain the parsing flow...",
+      "context_chunks": 10,
+      "code_chunks_used": 3,
+      "doc_chunks_used": 0,
+      "results": [...],
+      "evaluation": {
+        "evaluations": [...],
+        "winner": "gpt-4",
+        "summary": "GPT-4's answer better bridges conceptual explanation with actual implementation..."
+      }
+    }
+  ]
+}
+```
+
+### Evaluation Criteria
+
+The LLM judge (Claude 3.5 Sonnet) scores each answer on:
+
+1. **Accuracy (0-10)**: Technical correctness based on code context
+2. **Completeness (0-10)**: How thoroughly the question is answered
+3. **Clarity (0-10)**: Explanation quality and readability
+4. **Code Specificity (0-10)**: References to actual files, classes, and methods
+
+**Total Score:** /40 points
+
+### Key Features
+
+- ✅ **Code-First Retrieval**: Prioritizes `.py` files over `.md` files
+- ✅ **Unique Run IDs**: Track experiments over time
+- ✅ **Dual Output**: JSON (machine-readable) + Markdown (human-readable)
+- ✅ **Cost Tracking**: Actual API costs from OpenRouter
+- ✅ **Performance Metrics**: Response time, tokens, throughput
+- ✅ **Automated Judging**: Unbiased LLM evaluation with detailed reasoning
+
+### Files Indexed
+
+The system indexes these core implementation files:
+- `src/aicl/parser.py` - HCL parsing
+- `src/aicl/evaluator.py` - Interpolation resolution
+- `src/aicl/planner.py` - Dependency graph
+- `src/aicl/executor.py` - Resource provisioning
+- `src/aicl/core/engine.py` - Orchestration
+- `src/aicl/state/manager.py` - State tracking
+- `src/aicl/provider_registry.py` - Provider management
 
 ## License
 
