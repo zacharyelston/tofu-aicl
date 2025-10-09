@@ -1,0 +1,44 @@
+{
+  "total_experiments": 4,
+  "successful": 2,
+  "failed": 2,
+  "timestamp": "2025-10-09T12:29:17.468911",
+  "experiments": [
+    {
+      "experiment_id": "claude_executor",
+      "config_path": "experiments/code-matrix-results/claude_executor.aicl",
+      "state_file": "experiments/code-matrix-results/claude_executor.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'analysis' (chat-analysis) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-analysis' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-09T12:28:58.732604"
+    },
+    {
+      "experiment_id": "gpt4_executor",
+      "config_path": "experiments/code-matrix-results/gpt4_executor.aicl",
+      "state_file": "experiments/code-matrix-results/gpt4_executor.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'analysis' (chat-analysis) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-analysis' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-09T12:29:16.330364"
+    },
+    {
+      "experiment_id": "claude_evaluator",
+      "config_path": "experiments/code-matrix-results/claude_evaluator.aicl",
+      "state_file": null,
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser_state.py\", line 77, in feed_token\n    action, arg = states[state][token.type]\n                  ~~~~~~~~~~~~~^^^^^^^^^^^^\nKeyError: 'DBLQUOTE'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/workspace/run.py\", line 6, in <module>\n    engine = AICLEngine(config_path=config_path)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 54, in __init__\n    self.parsed_config = self._parse_config()\n                         ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 60, in _parse_config\n    return parser.parse()\n           ^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/parser.py\", line 9, in parse\n    return hcl2.load(f)\n           ^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/hcl2/api.py\", line 16, in load\n    return loads(file.read(), with_meta=with_meta)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/hcl2/api.py\", line 29, in loads\n    tree = parser().parse(text + \"\\n\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/lark.py\", line 676, in parse\n    return self.parser.parse(text, start=start, on_error=on_error)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parser_frontends.py\", line 123, in parse\n    return self.parser.parse(stream, chosen_start, **kw)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 42, in parse\n    return self.parser.parse(lexer, start)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 88, in parse\n    return self.parse_from_state(parser_state)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 111, in parse_from_state\n    raise e\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 102, in parse_from_state\n    state.feed_token(token)\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser_state.py\", line 80, in feed_token\n    raise UnexpectedToken(token, expected, state=self, interactive_parser=None)\nlark.exceptions.UnexpectedToken: Unexpected token Token('DBLQUOTE', '\"') at line 33, column 86.\nExpected one of: \n\t* COLON\n\t* EQ\n\t* DOT\n\n",
+      "timestamp": "2025-10-09T12:29:16.919552"
+    },
+    {
+      "experiment_id": "gpt4_evaluator",
+      "config_path": "experiments/code-matrix-results/gpt4_evaluator.aicl",
+      "state_file": null,
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser_state.py\", line 77, in feed_token\n    action, arg = states[state][token.type]\n                  ~~~~~~~~~~~~~^^^^^^^^^^^^\nKeyError: 'DBLQUOTE'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/workspace/run.py\", line 6, in <module>\n    engine = AICLEngine(config_path=config_path)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 54, in __init__\n    self.parsed_config = self._parse_config()\n                         ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 60, in _parse_config\n    return parser.parse()\n           ^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/src/aicl/parser.py\", line 9, in parse\n    return hcl2.load(f)\n           ^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/hcl2/api.py\", line 16, in load\n    return loads(file.read(), with_meta=with_meta)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/hcl2/api.py\", line 29, in loads\n    tree = parser().parse(text + \"\\n\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/lark.py\", line 676, in parse\n    return self.parser.parse(text, start=start, on_error=on_error)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parser_frontends.py\", line 123, in parse\n    return self.parser.parse(stream, chosen_start, **kw)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 42, in parse\n    return self.parser.parse(lexer, start)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 88, in parse\n    return self.parse_from_state(parser_state)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 111, in parse_from_state\n    raise e\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser.py\", line 102, in parse_from_state\n    state.feed_token(token)\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/lark/parsers/lalr_parser_state.py\", line 80, in feed_token\n    raise UnexpectedToken(token, expected, state=self, interactive_parser=None)\nlark.exceptions.UnexpectedToken: Unexpected token Token('DBLQUOTE', '\"') at line 33, column 86.\nExpected one of: \n\t* DOT\n\t* EQ\n\t* COLON\n\n",
+      "timestamp": "2025-10-09T12:29:17.468848"
+    }
+  ]
+}

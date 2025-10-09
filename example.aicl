@@ -3,7 +3,7 @@ terraform {
     openrouter = {
       source  = "aicl/openrouter"
       version = "~> 1.0"
-      container {
+      container = {
         image = "aicl/openrouter:1.0.0"
         resources = {
           cpu    = "1"

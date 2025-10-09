@@ -1,0 +1,46 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "chat" "analysis" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "system"
+      content = "You are a code review expert. Suggest specific, actionable improvements."
+    },
+    {
+      role = "user"
+      content = "Review this evaluator.py code and suggest 3 improvements:\n\nimport re
+from typing import Any, Dict
+from aicl.state.manager import StateManager
+
+class HCLEvaluator:
+    def __init__(self, state_manager: StateManager):
+        self.state_manager = state_manager
+        self.interpolation_pattern = re.compile(r'\$\{([^}]+)\}')
+
+    def build_context(self) -> Dict[str, Any]:
+        context = {'resource': {}}
+
+        if self.state_manager.current_state:
+            for resource_id, resource_state in self.state_manager.current_state.resources.items():
+                # Resource type is stored in resource_state.type (e.g., "loader_files")
+                # Resource name is extracted from ID (e.g., "loader-docs" -> "docs")
+                res_type = resource_state.type
+                res_name = resource_id.split('-', 1)[1] if '-' in resource_id else resource_id
+
+                if res_type not in context['resource']:
+                    context['resource'][res_type] = {}
+
+                context['resource'][res_type][res_name] = {
+                  "
+    }
+  ]
+  max_tokens = 400
+}

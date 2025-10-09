@@ -13,8 +13,8 @@ class Executor:
 
         # Map resource types to provider names
         self.resource_to_provider = {
-            'file_loader': 'loader',
-            'text_splitter': 'splitter',
+            'file_loader': 'file_loader',
+            'text_splitter': 'text_splitter',
             'embedding': 'openai',
             'azure_openai_embedding': 'azure_openai',
             'chat': 'openrouter',

@@ -1,0 +1,190 @@
+syntax = "proto3";
+
+package aicl.provider.v1;
+
+import "google/protobuf/struct.proto";
+
+// The Provider service definition.
+// This is the universal contract that all tofu-aicl providers (both for
+// resource provisioning and for testing/assertions) must implement.
+service Provider {
+  // --- Lifecycle Management ---
+
+  // GetSchema returns the provider's schema, defining available resources and their attributes.
+  rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse);
+
+  // ValidateConfig checks if the provider-level configuration is valid.
+  rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
+
+  // Configure sets the provider-level configuration (e.g., API keys).
+  rpc Configure(ConfigureRequest) returns (ConfigureResponse);
+
+
+  // --- Resource Management (The Terraform-like workflow) ---
+
+  // PlanResourceChange previews the changes required to reach the desired state.
+  rpc PlanResourceChange(PlanResourceChangeRequest) returns (PlanResourceChangeResponse);
+
+  // ApplyResourceChange creates, updates, or deletes a resource to match the desired configuration.
+  rpc ApplyResourceChange(ApplyResourceChangeRequest) returns (ApplyResourceChangeResponse);
+
+  // ReadResource retrieves the current state of a resource.
+  rpc ReadResource(ReadResourceRequest) returns (ReadResourceResponse);
+
+  // DeleteResource destroys a managed resource.
+  rpc DeleteResource(DeleteResourceRequest) returns (DeleteResourceResponse);
+
+
+  // --- AI & Testing Workflow ---
+
+  // Execute performs the primary AI action of a resource (e.g., running inference).
+  rpc Execute(ExecuteRequest) returns (stream ExecuteResponse);
+
+  // Validate performs assertions against a resource or its output.
+  // This is the core of the test-cl framework.
+  rpc Validate(ValidateRequest) returns (ValidateResponse);
+
+
+  // --- Health & Metrics ---
+
+  // HealthCheck reports the operational status of the provider container.
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ===================================
+// Core Data Structures
+// ===================================
+
+message ResourceState {
+  string id = 1;
+  string type = 2;
+  google.protobuf.Struct attributes = 3;
+  google.protobuf.Struct metadata = 4;
+  string status = 5; // e.g., "ready", "error", "provisioning"
+}
+
+message Diagnostic {
+  enum Severity {
+    SEVERITY_UNSPECIFIED = 0;
+    ERROR = 1;
+    WARNING = 2;
+  }
+  Severity severity = 1;
+  string summary = 2;
+  string detail = 3;
+}
+
+// ===================================
+// Lifecycle RPCs
+// ===================================
+
+message GetSchemaRequest {}
+
+message GetSchemaResponse {
+  message ResourceSchema {
+    string type_name = 1; // e.g., "openrouter_model"
+    google.protobuf.Struct schema = 2; // JSON Schema as a Struct
+  }
+  repeated ResourceSchema resources = 1;
+}
+
+message ValidateConfigRequest {
+  google.protobuf.Struct config = 1;
+}
+
+message ValidateConfigResponse {
+  repeated Diagnostic diagnostics = 1;
+}
+
+message ConfigureRequest {
+  google.protobuf.Struct config = 1;
+}
+
+message ConfigureResponse {
+  repeated Diagnostic diagnostics = 1;
+}
+
+// ===================================
+// Resource Management RPCs
+// ===================================
+
+message PlanResourceChangeRequest {
+  string type_name = 1;
+  google.protobuf.Struct proposed_config = 2;
+  ResourceState prior_state = 3; // Null for new resources
+}
+
+message PlanResourceChangeResponse {
+  google.protobuf.Struct planned_state = 1;
+  bool requires_replacement = 2;
+  repeated Diagnostic diagnostics = 3;
+}
+
+message ApplyResourceChangeRequest {
+  string type_name = 1;
+  google.protobuf.Struct config = 2;
+  ResourceState prior_state = 3;
+}
+
+message ApplyResourceChangeResponse {
+  ResourceState new_state = 1;
+  repeated Diagnostic diagnostics = 2;
+}
+
+message ReadResourceRequest {
+  string id = 1;
+  string type_name = 2;
+}
+
+message ReadResourceResponse {
+  ResourceState state = 1;
+  repeated Diagnostic diagnostics = 2;
+}
+
+message DeleteResourceRequest {
+  string id = 1;
+  string type_name = 2;
+}
+
+message DeleteResourceResponse {
+  repeated Diagnostic diagnostics = 1;
+}
+
+// ===================================
+// AI & Testing RPCs
+// ===================================
+
+message ExecuteRequest {
+  string resource_id = 1;
+  google.protobuf.Struct input = 2;
+}
+
+message ExecuteResponse {
+  oneof chunk {
+    google.protobuf.Value data = 1; // A piece of the primary output (e.g., text chunk)
+    google.protobuf.Struct progress = 2; // Progress update (e.g., { "percentage": 50 })
+    string log = 3; // A log message
+  }
+}
+
+message ValidateRequest {
+  string resource_id = 1;
+  google.protobuf.Struct input = 2;
+}
+
+message ValidateResponse {
+  bool success = 1;
+  google.protobuf.Struct output = 2;
+  repeated Diagnostic diagnostics = 3;
+}
+
+// ===================================
+// Health & Metrics RPCs
+// ===================================
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string version = 2;
+}

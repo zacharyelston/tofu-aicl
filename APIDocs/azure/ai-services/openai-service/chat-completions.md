@@ -61,7 +61,7 @@ Content-Type: application/json
 - **temperature**: Randomness in output (0.0-2.0)
 - **stream**: Enable streaming responses
 - **functions**: Function calling capabilities
-
+    
 ## Azure-Specific Features
 - **Content filtering**: Built-in safety controls
 - **Data sources**: Integration with Azure AI Search

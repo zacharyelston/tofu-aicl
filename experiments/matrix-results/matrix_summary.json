@@ -1,0 +1,60 @@
+{
+  "total_experiments": 4,
+  "successful": 4,
+  "failed": 0,
+  "timestamp": "2025-10-09T00:55:13.593449",
+  "experiments": [
+    {
+      "experiment_id": "claude_short",
+      "config_path": "experiments/matrix-results/claude_short.aicl",
+      "state_file": "experiments/matrix-results/claude_short.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'test_response' (chat-test_response) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'or-485a025c' deleted.\n  - Resource 'or-63d078ff' deleted.\n  - Resource 'or-6be4528d' deleted.\n  - Resource 'or-d0463a49' deleted.\n  - Resource 'chat-answer' deleted.\n  - Resource 'chat-greeting' deleted.\n  - Resource 'chat-write_feature' deleted.\n  - Resource 'chat-with_full_context' deleted.\n  - Resource 'chat-with_trimmed_context' deleted.\n  - Resource 'chat-claude_technical' deleted.\n  - Resource 'chat-gpt4_technical' deleted.\n  - Resource 'chat-test_response' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "metrics": {
+        "resources_created": 0,
+        "success": true
+      },
+      "timestamp": "2025-10-09T00:54:59.892100"
+    },
+    {
+      "experiment_id": "claude_medium",
+      "config_path": "experiments/matrix-results/claude_medium.aicl",
+      "state_file": "experiments/matrix-results/claude_medium.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'test_response' (chat-test_response) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'or-485a025c' deleted.\n  - Resource 'or-63d078ff' deleted.\n  - Resource 'or-6be4528d' deleted.\n  - Resource 'or-d0463a49' deleted.\n  - Resource 'chat-answer' deleted.\n  - Resource 'chat-greeting' deleted.\n  - Resource 'chat-write_feature' deleted.\n  - Resource 'chat-with_full_context' deleted.\n  - Resource 'chat-with_trimmed_context' deleted.\n  - Resource 'chat-claude_technical' deleted.\n  - Resource 'chat-gpt4_technical' deleted.\n  - Resource 'chat-test_response' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "metrics": {
+        "resources_created": 0,
+        "success": true
+      },
+      "timestamp": "2025-10-09T00:55:06.500237"
+    },
+    {
+      "experiment_id": "gpt4_short",
+      "config_path": "experiments/matrix-results/gpt4_short.aicl",
+      "state_file": "experiments/matrix-results/gpt4_short.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'test_response' (chat-test_response) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'or-485a025c' deleted.\n  - Resource 'or-63d078ff' deleted.\n  - Resource 'or-6be4528d' deleted.\n  - Resource 'or-d0463a49' deleted.\n  - Resource 'chat-answer' deleted.\n  - Resource 'chat-greeting' deleted.\n  - Resource 'chat-write_feature' deleted.\n  - Resource 'chat-with_full_context' deleted.\n  - Resource 'chat-with_trimmed_context' deleted.\n  - Resource 'chat-claude_technical' deleted.\n  - Resource 'chat-gpt4_technical' deleted.\n  - Resource 'chat-test_response' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "metrics": {
+        "resources_created": 0,
+        "success": true
+      },
+      "timestamp": "2025-10-09T00:55:10.014542"
+    },
+    {
+      "experiment_id": "gpt4_medium",
+      "config_path": "experiments/matrix-results/gpt4_medium.aicl",
+      "state_file": "experiments/matrix-results/gpt4_medium.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'test_response' (chat-test_response) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'or-485a025c' deleted.\n  - Resource 'or-63d078ff' deleted.\n  - Resource 'or-6be4528d' deleted.\n  - Resource 'or-d0463a49' deleted.\n  - Resource 'chat-answer' deleted.\n  - Resource 'chat-greeting' deleted.\n  - Resource 'chat-write_feature' deleted.\n  - Resource 'chat-with_full_context' deleted.\n  - Resource 'chat-with_trimmed_context' deleted.\n  - Resource 'chat-claude_technical' deleted.\n  - Resource 'chat-gpt4_technical' deleted.\n  - Resource 'chat-test_response' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "metrics": {
+        "resources_created": 0,
+        "success": true
+      },
+      "timestamp": "2025-10-09T00:55:13.593343"
+    }
+  ]
+}
