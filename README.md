@@ -62,6 +62,22 @@ A declarative, framework for defining and provisioning AI infrastructure (RAG pi
 
 ## Quick Start
 
+### Prerequisites
+
+The framework runs in two modes:
+
+1. **Subprocess Mode (Default)** ✅ - Works everywhere (Replit, local, GitHub)
+   - Providers run as Python subprocesses
+   - No Docker required
+   - Set `AICL_SUBPROCESS_MODE=true` (or leave unset)
+
+2. **Docker Mode (Optional)** - For container isolation
+   - Requires Docker installed
+   - Set `AICL_SUBPROCESS_MODE=false`
+   - Build containers: `./scripts/build_providers.sh`
+
+**For most users**: Subprocess mode is recommended and requires no setup.
+
 ### 1. Set up API Keys (Replit Secrets)
 Configure these secrets in your Replit environment:
 - `OPENAI_API_KEY` - For embeddings
@@ -417,6 +433,34 @@ The system indexes these core implementation files:
 - `src/aicl/core/engine.py` - Orchestration
 - `src/aicl/state/manager.py` - State tracking
 - `src/aicl/provider_registry.py` - Provider management
+
+## Troubleshooting
+
+### Docker Build Errors on GitHub/CI
+
+If `./scripts/build_providers.sh` fails:
+
+**Problem**: The build script requires Docker, which may not be available in your environment.
+
+**Solution**: Use subprocess mode (default) - no Docker needed!
+
+```bash
+# Set environment variable (or leave unset for default)
+export AICL_SUBPROCESS_MODE=true
+
+# Run normally
+python run.py config.aicl
+```
+
+Docker builds are **optional** and only needed for container isolation. The framework works perfectly with Python subprocesses.
+
+### Replit vs Local Development
+
+| Environment | Mode | Setup |
+|-------------|------|-------|
+| **Replit** | Subprocess (auto) | No config needed |
+| **Local/GitHub** | Subprocess (default) | `export AICL_SUBPROCESS_MODE=true` |
+| **With Docker** | Container (optional) | `export AICL_SUBPROCESS_MODE=false` + build script |
 
 ## License
 
