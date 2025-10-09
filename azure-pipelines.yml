@@ -69,7 +69,7 @@ stages:
               command: 'build'
               Dockerfile: 'providers/file_loader/Dockerfile'
               buildContext: '.'
-              repository: 'aicl/file_loader'
+              repository: 'tofu-aicl/file_loader'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -81,7 +81,7 @@ stages:
               command: 'build'
               Dockerfile: 'providers/text_splitter/Dockerfile'
               buildContext: '.'
-              repository: 'aicl/text_splitter'
+              repository: 'tofu-aicl/text_splitter'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -93,7 +93,7 @@ stages:
               command: 'build'
               Dockerfile: 'providers/openrouter/Dockerfile'
               buildContext: '.'
-              repository: 'aicl/openrouter'
+              repository: 'tofu-aicl/openrouter'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -105,7 +105,7 @@ stages:
               command: 'build'
               Dockerfile: 'providers/pinecone/Dockerfile'
               buildContext: '.'
-              repository: 'aicl/pinecone'
+              repository: 'tofu-aicl/pinecone'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -117,7 +117,7 @@ stages:
               command: 'build'
               Dockerfile: 'providers/command_assertion/Dockerfile'
               buildContext: '.'
-              repository: 'aicl/command_assertion'
+              repository: 'tofu-aicl/command_assertion'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -182,7 +182,7 @@ stages:
             displayName: 'Push file_loader'
             inputs:
               command: 'push'
-              repository: 'aicl/file_loader'
+              repository: 'tofu-aicl/file_loader'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -192,7 +192,7 @@ stages:
             displayName: 'Push text_splitter'
             inputs:
               command: 'push'
-              repository: 'aicl/text_splitter'
+              repository: 'tofu-aicl/text_splitter'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -202,7 +202,7 @@ stages:
             displayName: 'Push openrouter'
             inputs:
               command: 'push'
-              repository: 'aicl/openrouter'
+              repository: 'tofu-aicl/openrouter'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -212,7 +212,7 @@ stages:
             displayName: 'Push pinecone'
             inputs:
               command: 'push'
-              repository: 'aicl/pinecone'
+              repository: 'tofu-aicl/pinecone'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
@@ -222,7 +222,7 @@ stages:
             displayName: 'Push command_assertion'
             inputs:
               command: 'push'
-              repository: 'aicl/command_assertion'
+              repository: 'tofu-aicl/command_assertion'
               containerRegistry: '$(dockerRegistryServiceConnection)'
               tags: |
                 $(Build.BuildId)
