@@ -1,0 +1,50 @@
+terraform {
+  required_providers {
+    openai = {
+      source = "aicl/openai"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+    }
+    openrouter = {
+      source = "aicl/openrouter"
+    }
+  }
+}
+
+resource "embedding" "query_vector" {
+  provider = "aicl/openai"
+  config = {
+    text = "How does the HCL evaluator resolve interpolations in the tofu-aicl framework?"
+    model = "text-embedding-3-small"
+  }
+}
+
+resource "query" "relevant_code" {
+  provider = "aicl/pinecone"
+  config = {
+    vector = "${resource.embedding.query_vector.attributes.embedding}"
+    top_k = 3
+    namespace = "tofu-aicl-codebase"
+    include_metadata = true
+  }
+}
+
+resource "chat" "rag_answer_claude" {
+  provider = "aicl/openrouter"
+  config = {
+    model = "anthropic/claude-3.5-sonnet"
+    messages = [
+      {
+        role = "system"
+        content = "You are a helpful assistant that answers questions about the tofu-aicl codebase based on provided context."
+      },
+      {
+        role = "user"
+        content = "Context:\n${resource.query.relevant_code.attributes.matches}\n\nQuestion: How does the HCL evaluator resolve interpolations in the tofu-aicl framework?\n\nProvide a clear, technical answer based on the context above."
+      }
+    ]
+    temperature = 0.3
+    max_tokens = 500
+  }
+}

@@ -1,4 +1,21 @@
-resource "file_source" "codebase_docs" {
+terraform {
+  required_providers {
+    file_loader = {
+      source = "aicl/file_loader"
+    }
+    text_splitter = {
+      source = "aicl/text_splitter"
+    }
+    openai = {
+      source = "aicl/openai"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+    }
+  }
+}
+
+resource "file_loader" "codebase_docs" {
   provider = "aicl/file_loader"
   config = {
     file_paths = [
@@ -6,15 +23,16 @@ resource "file_source" "codebase_docs" {
       "src/aicl/evaluator.py", 
       "src/aicl/executor.py",
       "src/aicl/planner.py",
-      "replit.md"
+      "replit.md",
+      "README.md"
     ]
   }
 }
 
-resource "chunks" "split_docs" {
+resource "text_splitter" "split_docs" {
   provider = "aicl/text_splitter"
   config = {
-    text = "${resource.file_source.codebase_docs.attributes.content}"
+    text = "${resource.file_loader.codebase_docs.attributes.content}"
     chunk_size = 1000
     chunk_overlap = 200
   }
@@ -23,17 +41,16 @@ resource "chunks" "split_docs" {
 resource "embedding" "code_vectors" {
   provider = "aicl/openai"
   config = {
-    texts = "${resource.chunks.split_docs.attributes.chunks}"
+    texts = "${resource.text_splitter.split_docs.attributes.chunks}"
     model = "text-embedding-3-small"
   }
 }
 
-resource "vector_store" "indexed_code" {
+resource "upsert" "indexed_code" {
   provider = "aicl/pinecone"
   config = {
-    operation = "upsert"
     vectors = "${resource.embedding.code_vectors.attributes.embeddings}"
-    metadata = "${resource.chunks.split_docs.attributes.metadata}"
+    metadata = "${resource.text_splitter.split_docs.attributes.metadata}"
     namespace = "tofu-aicl-codebase"
   }
 }
