@@ -1,4 +1,52 @@
-# tofu-aicl - Declarative AI Infrastructure
+# tofu-aicl
+
+## 🎯 **Real RAG Evaluation Output**
+
+Here's what the system actually produces when you run it:
+
+```
+🔍 Testing 1 question(s)
+🆔 Test Run ID: 551730223cde
+📅 Timestamp: 2025-10-09T10:47:54
+
+📄 Retrieved chunks:
+  [1] src/aicl/parser.py (score: 0.404)
+  [2] src/aicl/planner.py (score: 0.371)
+  [3] src/aicl/evaluator.py (score: 0.347)
+
+✅ Using 3 code chunks + 0 doc chunks
+
+🤖 Claude 3.5 Sonnet...
+   ✅ Response: 1247 chars, 9127ms
+
+🤖 GPT-4...
+   ✅ Response: 1559 chars, 16370ms
+
+📊 LLM Judge Evaluation:
+  claude-3.5-sonnet:
+    Accuracy: 8/10
+    Completeness: 7/10
+    Clarity: 9/10
+    Code Specificity: 6/10
+    Total: 30/40
+
+  gpt-4:
+    Accuracy: 9/10
+    Completeness: 8/10
+    Clarity: 8/10
+    Code Specificity: 9/10
+    Total: 34/40
+
+  🏆 Winner: gpt-4
+```
+
+**Generated Report**: [View Full Report](experiments/rag_test_results.md)
+
+---
+
+## Overview
+
+Declarative AI Infrastructure
 
 A declarative, framework for defining and provisioning AI infrastructure (RAG pipelines, agents, etc.) using HCL syntax. Think "Terraform for AI workflows."
 
