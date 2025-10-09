@@ -124,7 +124,9 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 f"{self.base_url}/embeddings",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://github.com/zacharyelston/tofu-aicl",
+                    "X-Title": "tofu-aicl"
                 },
                 json={
                     "model": model,
@@ -188,49 +190,43 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 f"{self.base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://github.com/zacharyelston/tofu-aicl",
+                    "X-Title": "tofu-aicl"
                 },
                 json={
                     "model": model,
                     "messages": messages,
                     "temperature": config.get('temperature', 0.7),
-                    "max_tokens": config.get('max_tokens', 1024)
+                    "max_tokens": config.get('max_tokens', 1024),
+                    "usage": {"include": True}
                 }
             )
             
             response_time = time.time() - start_time
             response.raise_for_status()
             result = response.json()
+            
+            # Debug: Print full OpenRouter response to see what we get
+            print(f"DEBUG OpenRouter response keys: {result.keys()}")
+            if 'id' in result:
+                print(f"DEBUG Response ID: {result.get('id')}")
+            print(f"DEBUG Response headers: {dict(response.headers)}")
 
             answer = result['choices'][0]['message']['content']
             
-            # Extract usage metrics from standard response
+            # Extract usage metrics from response
             usage = result.get('usage', {})
+            print(f"DEBUG Usage object: {usage}")
             prompt_tokens = usage.get('prompt_tokens', 0)
             completion_tokens = usage.get('completion_tokens', 0)
             total_tokens = usage.get('total_tokens', prompt_tokens + completion_tokens)
             
-            # Check if OpenRouter provided extended metadata in headers or response
-            # OpenRouter returns generation stats in X-OpenRouter-* headers or generation field
-            openrouter_data = {}
-            
-            # Try to get OpenRouter-specific response data (when available)
-            if hasattr(response, 'headers'):
-                # Some OpenRouter responses include generation metadata
-                pass
-            
-            # For streaming=false, OpenRouter may include generation data
-            # Default to calculated values if not provided
-            actual_cost = None
+            # OpenRouter returns actual cost when usage.include=true
+            actual_cost = usage.get('total_cost')  # Real cost in USD from OpenRouter
+            print(f"DEBUG Actual cost from OpenRouter: {actual_cost}")
             generation_time_ms = None
             latency_ms = None
-            
-            # If response has OpenRouter metadata (check common locations)
-            if 'generation' in result:
-                gen_data = result['generation']
-                actual_cost = gen_data.get('usage')  # Real cost in USD
-                generation_time_ms = gen_data.get('generation_time')
-                latency_ms = gen_data.get('latency')
             
             # Use actual cost if available, otherwise estimate
             if actual_cost is not None:
@@ -328,13 +324,16 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
                 f"{self.base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://github.com/zacharyelston/tofu-aicl",
+                    "X-Title": "tofu-aicl"
                 },
                 json={
                     "model": model,
                     "messages": messages,
                     "temperature": config.get('temperature', 0.7),
-                    "max_tokens": config.get('max_tokens', 1024)
+                    "max_tokens": config.get('max_tokens', 1024),
+                    "usage": {"include": True}
                 }
             )
             response.raise_for_status()

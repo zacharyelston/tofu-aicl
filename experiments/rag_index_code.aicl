@@ -1,0 +1,39 @@
+resource "file_source" "codebase_docs" {
+  provider = "aicl/file_loader"
+  config = {
+    file_paths = [
+      "src/aicl/parser.py",
+      "src/aicl/evaluator.py", 
+      "src/aicl/executor.py",
+      "src/aicl/planner.py",
+      "replit.md"
+    ]
+  }
+}
+
+resource "chunks" "split_docs" {
+  provider = "aicl/text_splitter"
+  config = {
+    text = "${resource.file_source.codebase_docs.attributes.content}"
+    chunk_size = 1000
+    chunk_overlap = 200
+  }
+}
+
+resource "embedding" "code_vectors" {
+  provider = "aicl/openai"
+  config = {
+    texts = "${resource.chunks.split_docs.attributes.chunks}"
+    model = "text-embedding-3-small"
+  }
+}
+
+resource "vector_store" "indexed_code" {
+  provider = "aicl/pinecone"
+  config = {
+    operation = "upsert"
+    vectors = "${resource.embedding.code_vectors.attributes.embeddings}"
+    metadata = "${resource.chunks.split_docs.attributes.metadata}"
+    namespace = "tofu-aicl-codebase"
+  }
+}

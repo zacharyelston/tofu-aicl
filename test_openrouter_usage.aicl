@@ -1,0 +1,12 @@
+resource "chat" "test" {
+  provider = "aicl/openrouter"
+  config = {
+    model = "anthropic/claude-3.5-sonnet"
+    messages = [
+      {
+        role = "user"
+        content = "Say hello in one sentence."
+      }
+    ]
+  }
+}
