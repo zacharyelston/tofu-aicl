@@ -198,6 +198,20 @@ The project runs in Replit with providers as Python subprocesses (no Docker need
 | Claude 3 Opus | $15 | $75 |
 | Claude 3 Haiku | $0.25 | $1.25 |
 
+## RAG Testing Scripts
+
+Quick scripts to test RAG functionality:
+
+```bash
+# Load codebase into Pinecone
+python scripts/load_codebase_to_pinecone.py
+
+# Run RAG query test
+python scripts/test_rag_query.py
+```
+
+Results are saved to `experiments/rag_test_results.json` with actual OpenRouter costs and performance metrics.
+
 ## License
 
 GPL-3.0 - See LICENSE file for details.
