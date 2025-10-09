@@ -54,6 +54,48 @@ The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrati
 3. Execution with interpolation resolution
 4. Automatic cleanup/teardown
 
+## Matrix Experiment System (October 9, 2025)
+
+### Performance Metrics & Analysis
+Built a comprehensive matrix experiment system for running multiple AICL configurations with different variables and analyzing performance metrics:
+
+**Features:**
+- ✅ **Template-based experiments**: Use `{{ variable }}` placeholders in .aicl templates (lowercase with spaces)
+- ✅ **Comprehensive metrics**: Token usage, response timing, throughput, and cost tracking
+- ✅ **Model-specific pricing**: Accurate cost estimates per model (Claude, GPT-4, GPT-4o, etc.)
+- ✅ **Centralized storage**: All state files stored in `experiments/*/` directories
+- ✅ **Comparative analysis**: Built-in tools for comparing model performance
+
+**Available Tools:**
+```bash
+# Run experiments
+python run_matrix.py          # Simple chat experiments
+python run_code_matrix.py     # Code analysis experiments
+
+# View results
+python final_performance_report.py  # Comprehensive comparison
+python compare_matrix.py            # State file analysis
+```
+
+**Metrics Captured:**
+- **Token Usage**: Prompt tokens, completion tokens, total tokens
+- **Performance**: Response time (ms), latency, tokens/second
+- **Cost**: Accurate estimates with model-specific pricing (shows source: estimated/actual)
+- **Quality**: Response length, content preview
+
+**Example Results (Code Analysis):**
+- Claude 3.5 Sonnet: 116% faster, 75% cheaper than GPT-4
+- GPT-4: Higher cost but better token efficiency
+- All metrics stored in state files for custom analysis
+
+**Pricing Map (per 1M tokens):**
+- Claude 3.5 Sonnet: $3 input / $15 output
+- GPT-4: $30 input / $60 output
+- GPT-4o: $2.50 input / $10 output
+- GPT-4o-mini: $0.15 input / $0.60 output
+- Claude 3 Opus: $15 input / $75 output
+- Claude 3 Haiku: $0.25 input / $1.25 output
+
 ## Recent Changes (October 5, 2025)
 
 ### Core Framework

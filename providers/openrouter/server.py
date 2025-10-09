@@ -206,25 +206,17 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             response_time = time.time() - start_time
             response.raise_for_status()
             result = response.json()
-            
-            # Debug: Print full OpenRouter response to see what we get
-            print(f"DEBUG OpenRouter response keys: {result.keys()}")
-            if 'id' in result:
-                print(f"DEBUG Response ID: {result.get('id')}")
-            print(f"DEBUG Response headers: {dict(response.headers)}")
 
             answer = result['choices'][0]['message']['content']
             
             # Extract usage metrics from response
             usage = result.get('usage', {})
-            print(f"DEBUG Usage object: {usage}")
             prompt_tokens = usage.get('prompt_tokens', 0)
             completion_tokens = usage.get('completion_tokens', 0)
             total_tokens = usage.get('total_tokens', prompt_tokens + completion_tokens)
             
             # OpenRouter returns actual cost when usage.include=true
             actual_cost = usage.get('total_cost')  # Real cost in USD from OpenRouter
-            print(f"DEBUG Actual cost from OpenRouter: {actual_cost}")
             generation_time_ms = None
             latency_ms = None
             
