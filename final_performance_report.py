@@ -30,7 +30,8 @@ def generate_report():
                         'response_length': len(attrs.get("response", "")),
                         'usage': attrs.get("usage", {}),
                         'performance': attrs.get("performance", {}),
-                        'cost': attrs.get("cost", {})
+                        'cost': attrs.get("cost", {}),
+                        'quality_grade': attrs.get("quality_grade", {})
                     })
                     break
         except Exception as e:
@@ -53,6 +54,29 @@ def generate_report():
         print(f"│ {model:<19}│ {tokens:<7}│ {time_ms:<10}│ {tok_per_sec:<8}│ {cost:<11.6f}│ {length:<15}│")
     
     print("└─" + "─" * 93 + "┘")
+    
+    # Quality Grades Table (if available)
+    has_grades = any(exp.get('quality_grade') and exp['quality_grade'].get('scores') for exp in experiments)
+    if has_grades:
+        print("\n⭐ QUALITY GRADES (LLM-as-Judge)\n")
+        print("┌─" + "─" * 93 + "┐")
+        print("│ Model              │ Overall│ Accuracy│ Relevance│ Actionable│ Clarity │ Complete│")
+        print("├─" + "─" * 93 + "┤")
+        
+        for exp in experiments:
+            model = exp['model'].split('/')[-1][:17]
+            grade = exp.get('quality_grade', {})
+            scores = grade.get('scores', {})
+            overall = grade.get('overall_score', 'N/A')
+            accuracy = scores.get('accuracy', 'N/A')
+            relevance = scores.get('relevance', 'N/A')
+            actionability = scores.get('actionability', 'N/A')
+            clarity = scores.get('clarity', 'N/A')
+            completeness = scores.get('completeness', 'N/A')
+            
+            print(f"│ {model:<19}│ {str(overall):<7}│ {str(accuracy):<8}│ {str(relevance):<9}│ {str(actionability):<10}│ {str(clarity):<8}│ {str(completeness):<8}│")
+        
+        print("└─" + "─" * 93 + "┘")
     
     # Detailed breakdown
     print("\n💡 DETAILED ANALYSIS\n")
@@ -90,6 +114,17 @@ def generate_report():
         print(f"\n📝 Response:")
         print(f"  • Length: {exp['response_length']} characters")
         print(f"  • Preview: {exp['response'][:200]}...")
+        
+        # Quality grades (if available)
+        grade = exp.get('quality_grade', {})
+        if grade and grade.get('scores'):
+            print(f"\n⭐ Quality Grade (LLM-as-Judge):")
+            print(f"  • Overall Score: {grade.get('overall_score', 'N/A')}/10")
+            scores = grade.get('scores', {})
+            for criterion, score in scores.items():
+                print(f"  • {criterion.title()}: {score}/10")
+            if 'reasoning' in grade:
+                print(f"  • Judge Reasoning: {grade['reasoning'][:150]}...")
         print()
     
     # Comparative insights
@@ -157,6 +192,24 @@ def generate_report():
         else:
             pct = ((claude_tokens - gpt4_tokens) / claude_tokens) * 100
             print(f"  • GPT-4 uses {pct:.1f}% fewer tokens")
+        
+        # Quality comparison (if available)
+        claude_grade = claude.get('quality_grade', {})
+        gpt4_grade = gpt4.get('quality_grade', {})
+        if claude_grade.get('overall_score') and gpt4_grade.get('overall_score'):
+            claude_score = claude_grade.get('overall_score', 0)
+            gpt4_score = gpt4_grade.get('overall_score', 0)
+            print(f"\n⭐ Quality (LLM-as-Judge):")
+            print(f"  • Claude: {claude_score}/10")
+            print(f"  • GPT-4: {gpt4_score}/10")
+            if claude_score > gpt4_score:
+                diff = claude_score - gpt4_score
+                print(f"  • Claude scores {diff:.1f} points higher in quality")
+            elif gpt4_score > claude_score:
+                diff = gpt4_score - claude_score
+                print(f"  • GPT-4 scores {diff:.1f} points higher in quality")
+            else:
+                print(f"  • Equal quality scores")
     
     # Recommendations based on actual metrics
     print(f"\n{'=' * 95}")
