@@ -98,6 +98,20 @@ python compare_matrix.py            # State file analysis
 
 ## Recent Changes
 
+### October 10, 2025 - Test Harness Setup
+- **Pytest Integration**: Comprehensive unit and integration test suite
+- **Test Coverage**: Parser, Evaluator, Planner, State Manager, Engine
+- **21 Tests Passing**: Full test coverage for core components
+- **Test Structure**: Organized into `tests/unit/` and `tests/integration/`
+- **Coverage Reporting**: Configured with pytest-cov
+- **CI-Ready**: Tests can run in CI/CD pipelines
+
+**Test Statistics:**
+- 21 passing tests across 6 test files
+- Unit tests for all core framework components
+- Integration tests for engine workflows
+- Coverage reporting configured
+
 ### October 10, 2025 - OpenTelemetry Observability
 - **Distributed Tracing**: Full span instrumentation across Engine and Executor
 - **Metrics Collection**: Provider starts and resource operations counters
