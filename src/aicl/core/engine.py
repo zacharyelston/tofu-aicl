@@ -14,7 +14,7 @@ from aicl.parser import HCLParser
 from aicl.planner import Planner
 from aicl.executor import Executor
 from aicl.provider_registry import get_registry
-from aicl.observability import get_tracer, get_meter, initialize_observability
+from aicl.observability import get_tracer, get_meter, initialize_observability, shutdown_observability
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
@@ -317,6 +317,7 @@ class AICLEngine:
             self.apply()
         finally:
             self.destroy()
+            shutdown_observability()
 
     def test(self, test_config_path: str):
         print(f"--- Running Tests from {test_config_path} ---")

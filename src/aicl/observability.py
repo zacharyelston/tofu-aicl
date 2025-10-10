@@ -181,8 +181,10 @@ def shutdown_observability() -> None:
     
     try:
         if _tracer_provider:
+            _tracer_provider.force_flush(timeout_millis=30000)
             _tracer_provider.shutdown()
         if _meter_provider:
+            _meter_provider.force_flush(timeout_millis=30000)
             _meter_provider.shutdown()
         logger.info("OpenTelemetry shutdown complete")
     except Exception as e:
@@ -191,3 +193,7 @@ def shutdown_observability() -> None:
         _initialized = False
         _tracer_provider = None
         _meter_provider = None
+
+
+# Note: shutdown_observability() should be called explicitly by the Engine
+# after all work completes, rather than using atexit which can fire prematurely

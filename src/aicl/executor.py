@@ -59,16 +59,18 @@ class Executor:
                     response = provider.stub.ApplyResourceChange(req)
                     state = response.new_state
 
-                attributes = MessageToDict(state.attributes)
-                metadata = MessageToDict(state.metadata)
-                resource_state = ResourceState(
-                    id=state.id, type=state.type, provider=provider_name,
-                    attributes=attributes, metadata=metadata, status=state.status
-                )
-                self.state_manager.add_resource(resource_state)
-                span.set_attribute("resource.id", state.id)
-                span.set_attribute("resource.status", "created")
-                print(f"  + Resource '{res_name}' ({state.id}) created successfully.")
+                    attributes = MessageToDict(state.attributes)
+                    metadata = MessageToDict(state.metadata)
+                    resource_state = ResourceState(
+                        id=state.id, type=state.type, provider=provider_name,
+                        attributes=attributes, metadata=metadata, status=state.status
+                    )
+                    self.state_manager.add_resource(resource_state)
+                    
+                    # Set success attributes after successful completion
+                    span.set_attribute("resource.id", state.id)
+                    span.set_attribute("resource.status", "created")
+                    print(f"  + Resource '{res_name}' ({state.id}) created successfully.")
             except grpc.RpcError as e:
                 span.set_attribute("resource.status", "failed")
                 span.record_exception(e)
