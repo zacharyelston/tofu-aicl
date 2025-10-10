@@ -29,7 +29,7 @@ resource "query" "relevant_chunks" {
 
 # Generate answer using retrieved context
 resource "chat" "answer" {
-  model = "openai/gpt-4o-mini"
+  model = "mistralai/mistral-large"
   messages = [
     {
       role = "system"

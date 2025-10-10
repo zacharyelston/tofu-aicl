@@ -265,11 +265,11 @@ def main():
     # Select a subset for testing (first 3 questions)
     test_questions = questions[:3]
     
-    # Models to test
+    # Models to test - Latest versions
     models = [
-        "anthropic/claude-3.5-sonnet",
-        "openai/gpt-4",
-        "openai/gpt-4o-mini"
+        "anthropic/claude-3.5-sonnet",  # Latest Claude
+        "openai/gpt-4",                  # GPT-4
+        "mistralai/mistral-large"        # Latest Mistral
     ]
     
     # Run the matrix

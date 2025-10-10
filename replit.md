@@ -109,12 +109,13 @@ python compare_matrix.py            # State file analysis
 - ✅ GPT-4o-mini: Excellent 9.2/10 quality, 98% cheaper
 - See `QUALITY_VALIDATION_REPORT.md` for details
 
-**RAG Quality (8.4/10 avg):**
-- ✅ 100% RAG Success: 9/9 experiments on real codebase
-- ✅ GPT-4o-mini: Best RAG performance (9.0/10), most detailed
-- ✅ Claude 3.5 Sonnet: Strong RAG (8.8/10), balanced cost
-- ✅ GPT-4: Good RAG (7.6/10), most concise
-- See `RAG_QUALITY_REPORT.md` for details
+**RAG Quality (8.1-8.4/10 avg on latest models):**
+- ✅ 100% RAG Success: Multiple test runs on real codebase
+- ✅ Mistral Large: Best quality (8.3/10), most detailed (2,164 chars)
+- ✅ Claude 3.5 Sonnet: Best value (8.1/10), 64% cheaper
+- ✅ GPT-4: Reliable (7.9/10), compact responses
+- ✅ GPT-4o-mini: Budget champion (9.0/10), excellent for RAG
+- See `RAG_QUALITY_REPORT.md` and `RAG_MODEL_COMPARISON.md`
 
 **Key Insight**: GPT-4o-mini excels at RAG tasks, outperforming expensive models!
 
