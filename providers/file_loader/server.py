@@ -21,6 +21,10 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
         config = MessageToDict(request.config)
         path = config.get('path', '.')
         glob = config.get('glob', '**/*')
+        
+        # Get resource name from AICL config for consistent ID generation
+        resource_name = config.get('aiclResourceName', Path(path).name)
+        resource_id = f"{request.type_name}-{resource_name}"
 
         documents = []
         try:
@@ -38,7 +42,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
             ParseDict(output_attributes, output_struct)
 
             new_state = provider_pb2.ResourceState(
-                id=f"loader-{Path(path).name}",
+                id=resource_id,
                 type=request.type_name,
                 attributes=output_struct
             )
