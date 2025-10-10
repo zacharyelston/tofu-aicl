@@ -1,0 +1,18 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source = "aicl/openrouter"
+    }
+  }
+}
+
+resource "chat" "test_response" {
+  model = "openai/gpt-4o-mini"
+  messages = [
+    {
+      role = "user"
+      content = "Explain in 2 sentences: declarative infrastructure"
+    }
+  ]
+  aiclResourceName = "test_response"
+}
