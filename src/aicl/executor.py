@@ -70,3 +70,25 @@ class Executor:
         s = Struct()
         ParseDict(d, s)
         return s
+    
+    def _handle_diagnostics(self, diagnostics):
+        """Handle and print diagnostics from provider responses."""
+        for diag in diagnostics:
+            severity = provider_pb2.Diagnostic.Severity.Name(diag.severity)
+            print(f"  [{severity}] {diag.summary}: {diag.detail}")
+    
+    def destroy_all(self):
+        """Destroy all resources in current state."""
+        if not self.state_manager.current_state:
+            return
+        
+        for res_id, res_state in self.state_manager.current_state.resources.items():
+            provider = self.providers.get(res_state.provider)
+            if provider:
+                try:
+                    req = provider_pb2.DeleteResourceRequest(id=res_id, type_name=res_state.type)
+                    response = provider.stub.DeleteResource(req)
+                    self._handle_diagnostics(response.diagnostics)
+                    print(f"  - Resource '{res_id}' deleted.")
+                except grpc.RpcError as e:
+                    print(f"Error deleting resource {res_id}: {e.details()}")

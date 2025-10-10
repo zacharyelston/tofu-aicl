@@ -7,7 +7,7 @@ import sys
 from typing import Dict, Any, Optional
 from pathlib import Path
 from google.protobuf.struct_pb2 import Struct
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 from aicl.state.manager import StateManager, ResourceState
 from aicl.parser import HCLParser
@@ -58,6 +58,13 @@ class AICLEngine:
     def _parse_config(self):
         parser = HCLParser(self.config_path)
         return parser.parse()
+    
+    @staticmethod
+    def _dict_to_struct(d: dict) -> Struct:
+        """Utility to convert dict to Protobuf Struct."""
+        s = Struct()
+        ParseDict(d, s)
+        return s
 
     def _start_providers(self):
         if USE_SUBPROCESS_MODE or self.docker_client is None:
@@ -136,7 +143,7 @@ class AICLEngine:
                     try:
                         # Configure the provider
                         provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
-                        config_struct = self._dict_to_struct(provider_config)
+                        config_struct = self._dict_to_struct(provider_config) if provider_config else Struct()
                         configure_req = provider_pb2.ConfigureRequest(config=config_struct)
                         stub.Configure(configure_req)
                         break
@@ -206,7 +213,7 @@ class AICLEngine:
                     try:
                         # Configure the provider
                         provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
-                        config_struct = self._dict_to_struct(provider_config)
+                        config_struct = self._dict_to_struct(provider_config) if provider_config else Struct()
                         configure_req = provider_pb2.ConfigureRequest(config=config_struct)
                         stub.Configure(configure_req)
                         break
@@ -223,16 +230,6 @@ class AICLEngine:
                 self.destroy()
                 raise
 
-    def _dict_to_struct(self, d: dict) -> Struct:
-        s = Struct()
-        s.update(d)
-        return s
-
-
-    def _handle_diagnostics(self, diagnostics):
-        for diag in diagnostics:
-            severity = provider_pb2.Diagnostic.Severity.Name(diag.severity)
-            print(f"  [{severity}] {diag.summary}: {diag.detail}")
 
     def apply(self):
         self.state_manager.load(self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp'))
@@ -251,18 +248,13 @@ class AICLEngine:
 
     def destroy(self):
         print("\nDestroying resources and stopping containers...")
-        if self.state_manager.current_state:
-            for res_id, res_state in self.state_manager.current_state.resources.items():
-                provider = self.provider_containers.get(res_state.provider)
-                if provider:
-                    try:
-                        req = provider_pb2.DeleteResourceRequest(id=res_id, type_name=res_state.type)
-                        response = provider.stub.DeleteResource(req)
-                        self._handle_diagnostics(response.diagnostics)
-                        print(f"  - Resource '{res_id}' deleted.")
-                    except grpc.RpcError as e:
-                        print(f"Error deleting resource {res_id}: {e.details()}")
-
+        
+        # Delegate resource destruction to Executor
+        if self.state_manager.current_state and self.provider_containers:
+            executor = Executor(self.provider_containers, self.state_manager)
+            executor.destroy_all()
+        
+        # Stop all provider containers/processes
         for name, container in self.provider_containers.items():
             container.stop()
         self.provider_containers = {}
@@ -280,6 +272,9 @@ class AICLEngine:
         self.parsed_config = self._parse_config()
         self._start_providers()
 
+        # Create executor for utility methods
+        executor = Executor(self.provider_containers, self.state_manager)
+
         try:
             resources = self.parsed_config.get('resource', [])
             for res_config in resources:
@@ -291,14 +286,16 @@ class AICLEngine:
                         if not provider:
                             raise Exception(f"Assertion provider '{provider_name}' not found.")
 
-                        input_struct = self._dict_to_struct({
+                        # Use Executor's _dict_to_struct method
+                        input_struct = executor._dict_to_struct({
                             'command': config_attrs.get('command'),
                             'input': config_attrs.get('input')
                         })
                         req = provider_pb2.ValidateRequest(input=input_struct)
 
                         response = provider.stub.Validate(req)
-                        self._handle_diagnostics(response.diagnostics)
+                        # Use Executor's _handle_diagnostics method
+                        executor._handle_diagnostics(response.diagnostics)
 
                         if not response.success:
                             print("  [FAIL] Provider validation failed.")
