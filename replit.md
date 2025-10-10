@@ -98,24 +98,31 @@ python compare_matrix.py            # State file analysis
 
 ## Recent Changes
 
-### October 10, 2025 - Framework Validation (Infrastructure + Quality)
-- **100% Infrastructure Success**: 9/9 experiments passed across 3 models × 3 tasks
-- **9.7/10 Quality Score**: LLM-as-Judge validation confirms response accuracy
-- **Multi-Model Support**: Validated Claude 3.5 Sonnet, GPT-4, GPT-4o-mini
-- **Performance Metrics**: 6.0s avg per experiment, 968 total tokens, $0.019 total cost
-- **State Management**: Confirmed reliable state persistence and resource lifecycle
-- **Observability**: Full telemetry capture with traces and metrics
+### October 10, 2025 - Complete Framework Validation (Infrastructure + Quality + RAG)
 
-**Quality Results (LLM-as-Judge):**
-- Claude 3.5 Sonnet: Perfect 10.0/10 quality (all tasks)
-- GPT-4: Near-perfect 9.9/10 quality
-- GPT-4o-mini: Excellent 9.2/10 quality, 98% cheaper
-- See `QUALITY_VALIDATION_REPORT.md` for full analysis
+**Dual Validation: Simple Chat + RAG Pipeline**
 
-**Infrastructure Results:**
-- GPT-4: Fastest (5.7s avg), best latency (2.8s)
-- GPT-4o-mini: Most cost-effective ($0.0002 vs $0.012)
-- Claude 3.5 Sonnet: Best quality with balanced performance
+**Simple Chat Quality (9.7/10 avg):**
+- ✅ 100% Infrastructure Success: 9/9 experiments
+- ✅ Claude 3.5 Sonnet: Perfect 10.0/10 quality
+- ✅ GPT-4: Near-perfect 9.9/10 quality
+- ✅ GPT-4o-mini: Excellent 9.2/10 quality, 98% cheaper
+- See `QUALITY_VALIDATION_REPORT.md` for details
+
+**RAG Quality (8.4/10 avg):**
+- ✅ 100% RAG Success: 9/9 experiments on real codebase
+- ✅ GPT-4o-mini: Best RAG performance (9.0/10), most detailed
+- ✅ Claude 3.5 Sonnet: Strong RAG (8.8/10), balanced cost
+- ✅ GPT-4: Good RAG (7.6/10), most concise
+- See `RAG_QUALITY_REPORT.md` for details
+
+**Key Insight**: GPT-4o-mini excels at RAG tasks, outperforming expensive models!
+
+**Infrastructure Validation:**
+- Multi-provider orchestration: ✅ Working
+- State management: ✅ Reliable persistence
+- Observability: ✅ Full telemetry (traces + metrics)
+- Cost tracking: ✅ Accurate per-model estimation
 
 ### October 10, 2025 - Test Harness Setup
 - **Pytest Integration**: Comprehensive unit and integration test suite

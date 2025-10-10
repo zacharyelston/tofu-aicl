@@ -1,0 +1,45 @@
+terraform {
+  required_providers {
+    openai = {
+      source = "aicl/openai"
+    }
+    openrouter = {
+      source = "aicl/openrouter"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+    }
+  }
+}
+
+# Generate embedding for the question
+resource "embedding" "question_vector" {
+  text = "How does the AICL engine orchestrate provider lifecycle and resource provisioning?"
+  model = "text-embedding-3-small"
+  aiclResourceName = "question_vector"
+}
+
+# Query Pinecone for relevant code chunks
+resource "query" "relevant_chunks" {
+  vector = "${resource.embedding.question_vector.attributes.embedding}"
+  top_k = 5
+  namespace = "tofu-aicl-codebase"
+  aiclResourceName = "relevant_chunks"
+}
+
+# Generate answer using retrieved context
+resource "chat" "answer" {
+  model = "openai/gpt-4"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert on the AICL framework. Answer questions accurately based on the provided code context. Be specific and reference actual implementation details."
+    },
+    {
+      role = "user"
+      content = "Context from codebase:\n${resource.query.relevant_chunks.attributes.results}\n\nQuestion: How does the AICL engine orchestrate provider lifecycle and resource provisioning?"
+    }
+  ]
+  max_tokens = 500
+  aiclResourceName = "answer"
+}

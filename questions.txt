@@ -1,0 +1,33 @@
+# AICL Framework Test Questions
+# Format: One question per line, # for comments
+
+# Architecture & Design
+How does the AICL engine orchestrate provider lifecycle and resource provisioning?
+What is the role of the Evaluator in HCL interpolation and expression resolution?
+Explain the dependency resolution algorithm used by the Planner component
+How does the State Manager handle resource persistence and atomic operations?
+
+# Provider System
+How do providers communicate with the engine using gRPC?
+What is the difference between subprocess and container provider modes?
+How does the Provider Registry manage provider metadata and versions?
+
+# Resource Management
+How are resource dependencies resolved before execution?
+What happens during the apply phase of a resource?
+How does the framework handle resource cleanup and destruction?
+
+# HCL & Configuration
+How does variable interpolation work with ${resource.type.name.attribute} syntax?
+What is the purpose of the terraform block in AICL configurations?
+How are provider configurations evaluated and passed to provider processes?
+
+# Observability & Debugging
+How does OpenTelemetry integration provide distributed tracing?
+What metrics are captured during resource provisioning?
+How can you debug provider communication issues?
+
+# RAG & Embeddings
+How does the RAG pipeline index source code into Pinecone?
+What embedding models are supported by the framework?
+How does semantic search work in the RAG query pipeline?
