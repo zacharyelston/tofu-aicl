@@ -96,9 +96,32 @@ python compare_matrix.py            # State file analysis
 - Claude 3 Opus: $15 input / $75 output
 - Claude 3 Haiku: $0.25 input / $1.25 output
 
-## Recent Changes (October 5, 2025)
+## Recent Changes
 
-### Core Framework
+### October 10, 2025 - HCL Variable Evaluation
+- **Native Variable Support**: Full HCL variable evaluation with `${var.name}` interpolation
+- **Complete Coverage**: Variables work in both provider and resource configurations
+- **Evaluation Context**: Unified context with `var` and `resource` namespaces
+- **Default Values**: Support for variable blocks with default values
+- **Runtime Overrides**: Architecture supports variable overrides at execution time
+
+**Example Usage:**
+```hcl
+variable "source_path" {
+  type    = string
+  default = "src/aicl"
+}
+
+provider "loader" {
+  file_filter = var.source_path  # ✅ Variables in provider config
+}
+
+resource "loader_files" "docs" {
+  path = var.source_path  # ✅ Variables in resource config
+}
+```
+
+### October 5, 2025 - Core Framework
 - **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
 - **HCL Evaluator**: Native interpolation resolution for `${resource.type.name.attributes.field}` syntax with proper support for complex nested data structures (lists of dicts)
 - **Protobuf Serialization**: Updated to use `ParseDict`/`MessageToDict` for correct handling of nested structures between engine and providers
