@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  rag-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_HOST_URL=${PINECONE_INDEX_HOST}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    volumes:
+      - ./experiments:/app/experiments
+      - ./questions.txt:/app/questions.txt
+      - ./rag-config.yaml:/app/rag-config.yaml
+      - ./.env:/app/.env
+    command: python scripts/test_rag_query.py questions.txt

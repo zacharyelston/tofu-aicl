@@ -259,13 +259,55 @@ The RAG testing system evaluates retrieval quality and model performance with **
 
 ### Quick Start
 
-**1. Load your codebase into Pinecone:**
+**Automated Setup:**
+```bash
+# Run setup script to create .env and questions.txt templates
+./setup-rag.sh
+```
+
+#### Option 1: Docker (Recommended - Portable)
+
+**1. Set up environment variables:**
+```bash
+# Create .env file with your API keys
+cat > .env << EOF
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+PINECONE_API_KEY=...
+PINECONE_ENVIRONMENT=us-east-1
+EOF
+```
+
+**2. Create questions file (`questions.txt`):**
+```
+How does the HCL evaluator resolve interpolations?
+What is the role of the StateManager?
+Explain the parsing flow from HCL input to executable plan.
+```
+
+**3. Run with Docker Compose:**
+```bash
+# Build and run
+docker compose -f docker-compose.rag.yml build
+docker compose -f docker-compose.rag.yml run --rm rag-test
+
+# Results saved to experiments/ directory
+```
+
+#### Option 2: Local Python
+
+**1. Install dependencies:**
+```bash
+uv pip install -r pyproject.toml
+```
+
+**2. Load your codebase into Pinecone:**
 ```bash
 export $(grep -v '^#' .env | xargs)
 python scripts/load_codebase_to_pinecone.py
 ```
 
-**2. Create a questions file (`questions.txt`):**
+**3. Create a questions file (`questions.txt`):**
 ```
 # RAG Test Questions
 # One question per line, lines starting with # are ignored
@@ -275,7 +317,7 @@ What is the role of the StateManager?
 Explain the parsing flow from HCL input to executable plan.
 ```
 
-**3. Run RAG evaluation:**
+**4. Run RAG evaluation:**
 ```bash
 python scripts/test_rag_query.py questions.txt
 ```
