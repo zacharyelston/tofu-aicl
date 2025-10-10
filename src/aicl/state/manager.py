@@ -36,6 +36,8 @@ class StateManager:
         self.state_dir = Path(state_dir)
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.current_state: Optional[StateFile] = None
+        # Resource registry: {(type, name): resource_id} for fast exact lookups
+        self._resource_registry: Dict[tuple, str] = {}
 
     def load(self, experiment_id: str) -> StateFile:
         """Load state from git-tracked file"""
@@ -57,7 +59,26 @@ class StateManager:
         else:
             self.current_state = StateFile(experiment_id=experiment_id)
 
+        # Rebuild resource registry from loaded state
+        self._rebuild_registry()
+        
         return self.current_state
+    
+    def _rebuild_registry(self):
+        """Rebuild the resource registry from current state."""
+        self._resource_registry.clear()
+        if not self.current_state:
+            return
+        
+        for resource in self.current_state.resources.values():
+            # Extract resource name from standardized ID: {type_name}-{resource_name}
+            if '-' in resource.id:
+                resource_name = resource.id.split('-', 1)[1]
+            else:
+                resource_name = resource.id
+            
+            key = (resource.type, resource_name)
+            self._resource_registry[key] = resource.id
 
     def save(self) -> Optional[Path]:
         """Save state to git-tracked file"""
@@ -80,6 +101,16 @@ class StateManager:
         if not self.current_state:
             raise RuntimeError("No state loaded. Call load() first.")
         self.current_state.resources[resource.id] = resource
+        
+        # Update registry for fast lookup
+        # Extract resource name from standardized ID: {type_name}-{resource_name}
+        if '-' in resource.id:
+            resource_name = resource.id.split('-', 1)[1]
+        else:
+            resource_name = resource.id
+        
+        key = (resource.type, resource_name)
+        self._resource_registry[key] = resource.id
 
     def get_resource(self, resource_id: str) -> Optional[ResourceState]:
         if not self.current_state:
@@ -87,17 +118,17 @@ class StateManager:
         return self.current_state.resources.get(resource_id)
 
     def get_resource_by_name(self, resource_type: str, name: str) -> Optional[ResourceState]:
-        """Get resource by exact type and name match."""
+        """Get resource by exact type and name match using registry."""
         if not self.current_state:
             return None
 
-        # Look for exact match using type.name pattern
-        for res in self.current_state.resources.values():
-            if res.type == resource_type:
-                # Extract resource name from ID (format: provider-name)
-                res_name = res.id.split('-', 1)[1] if '-' in res.id else res.id
-                if res_name == name:
-                    return res
+        # Use registry for O(1) lookup instead of O(n) iteration
+        key = (resource_type, name)
+        resource_id = self._resource_registry.get(key)
+        
+        if resource_id:
+            return self.current_state.resources.get(resource_id)
+        
         return None
 
     def get_all_resources_as_dict(self) -> dict:
@@ -105,17 +136,31 @@ class StateManager:
             return {}
 
         output = defaultdict(lambda: defaultdict(dict))
-        for res in self.current_state.resources.values():
-            # This is a simplification and assumes unique resource names
-            res_name = res.id.split('-')[1] if '-' in res.id else res.id
-            output[res.type][res_name] = {'attributes': res.attributes}
+        # Use registry instead of substring parsing
+        for (res_type, res_name), res_id in self._resource_registry.items():
+            resource = self.current_state.resources.get(res_id)
+            if resource:
+                output[res_type][res_name] = {'attributes': resource.attributes}
         return output
 
     def remove_resource(self, resource_id: str):
         if self.current_state and resource_id in self.current_state.resources:
+            resource = self.current_state.resources[resource_id]
+            
+            # Remove from registry
+            if '-' in resource.id:
+                resource_name = resource.id.split('-', 1)[1]
+            else:
+                resource_name = resource.id
+            
+            key = (resource.type, resource_name)
+            self._resource_registry.pop(key, None)
+            
+            # Remove from state
             del self.current_state.resources[resource_id]
 
     def clear(self):
         if self.current_state:
             self.current_state.resources = {}
             self.current_state.outputs = {}
+            self._resource_registry.clear()
