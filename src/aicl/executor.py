@@ -6,10 +6,11 @@ from aicl.state.manager import ResourceState
 from aicl.evaluator import HCLEvaluator
 
 class Executor:
-    def __init__(self, providers, state_manager):
+    def __init__(self, providers, state_manager, parsed_config=None):
         self.providers = providers
         self.state_manager = state_manager
-        self.evaluator = HCLEvaluator(state_manager)
+        self.parsed_config = parsed_config or {}
+        self.evaluator = HCLEvaluator(state_manager, parsed_config)
 
         # Map resource types to provider names
         self.resource_to_provider = {

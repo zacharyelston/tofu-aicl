@@ -141,9 +141,16 @@ class AICLEngine:
                 max_retries = 5
                 for attempt in range(max_retries):
                     try:
-                        # Configure the provider
+                        # Configure the provider with variable evaluation
+                        from aicl.evaluator import HCLEvaluator
                         provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
-                        config_struct = self._dict_to_struct(provider_config) if provider_config else Struct()
+                        
+                        # Evaluate variables in provider config
+                        evaluator = HCLEvaluator(self.state_manager, self.parsed_config)
+                        context = evaluator.build_context()
+                        resolved_provider_config = evaluator.resolve_config(provider_config, context)
+                        
+                        config_struct = self._dict_to_struct(resolved_provider_config) if resolved_provider_config else Struct()
                         configure_req = provider_pb2.ConfigureRequest(config=config_struct)
                         stub.Configure(configure_req)
                         break
@@ -211,9 +218,16 @@ class AICLEngine:
                 max_retries = 5
                 for attempt in range(max_retries):
                     try:
-                        # Configure the provider
+                        # Configure the provider with variable evaluation
+                        from aicl.evaluator import HCLEvaluator
                         provider_config = self.parsed_config.get('provider', [{}])[0].get(name, {})
-                        config_struct = self._dict_to_struct(provider_config) if provider_config else Struct()
+                        
+                        # Evaluate variables in provider config
+                        evaluator = HCLEvaluator(self.state_manager, self.parsed_config)
+                        context = evaluator.build_context()
+                        resolved_provider_config = evaluator.resolve_config(provider_config, context)
+                        
+                        config_struct = self._dict_to_struct(resolved_provider_config) if resolved_provider_config else Struct()
                         configure_req = provider_pb2.ConfigureRequest(config=config_struct)
                         stub.Configure(configure_req)
                         break
@@ -239,7 +253,7 @@ class AICLEngine:
         planner = Planner(self.parsed_config)
         sorted_nodes, resource_map = planner.build_graph()
 
-        executor = Executor(self.provider_containers, self.state_manager)
+        executor = Executor(self.provider_containers, self.state_manager, self.parsed_config)
         for node_id in sorted_nodes:
             executor.execute_node(node_id, resource_map)
 
@@ -251,7 +265,7 @@ class AICLEngine:
         
         # Delegate resource destruction to Executor
         if self.state_manager.current_state and self.provider_containers:
-            executor = Executor(self.provider_containers, self.state_manager)
+            executor = Executor(self.provider_containers, self.state_manager, self.parsed_config)
             executor.destroy_all()
         
         # Stop all provider containers/processes
@@ -273,7 +287,7 @@ class AICLEngine:
         self._start_providers()
 
         # Create executor for utility methods
-        executor = Executor(self.provider_containers, self.state_manager)
+        executor = Executor(self.provider_containers, self.state_manager, self.parsed_config)
 
         try:
             resources = self.parsed_config.get('resource', [])
