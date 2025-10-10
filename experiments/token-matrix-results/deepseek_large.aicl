@@ -1,0 +1,53 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source  = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "chat" "code_review" {
+  model = "deepseek/deepseek-coder"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer specializing in Python. Provide detailed, technical feedback."
+    },
+    {
+      role = "user"
+      content = "Review this Python code and provide specific improvements for:
+1. Performance optimization
+2. Error handling
+3. Code maintainability
+
+Code:
+from google.protobuf.json_format import MessageToDict, ParseDict
+from google.protobuf.struct_pb2 import Struct
+import grpc
+import proto.provider_pb2 as provider_pb2
+from aicl.state.manager import ResourceState
+from aicl.evaluator import HCLEvaluator
+
+class Executor:
+    def __init__(self, providers, state_manager):
+        self.providers = providers
+        self.state_manager = state_manager
+        self.evaluator = HCLEvaluator(state_manager)
+
+        # Map resource types to provider names
+        self.resource_to_provider = {
+            'file_loader': 'file_loader',
+            'text_splitter': 'text_splitter',
+            'embedding': 'openai',
+            'azure_openai_embedding': 'azure_openai',
+            'chat': 'openrouter',
+            'upsert': 'pinecone',
+            'query': 
+
+Provide detailed, actionable suggestions."
+    }
+  ]
+  max_tokens = 3000
+  temperature = 0.3
+}

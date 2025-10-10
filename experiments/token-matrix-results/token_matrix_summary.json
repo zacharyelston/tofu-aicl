@@ -1,0 +1,89 @@
+{
+  "total_experiments": 9,
+  "successful": 9,
+  "failed": 0,
+  "timestamp": "2025-10-10T00:56:51.902764",
+  "experiments": [
+    {
+      "experiment_id": "claude_small",
+      "config_path": "experiments/token-matrix-results/claude_small.aicl",
+      "state_file": "experiments/token-matrix-results/claude_small.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:55:04.714732"
+    },
+    {
+      "experiment_id": "claude_medium",
+      "config_path": "experiments/token-matrix-results/claude_medium.aicl",
+      "state_file": "experiments/token-matrix-results/claude_medium.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:55:28.363090"
+    },
+    {
+      "experiment_id": "claude_large",
+      "config_path": "experiments/token-matrix-results/claude_large.aicl",
+      "state_file": "experiments/token-matrix-results/claude_large.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:55:49.242646"
+    },
+    {
+      "experiment_id": "gpt4o_small",
+      "config_path": "experiments/token-matrix-results/gpt4o_small.aicl",
+      "state_file": "experiments/token-matrix-results/gpt4o_small.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:02.921371"
+    },
+    {
+      "experiment_id": "gpt4o_medium",
+      "config_path": "experiments/token-matrix-results/gpt4o_medium.aicl",
+      "state_file": "experiments/token-matrix-results/gpt4o_medium.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:23.010918"
+    },
+    {
+      "experiment_id": "gpt4o_large",
+      "config_path": "experiments/token-matrix-results/gpt4o_large.aicl",
+      "state_file": "experiments/token-matrix-results/gpt4o_large.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:43.319807"
+    },
+    {
+      "experiment_id": "deepseek_small",
+      "config_path": "experiments/token-matrix-results/deepseek_small.aicl",
+      "state_file": "experiments/token-matrix-results/deepseek_small.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:46.112018"
+    },
+    {
+      "experiment_id": "deepseek_medium",
+      "config_path": "experiments/token-matrix-results/deepseek_medium.aicl",
+      "state_file": "experiments/token-matrix-results/deepseek_medium.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:49.105167"
+    },
+    {
+      "experiment_id": "deepseek_large",
+      "config_path": "experiments/token-matrix-results/deepseek_large.aicl",
+      "state_file": "experiments/token-matrix-results/deepseek_large.tfstate",
+      "returncode": 0,
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stderr": "",
+      "timestamp": "2025-10-10T00:56:51.902655"
+    }
+  ]
+}
