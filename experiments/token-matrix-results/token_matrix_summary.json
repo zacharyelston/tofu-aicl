@@ -2,7 +2,7 @@
   "total_experiments": 9,
   "successful": 9,
   "failed": 0,
-  "timestamp": "2025-10-10T00:56:51.902764",
+  "timestamp": "2025-10-10T01:01:24.885564",
   "experiments": [
     {
       "experiment_id": "claude_small",
@@ -11,7 +11,7 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:55:04.714732"
+      "timestamp": "2025-10-10T00:58:36.299678"
     },
     {
       "experiment_id": "claude_medium",
@@ -20,7 +20,7 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:55:28.363090"
+      "timestamp": "2025-10-10T00:59:03.578619"
     },
     {
       "experiment_id": "claude_large",
@@ -29,7 +29,7 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:55:49.242646"
+      "timestamp": "2025-10-10T00:59:24.163763"
     },
     {
       "experiment_id": "gpt4o_small",
@@ -38,7 +38,7 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:02.921371"
+      "timestamp": "2025-10-10T00:59:36.923342"
     },
     {
       "experiment_id": "gpt4o_medium",
@@ -47,7 +47,7 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:23.010918"
+      "timestamp": "2025-10-10T00:59:58.815450"
     },
     {
       "experiment_id": "gpt4o_large",
@@ -56,34 +56,34 @@
       "returncode": 0,
       "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:43.319807"
+      "timestamp": "2025-10-10T01:00:18.630503"
     },
     {
-      "experiment_id": "deepseek_small",
-      "config_path": "experiments/token-matrix-results/deepseek_small.aicl",
-      "state_file": "experiments/token-matrix-results/deepseek_small.tfstate",
+      "experiment_id": "llama_small",
+      "config_path": "experiments/token-matrix-results/llama_small.aicl",
+      "state_file": "experiments/token-matrix-results/llama_small.tfstate",
       "returncode": 0,
-      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:46.112018"
+      "timestamp": "2025-10-10T01:00:25.173178"
     },
     {
-      "experiment_id": "deepseek_medium",
-      "config_path": "experiments/token-matrix-results/deepseek_medium.aicl",
-      "state_file": "experiments/token-matrix-results/deepseek_medium.tfstate",
+      "experiment_id": "llama_medium",
+      "config_path": "experiments/token-matrix-results/llama_medium.aicl",
+      "state_file": "experiments/token-matrix-results/llama_medium.tfstate",
       "returncode": 0,
-      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:49.105167"
+      "timestamp": "2025-10-10T01:00:33.540149"
     },
     {
-      "experiment_id": "deepseek_large",
-      "config_path": "experiments/token-matrix-results/deepseek_large.aicl",
-      "state_file": "experiments/token-matrix-results/deepseek_large.tfstate",
+      "experiment_id": "llama_large",
+      "config_path": "experiments/token-matrix-results/llama_large.aicl",
+      "state_file": "experiments/token-matrix-results/llama_large.tfstate",
       "returncode": 0,
-      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' () created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource '' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
+      "stdout": "Starting providers in subprocess mode...\nStarting subprocess for provider 'openrouter'...\nConnecting to provider on 127.0.0.1:50051\nProvider 'openrouter' is running on port 50051\n\nApplying changes...\n  + Resource 'code_review' (chat-code_review) created successfully.\nApply complete.\n\nDestroying resources and stopping containers...\n  - Resource 'chat-code_review' deleted.\nStopping provider: openrouter\nDestroy complete.\n",
       "stderr": "",
-      "timestamp": "2025-10-10T00:56:51.902655"
+      "timestamp": "2025-10-10T01:01:24.885468"
     }
   ]
 }

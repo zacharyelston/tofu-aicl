@@ -212,7 +212,7 @@ resource "chat" "code_review" {
     models = [
         ('claude', 'anthropic/claude-3.5-sonnet'),
         ('gpt4o', 'openai/gpt-4o'),
-        ('deepseek', 'deepseek/deepseek-coder')
+        ('llama', 'meta-llama/llama-3.1-70b-instruct')
     ]
     
     token_sizes = [
