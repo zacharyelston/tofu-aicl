@@ -96,9 +96,69 @@ python compare_matrix.py            # State file analysis
 - Claude 3 Opus: $15 input / $75 output
 - Claude 3 Haiku: $0.25 input / $1.25 output
 
-## Recent Changes (October 5, 2025)
+## Recent Changes
 
-### Core Framework
+### October 10, 2025 - Test Harness Setup
+- **Pytest Integration**: Comprehensive unit and integration test suite
+- **Test Coverage**: Parser, Evaluator, Planner, State Manager, Engine
+- **21 Tests Passing**: Full test coverage for core components
+- **Test Structure**: Organized into `tests/unit/` and `tests/integration/`
+- **Coverage Reporting**: Configured with pytest-cov
+- **CI-Ready**: Tests can run in CI/CD pipelines
+
+**Test Statistics:**
+- 21 passing tests across 6 test files
+- Unit tests for all core framework components
+- Integration tests for engine workflows
+- Coverage reporting configured
+
+### October 10, 2025 - OpenTelemetry Observability
+- **Distributed Tracing**: Full span instrumentation across Engine and Executor
+- **Metrics Collection**: Provider starts and resource operations counters
+- **Grafana Integration**: OTLP exporter for Tempo (traces) and Prometheus (metrics)
+- **Environment Config**: OTEL_EXPORTER_OTLP_ENDPOINT and headers for auth
+- **Graceful Degradation**: Falls back to console export when OTLP unavailable
+- **Documentation**: Complete setup guide in `docs/opentelemetry-setup.md`
+
+**Traces Captured:**
+- Provider lifecycle (startup, configuration, shutdown)
+- Resource operations (provisioning, evaluation, apply, destroy)
+- Dependency resolution and execution flow
+- Exception tracking with stack traces
+
+**Span Hierarchy:**
+```
+apply (root)
+├── execute_resource.{id}
+│   ├── provision_resource.{id}
+│   │   ├── evaluate_config
+│   │   └── provider_apply
+```
+
+### October 10, 2025 - HCL Variable Evaluation
+- **Native Variable Support**: Full HCL variable evaluation with `${var.name}` interpolation
+- **Complete Coverage**: Variables work in both provider and resource configurations
+- **Evaluation Context**: Unified context with `var` and `resource` namespaces
+- **Default Values**: Support for variable blocks with default values
+- **Runtime Overrides**: Architecture supports variable overrides at execution time
+
+**Example Usage:**
+```hcl
+variable "source_path" {
+  type    = string
+  default = "src/aicl"
+}
+
+provider "loader" {
+  file_filter = var.source_path  # ✅ Variables in provider config
+}
+
+resource "loader_files" "docs" {
+  path = var.source_path  # ✅ Variables in resource config
+}
+```
+
+### October 5, 2025 - Core Framework
 - **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
 - **HCL Evaluator**: Native interpolation resolution for `${resource.type.name.attributes.field}` syntax with proper support for complex nested data structures (lists of dicts)
 - **Protobuf Serialization**: Updated to use `ParseDict`/`MessageToDict` for correct handling of nested structures between engine and providers

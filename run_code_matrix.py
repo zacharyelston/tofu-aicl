@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Code Analysis Matrix - Test models on code improvement questions
+Code Analysis Matrix - Test models on code improvement questions with LLM grading
 """
 
 import os
@@ -10,12 +10,16 @@ import subprocess
 import shutil
 from pathlib import Path
 from datetime import datetime
+from llm_grader import LLMGrader
 
 class CodeMatrixRunner:
-    def __init__(self, output_dir="experiments/code-matrix-results"):
+    def __init__(self, output_dir="experiments/code-matrix-results", enable_grading=True, judge_model="openai/gpt-4"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.results = []
+        self.enable_grading = enable_grading
+        self.judge_model = judge_model
+        self.grader = None  # Lazy initialization
         
     def create_config(self, template, variables, name):
         """Create config from template"""
@@ -27,8 +31,8 @@ class CodeMatrixRunner:
         config_path.write_text(config_content)
         return config_path
     
-    def run_experiment(self, config_path, experiment_id):
-        """Run experiment"""
+    def run_experiment(self, config_path, experiment_id, question=None):
+        """Run experiment and optionally grade the response"""
         print(f"\n{'='*70}")
         print(f"🧪 Running: {experiment_id}")
         print(f"{'='*70}")
@@ -46,10 +50,15 @@ class CodeMatrixRunner:
         )
         
         # Capture state
+        grades = None
         if state_file.exists():
             dest_state = self.output_dir / f"{experiment_id}.tfstate"
             shutil.copy(state_file, dest_state)
             print(f"✅ State saved: {dest_state}")
+            
+            # Grade the response if enabled (question can be extracted from state if not provided)
+            if self.enable_grading:
+                grades = self._grade_response(dest_state, question, experiment_id)
         
         return {
             'experiment_id': experiment_id,
@@ -58,23 +67,83 @@ class CodeMatrixRunner:
             'returncode': result.returncode,
             'stdout': result.stdout,
             'stderr': result.stderr,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'grades': grades
         }
     
+    def _grade_response(self, state_file, question, experiment_id):
+        """Extract response from state and grade it"""
+        # Lazy initialization of grader (retry each time if it failed before)
+        if not self.grader:
+            try:
+                self.grader = LLMGrader(judge_model=self.judge_model)
+            except ValueError as e:
+                print(f"  ⚠️ Grading skipped: {e}")
+                return None  # Don't disable permanently - allow retry next time
+        
+        try:
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+            
+            # Extract response and question from state
+            resources = state.get('resources', {})
+            for res_id, res_data in resources.items():
+                if res_data.get('type') == 'chat':
+                    response = res_data.get('attributes', {}).get('response', '')
+                    
+                    # If no question provided, try to extract from state messages
+                    grading_question = question
+                    if not grading_question:
+                        messages = res_data.get('attributes', {}).get('messages', [])
+                        for msg in messages:
+                            if msg.get('role') == 'user':
+                                grading_question = msg.get('content', '')
+                                break
+                    
+                    if response and grading_question:
+                        print(f"  🔍 Grading response...")
+                        grades = self.grader.grade_response(grading_question, response)
+                        print(f"  ⭐ Overall Score: {grades.get('overall_score', 'N/A')}/10")
+                        
+                        # Update state with grades
+                        res_data['attributes']['quality_grade'] = grades
+                        
+                        # Write to both the copy AND the original state
+                        with open(state_file, 'w') as f:
+                            json.dump(state, f, indent=2)
+                        
+                        # Also update original state file
+                        original_state = Path('terraform.tfstate.d/default-exp.tfstate')
+                        if original_state.exists():
+                            with open(original_state, 'w') as f:
+                                json.dump(state, f, indent=2)
+                        
+                        return grades
+            
+            return None
+        except Exception as e:
+            print(f"  ⚠️ Grading failed: {e}")
+            return {'error': str(e)}
+    
     def run_matrix(self, template, variable_matrix):
-        """Run matrix"""
+        """Run matrix with optional grading"""
         print(f"\n🚀 Code Analysis Matrix")
         print(f"Output: {self.output_dir}")
         print(f"Experiments: {len(variable_matrix)}")
+        if self.enable_grading:
+            print(f"🔍 LLM Grading: ENABLED (Judge: {self.judge_model})")
+        else:
+            print(f"🔍 LLM Grading: DISABLED")
         
         for exp in variable_matrix:
             exp_id = exp['id']
             variables = exp['variables']
+            question = variables.get('question')  # Extract question for grading
             
             config_path = self.create_config(template, variables, exp_id)
             
             try:
-                result = self.run_experiment(config_path, exp_id)
+                result = self.run_experiment(config_path, exp_id, question=question)
                 self.results.append(result)
                 
                 status = "✅" if result['returncode'] == 0 else "❌"

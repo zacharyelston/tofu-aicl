@@ -40,8 +40,6 @@ Here's what the system actually produces when you run it:
   🏆 Winner: gpt-4
 ```
 
-**Generated Report**: [View Full Report](experiments/rag_test_results.md)
-
 ---
 
 ## Overview
