@@ -98,6 +98,29 @@ python compare_matrix.py            # State file analysis
 
 ## Recent Changes
 
+### October 10, 2025 - OpenTelemetry Observability
+- **Distributed Tracing**: Full span instrumentation across Engine and Executor
+- **Metrics Collection**: Provider starts and resource operations counters
+- **Grafana Integration**: OTLP exporter for Tempo (traces) and Prometheus (metrics)
+- **Environment Config**: OTEL_EXPORTER_OTLP_ENDPOINT and headers for auth
+- **Graceful Degradation**: Falls back to console export when OTLP unavailable
+- **Documentation**: Complete setup guide in `docs/opentelemetry-setup.md`
+
+**Traces Captured:**
+- Provider lifecycle (startup, configuration, shutdown)
+- Resource operations (provisioning, evaluation, apply, destroy)
+- Dependency resolution and execution flow
+- Exception tracking with stack traces
+
+**Span Hierarchy:**
+```
+apply (root)
+├── execute_resource.{id}
+│   ├── provision_resource.{id}
+│   │   ├── evaluate_config
+│   │   └── provider_apply
+```
+
 ### October 10, 2025 - HCL Variable Evaluation
 - **Native Variable Support**: Full HCL variable evaluation with `${var.name}` interpolation
 - **Complete Coverage**: Variables work in both provider and resource configurations
