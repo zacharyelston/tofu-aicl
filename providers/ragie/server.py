@@ -38,9 +38,8 @@ class RagieProvider(provider_pb2_grpc.ProviderServicer):
         return provider_pb2.GetSchemaResponse(resources=[resource_schema])
 
     def ValidateConfig(self, request, context):
-        if 'api_key' not in request.config:
-            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "Missing 'api_key' in provider configuration")
-            return provider_pb2.ValidateConfigResponse(diagnostics=[diag])
+        # API key is read from RAGIE_API_KEY environment variable
+        # No validation needed in config
         return provider_pb2.ValidateConfigResponse()
 
     def Configure(self, request, context):
@@ -276,9 +275,10 @@ class RagieProvider(provider_pb2_grpc.ProviderServicer):
         return provider_pb2.RefreshResourceStateResponse(new_state=new_state)
 
     def DeleteResource(self, request, context):
-        resource_id = request.current_state.id
+        # Get resource ID from request (not current_state which may be empty)
+        resource_id = request.id or (request.current_state.id if request.current_state else None)
         
-        if resource_id in self.resources:
+        if resource_id and resource_id in self.resources:
             resource = self.resources[resource_id]
             
             # If it's a document, optionally delete from Ragie
