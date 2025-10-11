@@ -31,6 +31,32 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+### October 11, 2025 - Model Catalog Integration (COMPLETED)
+
+**Eliminated Model Duplication Across System:**
+- ✅ Integrated ProviderConfigLoader with centralized ModelCatalog
+- ✅ Migrated all provider configs to reference model_ids (openai, naga, openrouter)
+- ✅ Updated generate_experiments.py to enrich from catalog (auto-injected metadata)
+- ✅ Simplified test-variables.yaml to use catalog IDs only (no duplication)
+- ✅ Fixed catalog name-based indexing conflicts (strict ID-only lookups)
+- ✅ 10/10 integration tests passing, 170→0 provider LSP diagnostics (100% reduction)
+
+**Single Source of Truth:**
+```yaml
+# Before: Duplicated in 3 places
+providers/*/config.yaml   # Model definitions
+v2/config/models.yaml     # Model definitions
+test-variables.yaml       # Model definitions
+
+# After: One source, auto-enrichment everywhere
+v2/config/models.yaml              # ONLY source
+providers/*/config.yaml            # References: model_ids: [gpt-4o, ...]
+test-variables.yaml                # References: name: "gpt-4o"
+generate_experiments.py            # Auto-enriches from catalog
+```
+
+**Impact:** All models auto-enriched with cost, quality, dimensions from single catalog. No manual sync needed.
+
 ### October 11, 2025 - Configuration-as-Data Refactorings (COMPLETED)
 
 **Three Major Refactorings Following Configuration-as-Data Pattern:**

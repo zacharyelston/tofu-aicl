@@ -2,17 +2,93 @@
 """
 Generate AICL experiment configs from test-variables.yaml
 Supports single-variable, multi-variable, and A/B testing
+
+Now integrates with centralized ModelCatalog for model metadata.
 """
 
 import yaml
 import itertools
 from pathlib import Path
 from typing import List, Dict, Any
+from v2.config.model_catalog import ModelCatalog
 
 def load_test_config(config_file: str = "test-variables.yaml") -> Dict:
-    """Load test variables configuration"""
+    """
+    Load test variables configuration
+    
+    Enriches model data from centralized ModelCatalog when available.
+    """
     with open(config_file) as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    
+    # Enrich with catalog data if available
+    try:
+        catalog = ModelCatalog()
+        
+        # Enrich chat models
+        if 'chat_models' in config and 'models' in config['chat_models']:
+            enriched_chat = []
+            for model_def in config['chat_models']['models']:
+                # Ensure model_def is a dict (handle simple string names)
+                if isinstance(model_def, str):
+                    model_def = {'name': model_def}
+                
+                # Try to find in catalog
+                catalog_model = catalog.get(model_def['name'])
+                if catalog_model:
+                    # Use catalog data as source of truth
+                    enriched_chat.append({
+                        'id': catalog_model.id,
+                        'name': catalog_model.name,
+                        'provider': catalog_model.provider,
+                        'cost_per_1m_tokens': catalog_model.cost_per_1k_input * 1000,  # Convert to per 1M
+                        'quality_score': catalog_model.quality_score,
+                        'context_window': catalog_model.context_window
+                    })
+                else:
+                    # Fallback: ensure required fields exist
+                    if 'provider' not in model_def:
+                        model_def['provider'] = 'unknown'
+                    if 'cost_per_1m_tokens' not in model_def:
+                        model_def['cost_per_1m_tokens'] = 0.0
+                    enriched_chat.append(model_def)
+            config['chat_models']['models'] = enriched_chat
+        
+        # Enrich embedding models
+        if 'embedding_models' in config:
+            for provider_key in ['openai', 'google', 'azure']:
+                if provider_key in config['embedding_models']:
+                    enriched_embeddings = []
+                    for model_def in config['embedding_models'][provider_key]:
+                        # Ensure model_def is a dict
+                        if isinstance(model_def, str):
+                            model_def = {'name': model_def}
+                        
+                        catalog_model = catalog.get(model_def['name'])
+                        if catalog_model:
+                            enriched_embeddings.append({
+                                'id': catalog_model.id,
+                                'name': catalog_model.name,
+                                'provider': catalog_model.provider,
+                                'dimensions': catalog_model.dimensions,
+                                'cost_per_1m_tokens': catalog_model.cost_per_1k_input * 1000,
+                                'quality_score': catalog_model.quality_score
+                            })
+                        else:
+                            # Fallback: ensure required fields exist
+                            if 'provider' not in model_def:
+                                model_def['provider'] = provider_key
+                            if 'dimensions' not in model_def:
+                                model_def['dimensions'] = 0
+                            if 'cost_per_1m_tokens' not in model_def:
+                                model_def['cost_per_1m_tokens'] = 0.0
+                            enriched_embeddings.append(model_def)
+                    config['embedding_models'][provider_key] = enriched_embeddings
+    except Exception as e:
+        print(f"Warning: Could not enrich config with ModelCatalog: {e}")
+        # Continue with original config
+    
+    return config
 
 def generate_single_variable_experiments(config: Dict) -> List[Dict]:
     """Generate single-variable experiments (one variable at a time)"""
