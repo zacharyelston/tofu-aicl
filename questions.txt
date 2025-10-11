@@ -1,8 +1,8 @@
 # RAG Test Questions for tofu-aicl
 # One question per line, lines starting with # are ignored
-
+what improvements can be made to the tofu-aicl framework?
 # How does the HCL evaluator resolve interpolations in the tofu-aicl framework?
 # How would I add support for conditional resource creation using count or for_each meta-arguments? Which files need to be modified?
 # What is the role of the StateManager and how does it track resource dependencies?
 # How does the executor handle provider initialization and resource provisioning?
-Explain the parsing flow from HCL input to executable plan in the engine.
+#Explain the parsing flow from HCL input to executable plan in the engine.
