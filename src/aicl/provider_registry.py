@@ -65,6 +65,13 @@ class ProviderRegistry:
                 container_image="aicl/azure_openai:1.0.0",
                 description="Azure OpenAI embeddings"
             ),
+            ProviderMetadata(
+                name="naga",
+                source="aicl/naga",
+                version="1.0.0",
+                container_image="aicl/naga:1.0.0",
+                description="AI models via Naga.ai (OpenAI-compatible, 50% lower cost)"
+            ),
         ]
 
         for provider in default_providers:

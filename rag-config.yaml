@@ -1,28 +1,38 @@
 # RAG Test Configuration
 # Configure models, questions, and test parameters for RAG validation
 
-# Models to test (OpenRouter format)
+# Models to test (OpenRouter/Naga.ai format)
 models:
   # Top performing models from validation
   - name: "Mistral Large"
     id: "mistralai/mistral-large"
+    provider: "openrouter"  # or "naga" for 50% lower cost
     enabled: true
   - name: "GPT-4o-mini"
     id: "openai/gpt-4o-mini"
+    provider: "openrouter"
     enabled: true
   - name: "GPT-4o"
     id: "openai/gpt-4o"
+    provider: "openrouter"
     enabled: true
   - name: "Claude 3.5 Sonnet"
     id: "anthropic/claude-3.5-sonnet"
+    provider: "openrouter"
     enabled: true
+  
+  # Naga.ai models (same models, 50% cheaper)
+  # Note: Use "naga_chat" resource type until config-driven provider selection is implemented
+  - name: "GPT-4o (Naga.ai)"
+    id: "openai/gpt-4o"
+    provider: "naga"
+    resource_type: "naga_chat"
+    enabled: false
   
   # Additional models (disabled)
   - name: "GPT-4"
     id: "openai/gpt-4"
-    enabled: false
-  - name: "Claude Sonnet 4.5"
-    id: "anthropic/claude-sonnet-4.5"
+    provider: "openrouter"
     enabled: false
 
 # Test configuration

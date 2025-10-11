@@ -33,15 +33,15 @@ class RAGGradedMatrixRunner:
                     questions.append(line)
         return questions
     
-    def create_rag_config(self, question, model, experiment_id):
+    def create_rag_config(self, question, model_id, provider, experiment_id):
         """Create RAG query AICL config for a specific question"""
         config = f"""terraform {{
   required_providers {{
     openai = {{
       source = "aicl/openai"
     }}
-    openrouter = {{
-      source = "aicl/openrouter"
+    {provider} = {{
+      source = "aicl/{provider}"
     }}
     pinecone = {{
       source = "aicl/pinecone"
@@ -66,7 +66,7 @@ resource "query" "relevant_chunks" {{
 
 # Generate answer using retrieved context
 resource "chat" "answer" {{
-  model = "{model}"
+  model = "{model_id}"
   messages = [
     {{
       role = "system"
@@ -85,12 +85,16 @@ resource "chat" "answer" {{
         config_path.write_text(config)
         return config_path
     
-    def run_rag_experiment(self, question, model, experiment_id):
+    def run_rag_experiment(self, question, model_info, experiment_id):
         """Run a single RAG experiment"""
-        print(f"\n🔧 [{experiment_id}] {model.split('/')[-1]}: {question[:60]}...")
+        model_id = model_info['id']
+        model_name = model_info['name']
+        provider = model_info.get('provider', 'openrouter')
+        
+        print(f"\n🔧 [{experiment_id}] {model_name}: {question[:60]}...")
         
         # Create config
-        config_path = self.create_rag_config(question, model, experiment_id)
+        config_path = self.create_rag_config(question, model_id, provider, experiment_id)
         
         # Run experiment
         result = subprocess.run(
@@ -119,7 +123,9 @@ resource "chat" "answer" {{
         
         return {
             'experiment_id': experiment_id,
-            'model': model,
+            'model': model_info['name'],
+            'model_id': model_info['id'],
+            'provider': model_info.get('provider', 'openrouter'),
             'question': question,
             'success': success,
             'response': response_text,
@@ -299,6 +305,67 @@ resource "chat" "answer" {{
         
         print(f"\n💾 Full report saved: {summary_file}")
         print("="*70 + "\n")
+    
+    def run_experiments(self, config_file='rag-config.yaml'):
+        """Run all RAG experiments from config"""
+        # Load configuration
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        models = [m for m in config['models'] if m.get('enabled', True)]
+        questions = self.load_questions()[:config['test_config']['num_questions']]
+        max_workers = config['test_config'].get('max_workers', 1)
+        
+        print(f"\n🚀 Starting RAG Matrix Experiments")
+        print(f"   Models: {len(models)}")
+        print(f"   Questions: {len(questions)}")
+        print(f"   Total experiments: {len(models) * len(questions)}")
+        print(f"   Parallel workers: {max_workers}")
+        
+        start_time = time.time()
+        
+        # Run experiments in parallel
+        experiment_tasks = []
+        for model_info in models:
+            for i, question in enumerate(questions):
+                experiment_id = f"{model_info['id'].replace('/', '-')}-q{i+1}"
+                experiment_tasks.append((question, model_info, experiment_id))
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(self.run_rag_experiment, q, m, eid): (q, m, eid)
+                for q, m, eid in experiment_tasks
+            }
+            
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    self.results.append(result)
+                except Exception as e:
+                    q, m, eid = futures[future]
+                    print(f"❌ [{eid}] Failed: {str(e)}")
+                    self.results.append({
+                        'experiment_id': eid,
+                        'model': m['name'],
+                        'model_id': m['id'],
+                        'provider': m.get('provider', 'openrouter'),
+                        'question': q,
+                        'success': False,
+                        'error': str(e)
+                    })
+        
+        elapsed_time = time.time() - start_time
+        print(f"\n⏱️  Total execution time: {elapsed_time:.1f}s")
+        print(f"📊 Average time per experiment: {elapsed_time/len(experiment_tasks):.1f}s\n")
+        
+        # Grade all responses
+        self.results = self.grade_responses(self.results)
+        
+        # Print summary
+        self.print_summary()
+        
+        # Save results
+        self.save_summary()
 
 
 def main():
@@ -323,13 +390,13 @@ def main():
     num_questions = config['test_config'].get('num_questions', 3)
     test_questions = questions[:num_questions]
     
-    # Get enabled models from config
-    models = [m['id'] for m in config['models'] if m.get('enabled', True)]
+    # Get enabled model configs from config
+    models = [m for m in config['models'] if m.get('enabled', True)]
     
     print(f"🤖 Testing {len(models)} models:")
-    for model_config in config['models']:
-        if model_config.get('enabled', True):
-            print(f"   ✅ {model_config['name']} ({model_config['id']})")
+    for model_config in models:
+        provider = model_config.get('provider', 'openrouter')
+        print(f"   ✅ {model_config['name']} ({model_config['id']}) via {provider}")
     print()
     
     # Update judge model from config
@@ -339,8 +406,8 @@ def main():
     parallel = config['test_config'].get('parallel', False)
     max_workers = config['test_config'].get('max_workers', 4)
     
-    # Run the matrix
-    runner.run_matrix(test_questions, models, parallel=parallel, max_workers=max_workers)
+    # Run experiments
+    runner.run_experiments(config_file)
     
     print(f"✨ RAG quality validation complete! Check {runner.output_dir} for results")
 

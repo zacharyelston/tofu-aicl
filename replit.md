@@ -37,8 +37,9 @@ The project originally used Docker containers for provider isolation. In Replit 
 3. **openai** - OpenAI embeddings (text-embedding-3-small)
 4. **azure_openai** - Azure OpenAI embeddings
 5. **openrouter** - AI models via OpenRouter (chat, completions)
-6. **pinecone** - Vector database for RAG
-7. **command_assertion** - Validation and testing
+6. **naga** - AI models via Naga.ai (OpenAI-compatible, 50% lower cost) ✨ NEW
+7. **pinecone** - Vector database for RAG
+8. **command_assertion** - Validation and testing
 
 ### Running the Engine
 ```bash
@@ -97,6 +98,34 @@ python compare_matrix.py            # State file analysis
 - Claude 3 Haiku: $0.25 input / $1.25 output
 
 ## Recent Changes
+
+### October 11, 2025 - Naga.ai Integration
+
+**Cost-Effective AI Provider Integration:**
+- ✅ Created Naga.ai provider (OpenAI-compatible, 50% cost savings)
+- ✅ Added to provider registry with full gRPC implementation
+- ✅ API key (`NAGA_API_KEY`) securely stored in Replit Secrets
+- ✅ Basic functionality tested and validated
+
+**Current Implementation:**
+- Resource types: `naga_chat` and `naga_embedding`
+- Base URL: https://api.naga.ac/v1
+- Supports same models as OpenRouter/OpenAI at half the cost
+
+**Known Limitation (Temporary):**
+- Use `naga_chat` (not `chat`) to route to Naga provider
+- Due to hardcoded resource-to-provider mapping in executor
+- Architect has provided roadmap for config-driven provider selection
+
+**Documentation Added:**
+- `NAGA_INTEGRATION.md` - Complete usage guide
+- `PROVIDER_SELECTION_ROADMAP.md` - Architecture improvement plan
+- Updated `rag-config.yaml` with Naga model examples
+
+**Cost Comparison:**
+- OpenRouter: $0.003/1K tokens
+- Naga.ai: $0.0015/1K tokens  
+- **Savings: 50%** 💰
 
 ### October 10, 2025 - Complete Framework Validation (Infrastructure + Quality + RAG)
 
