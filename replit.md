@@ -31,6 +31,39 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+### October 11, 2025 - Provider Configuration Refactoring (COMPLETED)
+
+**Configuration-as-Data Pattern - Provider Metadata:**
+- ✅ Externalized all provider metadata from hardcoded Python to YAML configs
+- ✅ Created `providers/<name>/config.yaml` for all 9 providers (openai, naga, ragie, pinecone, etc.)
+- ✅ Built `v2/config/ProviderConfigLoader` with schema validation and fail-fast error handling
+- ✅ Refactored `engine.py` to use ProviderConfigLoader (eliminated 111-line provider_registry.py)
+- ✅ Static port assignment from config (50051-50059) replaces dynamic allocation
+- ✅ Runtime mode validation (subprocess/docker/both) enforced at startup
+- ✅ Deprecated `provider_registry.py` with migration guide
+
+**Provider Config Structure:**
+```yaml
+provider:
+  name: openai
+  display_name: OpenAI
+  version: 1.0.0
+  runtime:
+    entrypoint: server.py
+    default_port: 50051
+    mode: both
+  environment:
+    required_vars: [OPENAI_API_KEY]
+  capabilities:
+    types: [llm, embeddings]
+  models:
+    - name: gpt-4o
+      cost_per_1k_input: 0.0025
+      quality_score: 9.5
+```
+
+**Impact:** 60-70% code reduction in engine.py, providers discoverable by dropping config.yaml, centralized model catalog with pricing/quality scores.
+
 ### October 11, 2025 - v2 Architecture: CLI/Web Split
 
 **Major Architectural Refactor for Business Model:**
