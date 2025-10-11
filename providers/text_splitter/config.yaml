@@ -10,11 +10,7 @@ provider:
   runtime:
     entrypoint: server.py
     default_port: 50057
-    mode: both
-  
-  docker:
-    image: aicl/text_splitter:1.0.0
-    internal_port: 50051
+    mode: subprocess  # Text splitter is local, subprocess only
   
   environment:
     required_vars: []

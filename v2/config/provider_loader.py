@@ -111,9 +111,14 @@ class ProviderConfig:
         return None
 
 
+class ProviderConfigValidationError(Exception):
+    """Raised when provider config validation fails"""
+    pass
+
+
 class ProviderConfigLoader:
     """
-    Load provider configurations from YAML files
+    Load provider configurations from YAML files with schema validation
     
     Usage:
         loader = ProviderConfigLoader()
@@ -121,19 +126,22 @@ class ProviderConfigLoader:
         all_providers = loader.list_all()
     """
     
-    def __init__(self, providers_dir: Optional[Path] = None):
+    def __init__(self, providers_dir: Optional[Path] = None, fail_fast: bool = True):
         """
         Initialize loader
         
         Args:
             providers_dir: Path to providers directory (defaults to project root)
+            fail_fast: If True, raise exception on invalid configs. If False, skip invalid configs.
         """
         if providers_dir is None:
             # Default to project root/providers
             providers_dir = Path(__file__).parent.parent.parent / "providers"
         
         self.providers_dir = Path(providers_dir)
+        self.fail_fast = fail_fast
         self._configs: Dict[str, ProviderConfig] = {}
+        self._name_to_config: Dict[str, ProviderConfig] = {}  # Track by name only
         self._load_all_configs()
     
     def _load_all_configs(self):
@@ -148,34 +156,116 @@ class ProviderConfigLoader:
                 if config_file.exists():
                     try:
                         config = self._load_config_file(config_file)
+                        
+                        # Check for duplicate name
+                        if config.name in self._name_to_config:
+                            error_msg = f"Duplicate provider name '{config.name}' in {config_file} (already defined in {self._name_to_config[config.name]})"
+                            if self.fail_fast:
+                                raise ProviderConfigValidationError(error_msg)
+                            else:
+                                print(f"Error: {error_msg}")
+                                continue
+                        
+                        # Check for duplicate source
+                        if config.source in self._configs and config.source != config.name:
+                            error_msg = f"Duplicate provider source '{config.source}' in {config_file}"
+                            if self.fail_fast:
+                                raise ProviderConfigValidationError(error_msg)
+                            else:
+                                print(f"Error: {error_msg}")
+                                continue
+                        
+                        # Store config
+                        self._name_to_config[config.name] = config_file
                         self._configs[config.name] = config
                         # Also index by source for backward compatibility
-                        self._configs[config.source] = config
+                        if config.source != config.name:
+                            self._configs[config.source] = config
+                            
+                    except ProviderConfigValidationError:
+                        raise  # Re-raise validation errors
                     except Exception as e:
-                        print(f"Warning: Failed to load provider config {config_file}: {e}")
+                        error_msg = f"Failed to load provider config {config_file}: {e}"
+                        if self.fail_fast:
+                            raise ProviderConfigValidationError(error_msg) from e
+                        else:
+                            print(f"Warning: {error_msg}")
+    
+    def _validate_required_fields(self, data: dict, required_fields: List[str], config_file: Path):
+        """Validate required fields exist"""
+        for field in required_fields:
+            if field not in data:
+                raise ProviderConfigValidationError(
+                    f"Missing required field '{field}' in {config_file}"
+                )
+    
+    def _validate_runtime_mode(self, mode: str, config_file: Path):
+        """Validate runtime mode"""
+        valid_modes = {"subprocess", "docker", "both"}
+        if mode not in valid_modes:
+            raise ProviderConfigValidationError(
+                f"Invalid runtime mode '{mode}' in {config_file}. Must be one of: {valid_modes}"
+            )
+    
+    def _validate_port(self, port: int, config_file: Path):
+        """Validate port number"""
+        if not (1 <= port <= 65535):
+            raise ProviderConfigValidationError(
+                f"Invalid port {port} in {config_file}. Must be between 1 and 65535"
+            )
     
     def _load_config_file(self, config_file: Path) -> ProviderConfig:
-        """Load a single provider config from YAML"""
+        """Load a single provider config from YAML with validation"""
         with open(config_file) as f:
             data = yaml.safe_load(f)
         
+        # Validate top-level structure
+        if 'provider' not in data:
+            raise ProviderConfigValidationError(
+                f"Missing 'provider' key in {config_file}"
+            )
+        
         provider_data = data['provider']
         
-        # Parse runtime
+        # Validate required fields
+        self._validate_required_fields(
+            provider_data,
+            ['name', 'display_name', 'version', 'source', 'description', 'runtime', 'environment', 'capabilities'],
+            config_file
+        )
+        
+        # Parse and validate runtime
         runtime_data = provider_data['runtime']
+        self._validate_required_fields(
+            runtime_data,
+            ['entrypoint', 'default_port', 'mode'],
+            config_file
+        )
+        
+        # Validate runtime mode
+        self._validate_runtime_mode(runtime_data['mode'], config_file)
+        
+        # Validate port
+        self._validate_port(runtime_data['default_port'], config_file)
+        
         runtime = ProviderRuntime(
             entrypoint=runtime_data['entrypoint'],
             default_port=runtime_data['default_port'],
             mode=runtime_data['mode']
         )
         
-        # Parse Docker config (optional)
+        # Parse Docker config (optional, but required if mode is 'docker' or 'both')
         docker = None
         if 'docker' in provider_data:
             docker_data = provider_data['docker']
+            self._validate_required_fields(docker_data, ['image'], config_file)
             docker = ProviderDocker(
                 image=docker_data['image'],
                 internal_port=docker_data.get('internal_port', 50051)
+            )
+        elif runtime_data['mode'] in ('docker', 'both'):
+            raise ProviderConfigValidationError(
+                f"Docker config required for mode '{runtime_data['mode']}' in {config_file}"
             )
         
         # Parse environment

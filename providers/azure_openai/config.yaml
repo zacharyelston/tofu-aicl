@@ -10,11 +10,7 @@ provider:
   runtime:
     entrypoint: server.py
     default_port: 50059
-    mode: both
-  
-  docker:
-    image: aicl/azure_openai:1.0.0
-    internal_port: 50051
+    mode: subprocess
   
   environment:
     required_vars:
@@ -33,20 +29,8 @@ provider:
       - embed
       - create_embedding
   
-  models:
-    - name: gpt-4o
-      type: chat
-      context_window: 128000
-      cost_per_1k_input: 0.0025
-      cost_per_1k_output: 0.010
-      quality_score: 9.5
-    
-    - name: text-embedding-3-small
-      type: embedding
-      context_window: 8192
-      cost_per_1k_input: 0.00002
-      cost_per_1k_output: 0
-      quality_score: 7.0
+  # Note: Azure OpenAI uses deployment-based model access, not direct model names
+  # Pricing varies by deployment and region. Models are configured via AZURE_OPENAI_DEPLOYMENT_NAME
   
   health:
     endpoint: ValidateConfig

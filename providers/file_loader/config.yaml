@@ -10,11 +10,7 @@ provider:
   runtime:
     entrypoint: server.py
     default_port: 50056
-    mode: both
-  
-  docker:
-    image: aicl/file_loader:1.0.0
-    internal_port: 50051
+    mode: subprocess  # File loader is local, subprocess only
   
   environment:
     required_vars: []

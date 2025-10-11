@@ -10,11 +10,7 @@ provider:
   runtime:
     entrypoint: server.py
     default_port: 50058
-    mode: both
-  
-  docker:
-    image: aicl/command_assertion:1.0.0
-    internal_port: 50051
+    mode: subprocess  # Command assertion is local, subprocess only
   
   environment:
     required_vars: []

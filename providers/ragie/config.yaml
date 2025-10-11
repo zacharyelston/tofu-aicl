@@ -10,7 +10,7 @@ provider:
   runtime:
     entrypoint: server.py
     default_port: 50053
-    mode: subprocess
+    mode: subprocess  # Ragie is API-based, subprocess only
   
   environment:
     required_vars:
