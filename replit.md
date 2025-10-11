@@ -31,44 +31,70 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
-### October 11, 2025 - SQLite Experiment Database
+### October 11, 2025 - v2 Architecture: CLI/Web Split
 
-**Persistent Experiment Tracking:**
-- ✅ Created `src/aicl/experiment_db.py` - SQLite database for experiment results
+**Major Architectural Refactor for Business Model:**
+- ✅ Created `v2/` directory for all new modular code
+- ✅ Storage abstraction layer (`v2/storage/`) with pluggable backends
+- ✅ API layer (`v2/api/`) for shared experiment and grading logic
+- ✅ CLI tool (`v2/cli/`) for free tier with in-memory storage
+- ✅ Backward compatibility wrapper for v1 code migration
+- ✅ Documentation: `V1_V2_MIGRATION.md`, `ARCHITECTURE_REFACTOR_PLAN.md`
+
+**v2 Architecture:**
+```
+v2/                           # All new code
+├── storage/                  # Storage abstraction
+│   ├── base.py              # Abstract interface
+│   ├── memory.py            # In-memory (FREE CLI default)
+│   ├── sqlite_adapter.py    # SQLite (user sets up)
+│   └── postgres_adapter.py  # PostgreSQL (WEB tier, future)
+├── api/                      # Shared logic
+│   ├── experiments.py       # Storage-agnostic runner
+│   └── grading.py           # LLM-as-Judge
+└── cli/                      # Free CLI tool
+    └── main.py              # aicl run, setup-db, stats
+```
+
+**Business Model Support:**
+- **Free CLI**: In-memory storage (default), optional user-configured SQLite
+- **Paid Web**: PostgreSQL, multi-user, advanced analytics (future)
+
+**v2 CLI Commands:**
+```bash
+# Default: in-memory (no persistence)
+python -m v2.cli.main run experiments/*.aicl
+
+# Setup SQLite for persistence
+python -m v2.cli.main setup-db --path my.db
+
+# Use SQLite
+python -m v2.cli.main run experiments/*.aicl --db my.db
+
+# Show statistics
+python -m v2.cli.main stats --db my.db
+```
+
+**Migration Path:**
+- v1 code (src/aicl/experiment_db.py) still works with deprecation warning
+- New code uses v2 storage abstraction
+- Core engine (src/aicl/core/) unchanged, works with both v1 and v2
+
+### October 11, 2025 - SQLite Experiment Database (v1 - Legacy)
+
+**v1 Persistent Experiment Tracking:**
+- ✅ Created `src/aicl/experiment_db.py` - SQLite database (now wraps v2)
 - ✅ Schema: 4 tables (experiments, configurations, results, quality_scores)
 - ✅ Indexed joins on experiment_id for performance
 - ✅ CLI commands for stats, queries, model comparison, export
 - ✅ Created `SQLITE_DATABASE.md` - Complete database documentation
 
-**Database Features:**
-- **Automatic Storage**: Save experiment configs, results, and quality scores
-- **Powerful Queries**: Find best configs by quality + cost thresholds
-- **Analytics**: Cost analysis, model performance comparison, quality tracking
-- **Data Export**: Export to JSON for backup and analysis
-
-**CLI Commands:**
+**v1 CLI Commands (deprecated, use v2):**
 ```bash
-# Show statistics
 python -m src.aicl.experiment_db stats
-
-# List experiments
 python -m src.aicl.experiment_db list
-
-# Find best configs (quality ≥7, cost ≤$0.01)
 python -m src.aicl.experiment_db best
-
-# Compare models
-python -m src.aicl.experiment_db models
-
-# Export to JSON
-python -m src.aicl.experiment_db export backup.json
 ```
-
-**Benefits:**
-- Historical tracking of all experiments
-- Statistical analysis and trend identification
-- Cost optimization (find cheapest configs meeting quality bar)
-- Scientific reproducibility and A/B testing validation
 
 ### October 11, 2025 - Systematic Experiment Testing Framework
 
