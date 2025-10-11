@@ -31,6 +31,45 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+### October 11, 2025 - SQLite Experiment Database
+
+**Persistent Experiment Tracking:**
+- ✅ Created `src/aicl/experiment_db.py` - SQLite database for experiment results
+- ✅ Schema: 4 tables (experiments, configurations, results, quality_scores)
+- ✅ Indexed joins on experiment_id for performance
+- ✅ CLI commands for stats, queries, model comparison, export
+- ✅ Created `SQLITE_DATABASE.md` - Complete database documentation
+
+**Database Features:**
+- **Automatic Storage**: Save experiment configs, results, and quality scores
+- **Powerful Queries**: Find best configs by quality + cost thresholds
+- **Analytics**: Cost analysis, model performance comparison, quality tracking
+- **Data Export**: Export to JSON for backup and analysis
+
+**CLI Commands:**
+```bash
+# Show statistics
+python -m src.aicl.experiment_db stats
+
+# List experiments
+python -m src.aicl.experiment_db list
+
+# Find best configs (quality ≥7, cost ≤$0.01)
+python -m src.aicl.experiment_db best
+
+# Compare models
+python -m src.aicl.experiment_db models
+
+# Export to JSON
+python -m src.aicl.experiment_db export backup.json
+```
+
+**Benefits:**
+- Historical tracking of all experiments
+- Statistical analysis and trend identification
+- Cost optimization (find cheapest configs meeting quality bar)
+- Scientific reproducibility and A/B testing validation
+
 ### October 11, 2025 - Systematic Experiment Testing Framework
 
 **Comprehensive Variable Testing System:**
