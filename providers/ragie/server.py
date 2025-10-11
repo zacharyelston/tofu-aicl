@@ -298,14 +298,6 @@ class RagieProvider(provider_pb2_grpc.ProviderServicer):
         
         return provider_pb2.DeleteResourceResponse()
 
-def serve():
-    port = os.getenv("AICL_PROVIDER_PORT", "50051")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(RagieProvider(), server)
-    server.add_insecure_port(f'[::]:{port}')
-    server.start()
-    print(f"Ragie Provider started on port {port}", flush=True)
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(RagieProvider())

@@ -73,14 +73,6 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(FileLoaderProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"File Loader provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(FileLoaderProvider())
