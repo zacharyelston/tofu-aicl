@@ -73,10 +73,21 @@ schema = validate_model_config(model_data)  # Fails fast on errors
 
 #### 3. Provider Runtime Boilerplate Extraction
 - ✅ Created `v2/runtime/provider_server.py` with shared gRPC setup
-- ✅ Refactored openai and naga providers (26 lines saved)
+- ✅ Refactored ALL 9 providers to use shared runtime (68 lines saved total)
 - ✅ Thread-safe signal handling (main thread check)
 - ✅ Graceful shutdown and error handling
 - ✅ 10/10 comprehensive tests passing (including thread safety)
+
+**Refactored Providers:**
+- OpenAI (12 lines saved)
+- Naga (14 lines saved)
+- OpenRouter (10 lines saved)
+- Azure OpenAI (6 lines saved)
+- Pinecone (5 lines saved)
+- Ragie (6 lines saved)
+- File Loader (5 lines saved)
+- Text Splitter (5 lines saved)
+- Command Assertion (5 lines saved)
 
 **Before (50+ lines):**
 ```python
