@@ -1,0 +1,389 @@
+# AICL Test Variables Configuration
+# Define parameter ranges for systematic testing across models, embeddings, and vector operations
+
+# =============================================================================
+# CHAT MODELS - Variables for chat/completion models
+# =============================================================================
+chat_models:
+  # Model selection
+  models:
+    - name: "gpt-4o-2024-08-06"
+      provider: "naga"  # or "openrouter"
+      cost_per_1m_tokens: 2.50
+    - name: "gpt-4o-mini"
+      provider: "naga"
+      cost_per_1m_tokens: 0.15
+    - name: "claude-3.5-sonnet"
+      provider: "openrouter"
+      cost_per_1m_tokens: 3.00
+    - name: "mistralai/mistral-large"
+      provider: "openrouter"
+      cost_per_1m_tokens: 2.00
+    - name: "anthropic/claude-3-haiku"
+      provider: "openrouter"
+      cost_per_1m_tokens: 0.25
+  
+  # Temperature - Controls randomness (0.0 = deterministic, 2.0 = very random)
+  temperature:
+    min: 0.0
+    max: 2.0
+    step: 0.1
+    recommended: [0.0, 0.3, 0.7, 1.0]
+    description: "Lower for factual tasks, higher for creative tasks"
+  
+  # Max tokens - Maximum length of response
+  max_tokens:
+    min: 50
+    max: 4096
+    step: 50
+    recommended: [100, 300, 500, 1000, 2000]
+    description: "Longer for detailed answers, shorter for concise responses"
+  
+  # Top P - Nucleus sampling threshold
+  top_p:
+    min: 0.0
+    max: 1.0
+    step: 0.05
+    recommended: [0.9, 0.95, 1.0]
+    description: "Alternative to temperature, controls diversity"
+  
+  # Frequency penalty - Reduces repetition of tokens
+  frequency_penalty:
+    min: -2.0
+    max: 2.0
+    step: 0.1
+    recommended: [0.0, 0.5, 1.0]
+    description: "Positive values discourage repetition"
+  
+  # Presence penalty - Encourages new topics
+  presence_penalty:
+    min: -2.0
+    max: 2.0
+    step: 0.1
+    recommended: [0.0, 0.5, 1.0]
+    description: "Positive values encourage topic diversity"
+
+# =============================================================================
+# EMBEDDING MODELS - Variables for text embeddings
+# =============================================================================
+embedding_models:
+  # OpenAI embeddings (via Naga or OpenAI direct)
+  openai:
+    - name: "text-embedding-3-small"
+      provider: "naga"
+      dimensions: 1536
+      cost_per_1m_tokens: 0.00001
+      quality_score: 5.0  # From your test results
+    - name: "text-embedding-3-large"
+      provider: "naga"
+      dimensions: 3072
+      cost_per_1m_tokens: 0.000065
+      quality_score: 8.0  # Winner from your test
+    - name: "text-embedding-ada-002"
+      provider: "openai"
+      dimensions: 1536
+      cost_per_1m_tokens: 0.00010
+      quality_score: null
+  
+  # Google embeddings (via Naga)
+  google:
+    - name: "gemini-embedding-001"
+      provider: "naga"
+      dimensions: 3072
+      cost_per_1m_tokens: 0.0  # Included in Naga
+      quality_score: 7.0
+  
+  # Azure OpenAI embeddings
+  azure:
+    - name: "text-embedding-3-small"
+      provider: "azure_openai"
+      dimensions: 1536
+      cost_per_1m_tokens: 0.00002
+      quality_score: null
+  
+  # Dimension reduction (for compatible models)
+  dimensions:
+    text-embedding-3-small: [512, 1536]
+    text-embedding-3-large: [256, 1024, 3072]
+    description: "Lower dimensions = faster but less accurate"
+
+# =============================================================================
+# TEXT CHUNKING - Variables for document splitting
+# =============================================================================
+text_splitter:
+  # Chunk size - Number of characters per chunk
+  chunk_size:
+    min: 100
+    max: 2000
+    step: 100
+    recommended: [200, 500, 1000, 1500]
+    description: "Larger chunks = more context, fewer chunks"
+  
+  # Chunk overlap - Characters shared between chunks
+  chunk_overlap:
+    min: 0
+    max: 500
+    step: 50
+    recommended: [0, 50, 100, 200]
+    description: "Overlap preserves context across boundaries"
+  
+  # Separators - How to split text
+  separators:
+    options:
+      - ["\n\n", "\n", " ", ""]  # Paragraph, line, word, char
+      - ["\n\n\n", "\n\n", "\n"]  # Section, paragraph, line
+      - [".", "!", "?", "\n"]  # Sentence boundaries
+    description: "Priority order for splitting text"
+
+# =============================================================================
+# VECTOR DATABASE (Pinecone) - Variables for vector operations
+# =============================================================================
+pinecone:
+  # Top K - Number of results to retrieve
+  top_k:
+    min: 1
+    max: 50
+    step: 1
+    recommended: [3, 5, 10, 20]
+    description: "More results = more context but higher cost/noise"
+  
+  # Namespace - Logical partitioning
+  namespaces:
+    options:
+      - "tofu-aicl-codebase"
+      - "production"
+      - "staging"
+      - "experimental"
+    description: "Separate indexes for different data sets"
+  
+  # Include metadata - Return metadata with results
+  include_metadata:
+    values: [true, false]
+    default: true
+    description: "Metadata adds context but increases response size"
+  
+  # Include values - Return vector values
+  include_values:
+    values: [true, false]
+    default: false
+    description: "Usually not needed, increases response size"
+
+# =============================================================================
+# RAGIE (Managed RAG) - Variables for Ragie operations
+# =============================================================================
+ragie:
+  # Upload settings
+  upload:
+    # Processing mode
+    mode:
+      values: ["fast", "hi_res", "all"]
+      default: "fast"
+      description: "fast=text only, hi_res=images/tables, all=everything"
+    
+    # Media processing (for audio/video)
+    media_mode:
+      audio: [true, false]
+      video: ["audio_only", "video_only", "audio_video"]
+      description: "How to process multimedia files"
+  
+  # Retrieval settings
+  retrieval:
+    # Top K - Number of chunks to retrieve
+    top_k:
+      min: 1
+      max: 50
+      step: 1
+      recommended: [5, 8, 10, 15]
+      default: 8
+      description: "Number of relevant chunks to return"
+    
+    # Rerank - Enable LLM-powered reranking
+    rerank:
+      values: [true, false]
+      default: true
+      description: "true=better quality but slower/costlier"
+    
+    # Recency bias - Favor recent documents
+    recency_bias:
+      values: [true, false]
+      default: false
+      description: "true=prioritize recent docs (time-sensitive queries)"
+    
+    # Partitions - Data isolation
+    partitions:
+      options:
+        - "default"
+        - "production"
+        - "customer-tenant-1"
+        - "experimental"
+      description: "Logical data isolation for multi-tenant apps"
+
+# =============================================================================
+# LLM-AS-JUDGE - Variables for quality evaluation
+# =============================================================================
+judge:
+  # Judge models
+  models:
+    - name: "mistralai/mistral-large"
+      cost_per_1m_tokens: 2.00
+      reliability_score: 9.7  # Your test winner
+    - name: "gpt-4o-2024-08-06"
+      cost_per_1m_tokens: 2.50
+      reliability_score: null
+    - name: "claude-3.5-sonnet"
+      cost_per_1m_tokens: 3.00
+      reliability_score: null
+  
+  # Evaluation criteria
+  criteria:
+    - name: "accuracy"
+      weight: 0.4
+      description: "Factual correctness based on context"
+    - name: "completeness"
+      weight: 0.3
+      description: "Covers all aspects of the question"
+    - name: "clarity"
+      weight: 0.2
+      description: "Clear and well-structured response"
+    - name: "relevance"
+      weight: 0.1
+      description: "Stays on topic, no hallucination"
+  
+  # Grading scale
+  grading_scale:
+    min: 1
+    max: 10
+    step: 0.5
+    description: "1=poor, 10=excellent"
+
+# =============================================================================
+# EXPERIMENT DESIGN - Matrix testing configuration
+# =============================================================================
+experiment_design:
+  # Single variable tests (one variable at a time)
+  single_variable:
+    - variable: "chat_model.temperature"
+      fixed: {model: "gpt-4o-2024-08-06", max_tokens: 500}
+      test_values: [0.0, 0.3, 0.7, 1.0]
+    
+    - variable: "embedding_model"
+      fixed: {top_k: 5}
+      test_values: ["text-embedding-3-small", "text-embedding-3-large", "gemini-embedding-001"]
+    
+    - variable: "retrieval.top_k"
+      fixed: {embedding: "text-embedding-3-large", rerank: true}
+      test_values: [3, 5, 10, 20]
+  
+  # Multi-variable tests (grid search)
+  multi_variable:
+    - name: "temperature_x_top_k"
+      variables:
+        temperature: [0.0, 0.5, 1.0]
+        top_k: [3, 5, 10]
+      fixed: {model: "gpt-4o-2024-08-06"}
+      total_experiments: 9  # 3 x 3
+    
+    - name: "embedding_x_retrieval"
+      variables:
+        embedding_model: ["text-embedding-3-small", "text-embedding-3-large"]
+        top_k: [5, 10]
+        rerank: [true, false]
+      total_experiments: 8  # 2 x 2 x 2
+  
+  # A/B testing
+  ab_tests:
+    - name: "naga_vs_openrouter"
+      variant_a:
+        provider: "naga"
+        model: "gpt-4o-2024-08-06"
+        cost: 2.50
+      variant_b:
+        provider: "openrouter"
+        model: "gpt-4o-2024-08-06"
+        cost: 5.00
+      metric: "cost_per_query"
+    
+    - name: "ragie_vs_manual_rag"
+      variant_a:
+        type: "ragie"
+        setup_complexity: "low"
+      variant_b:
+        type: "manual_pinecone"
+        setup_complexity: "high"
+      metric: "time_to_production"
+
+# =============================================================================
+# METRICS TO TRACK
+# =============================================================================
+metrics:
+  # Performance metrics
+  performance:
+    - latency_ms
+    - tokens_per_second
+    - end_to_end_time_ms
+  
+  # Cost metrics
+  cost:
+    - total_cost_usd
+    - cost_per_query
+    - embedding_cost
+    - chat_cost
+    - retrieval_cost
+  
+  # Quality metrics
+  quality:
+    - judge_score
+    - accuracy_score
+    - relevance_score
+    - hallucination_count
+  
+  # Resource metrics
+  resources:
+    - total_tokens
+    - prompt_tokens
+    - completion_tokens
+    - chunks_retrieved
+    - documents_indexed
+
+# =============================================================================
+# RECOMMENDED TEST SUITES
+# =============================================================================
+test_suites:
+  # Quick smoke test (fast validation)
+  smoke_test:
+    duration: "2-5 minutes"
+    experiments: 3
+    variables:
+      - {embedding: "text-embedding-3-small", chat: "gpt-4o-mini", top_k: 5}
+      - {embedding: "text-embedding-3-large", chat: "gpt-4o", top_k: 5}
+      - {embedding: "gemini-embedding-001", chat: "claude-3.5-sonnet", top_k: 5}
+  
+  # Comprehensive test (full evaluation)
+  comprehensive_test:
+    duration: "30-60 minutes"
+    experiments: 27
+    variables:
+      embeddings: 3
+      chat_models: 3
+      temperatures: [0.0, 0.5, 1.0]
+      top_k: [3, 5, 10]
+  
+  # Cost optimization test
+  cost_optimization:
+    duration: "15-30 minutes"
+    experiments: 12
+    goal: "Find lowest cost with acceptable quality (score >= 7)"
+    variables:
+      providers: ["naga", "openrouter"]
+      models: ["gpt-4o-mini", "gpt-4o", "claude-3-haiku"]
+  
+  # Quality optimization test
+  quality_optimization:
+    duration: "30-45 minutes"
+    experiments: 18
+    goal: "Maximize quality score regardless of cost"
+    variables:
+      embeddings: ["text-embedding-3-large", "gemini-embedding-001"]
+      chat_models: ["gpt-4o", "claude-3.5-sonnet"]
+      temperatures: [0.0, 0.3, 0.5]
+      rerank: [true, false]

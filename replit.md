@@ -31,3 +31,43 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+### October 11, 2025 - Systematic Experiment Testing Framework
+
+**Comprehensive Variable Testing System:**
+- ✅ Created `test-variables.yaml` - Master config defining all testable variables and ranges
+- ✅ Created `generate_experiments.py` - Auto-generate AICL configs from test definitions
+- ✅ Created `EXPERIMENT_TESTING_GUIDE.md` - Complete guide for systematic testing
+- ✅ Pre-configured test suites for common scenarios
+
+**Testable Variables:**
+- **Chat Models**: temperature (0.0-2.0), max_tokens (50-4096), top_p, penalties
+- **Embeddings**: 5+ models with quality scores (3-small: 5/10, 3-large: 8/10, gemini: 7/10)
+- **Vector Retrieval**: top_k (1-50), namespaces, metadata options
+- **Ragie RAG**: rerank, recency_bias, partitions, processing modes
+- **Text Chunking**: chunk_size (100-2000), overlap (0-500), separators
+- **LLM-as-Judge**: 3 models with reliability scores (Mistral Large: 9.7/10)
+
+**Test Suites Available:**
+1. **Smoke Test** - 3 experiments, 2-5 minutes (quick validation)
+2. **Comprehensive** - 27 experiments, 30-60 minutes (full evaluation)
+3. **Cost Optimization** - 12 experiments, 15-30 minutes (best value, score ≥7)
+4. **Quality Optimization** - 18 experiments, 30-45 minutes (maximize quality)
+
+**Usage:**
+```bash
+# View available tests
+python generate_experiments.py summary
+
+# Generate test suite
+python generate_experiments.py suite smoke_test
+
+# Run experiments with grading
+python run_rag_graded_matrix.py experiments/suites/smoke_test/*.aicl
+```
+
+**Key Features:**
+- Single-variable testing (isolate variable impact)
+- Multi-variable grid search (test combinations)
+- A/B testing (compare variants)
+- Automated AICL config generation
+- Comprehensive metrics tracking (cost, quality, performance)
