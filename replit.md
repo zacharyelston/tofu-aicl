@@ -39,6 +39,7 @@ The project integrates with several external services and APIs:
 - ✅ API layer (`v2/api/`) for shared experiment and grading logic
 - ✅ CLI tool (`v2/cli/`) for free tier with in-memory storage
 - ✅ Backward compatibility wrapper for v1 code migration
+- ✅ SQL config refactoring: All SQL moved to `sql-config.yaml` (80% code reduction)
 - ✅ Documentation: `V1_V2_MIGRATION.md`, `ARCHITECTURE_REFACTOR_PLAN.md`
 
 **v2 Architecture:**
