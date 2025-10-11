@@ -1,0 +1,376 @@
+{
+  "timestamp": "2025-10-11T02:18:06.155297",
+  "total_experiments": 12,
+  "successful": 8,
+  "judge_model": "openai/gpt-4",
+  "results": [
+    {
+      "experiment_id": "rag_04_gpt_4o_mini",
+      "model": "openai/gpt-4o-mini",
+      "question": "How does the AICL engine orchestrate provider lifecycle and resource provisioning?",
+      "success": true,
+      "response": "The AICL engine orchestrates provider lifecycle and resource provisioning through a series of defined actions and states that manage the interaction between the resources and the providers. The process typically involves the following key components:\n\n1. **Resource Management**: AICL defines resources, which represent the entities that require provisioning and management. These resources are often structured to include attributes that specify their desired state and configuration.\n\n2. **Provider Lifecycle Management**: The AICL engine maintains a lifecycle for each provider, which includes states such as 'creating', 'updating', 'deleting', and 'active'. These states help in tracking the current phase of the provider and managing transitions between states based on events and triggers.\n\n3. **Provisioning Logic**: The engine includes logic for provisioning resources that interact with providers. This logic is responsible for creating, updating, or deleting resources based on the current state of the provider and the desired state defined in the resource attributes.\n\n4. **Event Handling**: The AICL engine listens for events that can affect the lifecycle of providers and resources. For example, if a provider becomes available or is updated, the engine can trigger a re-evaluation of the resources that depend on that provider, ensuring that they are provisioned correctly according to the latest state.\n\n5. **Error Handling and Recovery**: The orchestration includes mechanisms for error handling, allowing the engine to respond to failures in resource provisioning or provider state changes. This can involve retries, rolling back changes, or alerting administrators to issues.\n\n6. **Integration with External Systems**: The AICL engine can interact with external systems (like cloud providers or databases) to carry out provisioning tasks. This integration is typically abstracted through provider interfaces that allow the engine to communicate with various APIs and services.\n\nIn summary, the AICL engine orchestrates the lifecycle of providers and resource provisioning by managing states, handling events, and integrating with external systems to ensure that resources are provisioned and maintained according to defined specifications.",
+      "response_preview": "The AICL engine orchestrates provider lifecycle and resource provisioning through a series of defined actions and states that manage the interaction b...",
+      "usage": {
+        "completion_tokens": 403.0,
+        "total_tokens": 474.0,
+        "prompt_tokens": 71.0
+      },
+      "performance": {
+        "tokens_per_second": 55.0,
+        "response_time_ms": 7317.0,
+        "latency_ms": 7317.0
+      },
+      "cost": {
+        "source": "estimated",
+        "total_usd": 0.000252
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:16:59.497473",
+      "quality": {
+        "scores": {
+          "accuracy": 8,
+          "relevance": 9,
+          "completeness": 9
+        },
+        "overall_score": 8.67,
+        "reasoning": "The response is technically accurate, with a detailed explanation of how the AICL engine manages provider lifecycle and resource provisioning. It is highly relevant to the question, addressing all the key points asked. The response is also quite comprehensive, covering resource management, provider lifecycle management, provisioning logic, event handling, error handling, and integration with external systems. However, without specific knowledge of the AICL framework, it's hard to confirm if all the details are 100% accurate, hence the slightly lower score for accuracy.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_02_mistral_large",
+      "model": "mistralai/mistral-large",
+      "question": "What is the role of the Evaluator in HCL interpolation and expression resolution?",
+      "success": true,
+      "response": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the values of expressions and interpolations within HCL code. Here are some specific implementation details and responsibilities of the Evaluator:\n\n1. **Expression Parsing**: The Evaluator is responsible for parsing expressions within the HCL code. This includes recognizing and interpreting different types of expressions, such as function calls, variable references, and operations.\n\n2. **Interpolation Resolution**: In HCL, interpolation is denoted by `${...}`. The Evaluator resolves these interpolations by replacing them with their computed values. For example, if a variable `var.example` is defined elsewhere in the configuration, the Evaluator will replace `${var.example}` with the actual value of `var.example`.\n\n3. **Function Evaluation**: The Evaluator handles the evaluation of functions within expressions. This involves executing the logic of the function and returning the result. For instance, if an expression contains a function call like `${length(var.list)}`, the Evaluator will compute the length of the list stored in `var.list`.\n\n4. **Variable Resolution**: The Evaluator resolves variable references by looking up the values of variables in the current scope. This means that when an expression references a variable, the Evaluator will fetch the value of that variable from the context in which the expression is being evaluated.\n\n5. **Scope Management**: The Evaluator manages the scope of variables and functions, ensuring that references are resolved correctly within their respective contexts. This includes handling nested scopes and overrides.\n\n6. **Type Checking and Conversion**: The Evaluator performs type checking and conversion as necessary. For instance, if an expression involves operations between different data types, the Evaluator ensures that the types are compatible and performs any required conversions.\n\n7. **Error Handling**: The Evaluator is responsible for detecting and reporting errors in expressions, such as undefined variables, incorrect function arguments, or type mismatches. It provides meaningful error messages to help users diagnose and fix issues in their HCL code.\n\n### Example\n\nConsider the following HCL snippet:\n\n```hcl\nvariable \"example\" {",
+      "response_preview": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the v...",
+      "usage": {
+        "completion_tokens": 500.0,
+        "total_tokens": 577.0,
+        "prompt_tokens": 77.0
+      },
+      "performance": {
+        "tokens_per_second": 43.0,
+        "response_time_ms": 11458.0,
+        "latency_ms": 11458.0
+      },
+      "cost": {
+        "total_usd": 0.007731,
+        "source": "estimated"
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:03.813097",
+      "quality": {
+        "scores": {
+          "accuracy": 10,
+          "relevance": 10,
+          "completeness": 10
+        },
+        "overall_score": 10.0,
+        "reasoning": "The response is technically accurate, detailing the specific responsibilities of the Evaluator in HCL interpolation and expression resolution. It directly addresses the question, explaining the role of the Evaluator in a comprehensive manner. The response is complete, covering all aspects of the Evaluator's role, from expression parsing to error handling.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_03_mistral_large",
+      "model": "mistralai/mistral-large",
+      "question": "Explain the dependency resolution algorithm used by the Planner component",
+      "success": true,
+      "response": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the values of expressions and interpolations within HCL code. Here are some specific implementation details and responsibilities of the Evaluator:\n\n1. **Expression Parsing**: The Evaluator is responsible for parsing expressions within the HCL code. This includes recognizing and interpreting different types of expressions, such as function calls, variable references, and operations.\n\n2. **Interpolation Resolution**: In HCL, interpolation is denoted by `${...}`. The Evaluator resolves these interpolations by replacing them with their computed values. For example, if a variable `var.example` is defined elsewhere in the configuration, the Evaluator will replace `${var.example}` with the actual value of `var.example`.\n\n3. **Function Evaluation**: The Evaluator handles the evaluation of functions within expressions. This involves executing the logic of the function and returning the result. For instance, if an expression contains a function call like `${length(var.list)}`, the Evaluator will compute the length of the list stored in `var.list`.\n\n4. **Variable Resolution**: The Evaluator resolves variable references by looking up the values of variables in the current scope. This means that when an expression references a variable, the Evaluator will fetch the value of that variable from the context in which the expression is being evaluated.\n\n5. **Scope Management**: The Evaluator manages the scope of variables and functions, ensuring that references are resolved correctly within their respective contexts. This includes handling nested scopes and overrides.\n\n6. **Type Checking and Conversion**: The Evaluator performs type checking and conversion as necessary. For instance, if an expression involves operations between different data types, the Evaluator ensures that the types are compatible and performs any required conversions.\n\n7. **Error Handling**: The Evaluator is responsible for detecting and reporting errors in expressions, such as undefined variables, incorrect function arguments, or type mismatches. It provides meaningful error messages to help users diagnose and fix issues in their HCL code.\n\n### Example\n\nConsider the following HCL snippet:\n\n```hcl\nvariable \"example\" {",
+      "response_preview": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the v...",
+      "usage": {
+        "completion_tokens": 500.0,
+        "total_tokens": 577.0,
+        "prompt_tokens": 77.0
+      },
+      "performance": {
+        "tokens_per_second": 43.0,
+        "response_time_ms": 11458.0,
+        "latency_ms": 11458.0
+      },
+      "cost": {
+        "total_usd": 0.007731,
+        "source": "estimated"
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:03.856564",
+      "quality": {
+        "scores": {
+          "accuracy": 7,
+          "relevance": 3,
+          "completeness": 8
+        },
+        "overall_score": 6.0,
+        "reasoning": "The response is technically accurate and provides a detailed explanation of the Evaluator's responsibilities in HCL. However, it is not relevant to the question asked, which was about the Planner component's dependency resolution algorithm, not the Evaluator. The response is quite comprehensive in explaining the Evaluator's role, but it does not address the Planner component or dependency resolution at all.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_01_mistral_large",
+      "model": "mistralai/mistral-large",
+      "question": "How does the AICL engine orchestrate provider lifecycle and resource provisioning?",
+      "success": false,
+      "response": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the values of expressions and interpolations within HCL code. Here are some specific implementation details and responsibilities of the Evaluator:\n\n1. **Expression Parsing**: The Evaluator is responsible for parsing expressions within the HCL code. This includes recognizing and interpreting different types of expressions, such as function calls, variable references, and operations.\n\n2. **Interpolation Resolution**: In HCL, interpolation is denoted by `${...}`. The Evaluator resolves these interpolations by replacing them with their computed values. For example, if a variable `var.example` is defined elsewhere in the configuration, the Evaluator will replace `${var.example}` with the actual value of `var.example`.\n\n3. **Function Evaluation**: The Evaluator handles the evaluation of functions within expressions. This involves executing the logic of the function and returning the result. For instance, if an expression contains a function call like `${length(var.list)}`, the Evaluator will compute the length of the list stored in `var.list`.\n\n4. **Variable Resolution**: The Evaluator resolves variable references by looking up the values of variables in the current scope. This means that when an expression references a variable, the Evaluator will fetch the value of that variable from the context in which the expression is being evaluated.\n\n5. **Scope Management**: The Evaluator manages the scope of variables and functions, ensuring that references are resolved correctly within their respective contexts. This includes handling nested scopes and overrides.\n\n6. **Type Checking and Conversion**: The Evaluator performs type checking and conversion as necessary. For instance, if an expression involves operations between different data types, the Evaluator ensures that the types are compatible and performs any required conversions.\n\n7. **Error Handling**: The Evaluator is responsible for detecting and reporting errors in expressions, such as undefined variables, incorrect function arguments, or type mismatches. It provides meaningful error messages to help users diagnose and fix issues in their HCL code.\n\n### Example\n\nConsider the following HCL snippet:\n\n```hcl\nvariable \"example\" {",
+      "response_preview": "The Evaluator plays a crucial role in HCL (HashiCorp Configuration Language) interpolation and expression resolution by processing and computing the v...",
+      "usage": {
+        "completion_tokens": 500.0,
+        "total_tokens": 577.0,
+        "prompt_tokens": 77.0
+      },
+      "performance": {
+        "tokens_per_second": 43.0,
+        "response_time_ms": 11458.0,
+        "latency_ms": 11458.0
+      },
+      "cost": {
+        "total_usd": 0.007731,
+        "source": "estimated"
+      },
+      "returncode": 1,
+      "timestamp": "2025-10-11T02:17:04.503513"
+    },
+    {
+      "experiment_id": "rag_05_gpt_4o_mini",
+      "model": "openai/gpt-4o-mini",
+      "question": "What is the role of the Evaluator in HCL interpolation and expression resolution?",
+      "success": true,
+      "response": "In the context of HCL (HashiCorp Configuration Language) interpolation and expression resolution, the Evaluator plays a crucial role in processing and evaluating expressions to produce final values that can be used in the configuration.\n\nThe Evaluator is responsible for the following tasks:\n\n1. **Expression Parsing**: It takes HCL expressions, such as `${resource.query.relevant_chunks.attributes.results}`, and parses them to understand their structure and components.\n\n2. **Value Resolution**: The Evaluator resolves the values referenced in the expressions. For example, in the provided expression, it would access the `results` attribute of the `relevant_chunks` from the `query` of a specified `resource`.\n\n3. **Context Management**: The Evaluator works within a defined context, which provides the data and variables that can be referenced in expressions. This context is essential for determining what values are available for interpolation.\n\n4. **Error Handling**: During the evaluation process, the Evaluator also handles potential errors, such as referencing undefined variables or accessing attributes that do not exist.\n\n5. **Returning Final Values**: After evaluating the expressions, the Evaluator returns the final computed values that can be utilized within the configuration.\n\nIn summary, the Evaluator in HCL interpolation is integral for parsing, resolving, and returning values from expressions, ensuring that the configurations are correctly interpreted and executed.",
+      "response_preview": "In the context of HCL (HashiCorp Configuration Language) interpolation and expression resolution, the Evaluator plays a crucial role in processing and...",
+      "usage": {
+        "completion_tokens": 275.0,
+        "prompt_tokens": 72.0,
+        "total_tokens": 347.0
+      },
+      "performance": {
+        "tokens_per_second": 42.0,
+        "response_time_ms": 6527.0,
+        "latency_ms": 6527.0
+      },
+      "cost": {
+        "source": "estimated",
+        "total_usd": 0.000176
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:14.994612",
+      "quality": {
+        "scores": {
+          "accuracy": 9,
+          "relevance": 10,
+          "completeness": 9
+        },
+        "overall_score": 9.33,
+        "reasoning": "The response is highly accurate and relevant to the question, providing a detailed explanation of the role of the Evaluator in HCL interpolation and expression resolution. It covers all the major tasks of the Evaluator, including expression parsing, value resolution, context management, error handling, and returning final values. However, it could provide more specific examples or delve deeper into the implementation details to achieve full completeness.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_06_gpt_4o_mini",
+      "model": "openai/gpt-4o-mini",
+      "question": "Explain the dependency resolution algorithm used by the Planner component",
+      "success": false,
+      "response": "In the context of HCL (HashiCorp Configuration Language) interpolation and expression resolution, the Evaluator plays a crucial role in processing and evaluating expressions to produce final values that can be used in the configuration.\n\nThe Evaluator is responsible for the following tasks:\n\n1. **Expression Parsing**: It takes HCL expressions, such as `${resource.query.relevant_chunks.attributes.results}`, and parses them to understand their structure and components.\n\n2. **Value Resolution**: The Evaluator resolves the values referenced in the expressions. For example, in the provided expression, it would access the `results` attribute of the `relevant_chunks` from the `query` of a specified `resource`.\n\n3. **Context Management**: The Evaluator works within a defined context, which provides the data and variables that can be referenced in expressions. This context is essential for determining what values are available for interpolation.\n\n4. **Error Handling**: During the evaluation process, the Evaluator also handles potential errors, such as referencing undefined variables or accessing attributes that do not exist.\n\n5. **Returning Final Values**: After evaluating the expressions, the Evaluator returns the final computed values that can be utilized within the configuration.\n\nIn summary, the Evaluator in HCL interpolation is integral for parsing, resolving, and returning values from expressions, ensuring that the configurations are correctly interpreted and executed.",
+      "response_preview": "In the context of HCL (HashiCorp Configuration Language) interpolation and expression resolution, the Evaluator plays a crucial role in processing and...",
+      "usage": {
+        "completion_tokens": 275.0,
+        "prompt_tokens": 72.0,
+        "total_tokens": 347.0
+      },
+      "performance": {
+        "tokens_per_second": 42.0,
+        "response_time_ms": 6527.0,
+        "latency_ms": 6527.0
+      },
+      "cost": {
+        "source": "estimated",
+        "total_usd": 0.000176
+      },
+      "returncode": 1,
+      "timestamp": "2025-10-11T02:17:16.743039"
+    },
+    {
+      "experiment_id": "rag_07_gpt_4o",
+      "model": "openai/gpt-4o",
+      "question": "How does the AICL engine orchestrate provider lifecycle and resource provisioning?",
+      "success": true,
+      "response": "In the context of HashiCorp Configuration Language (HCL), an Evaluator typically plays a crucial role in the process of interpolation and expression resolution. The Evaluator is responsible for interpreting and executing the expressions defined within HCL configurations. This involves:\n\n1. **Parsing**: The Evaluator takes expressions written in HCL and parses them to understand their structure and components.\n\n2. **Variable Resolution**: It resolves variables, ensuring that any references to variables within expressions are replaced with their actual values. This is essential for dynamic configuration, where the final configuration output depends on variable values that may be set at runtime.\n\n3. **Function Execution**: If there are any functions within the expressions, the Evaluator executes these functions, providing necessary inputs and handling outputs appropriately. This allows for more complex logic to be embedded within HCL configurations.\n\n4. **Type Checking and Conversion**: The Evaluator ensures that types are consistent and performs necessary conversions. For example, it might convert a string to a number if the expression context requires it.\n\n5. **Error Handling**: Proper error handling is implemented to catch and report issues in expressions, such as unresolved variables or incorrect function usage, providing feedback to users for debugging.\n\nOverall, the Evaluator enables dynamic and flexible configuration through its ability to interpret and resolve expressions, making HCL a powerful tool for infrastructure as code scenarios.",
+      "response_preview": "In the context of HashiCorp Configuration Language (HCL), an Evaluator typically plays a crucial role in the process of interpolation and expression r...",
+      "usage": {
+        "total_tokens": 348.0,
+        "prompt_tokens": 72.0,
+        "completion_tokens": 276.0
+      },
+      "performance": {
+        "latency_ms": 4422.0,
+        "response_time_ms": 4422.0,
+        "tokens_per_second": 62.0
+      },
+      "cost": {
+        "source": "estimated",
+        "total_usd": 0.00294
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:19.021848",
+      "quality": {
+        "scores": {
+          "accuracy": 8,
+          "relevance": 3,
+          "completeness": 7
+        },
+        "overall_score": 6.0,
+        "reasoning": "The response is technically accurate and provides a detailed explanation of the role of an Evaluator in the context of HCL. However, it does not specifically address the question about the AICL engine's orchestration of provider lifecycle and resource provisioning. Therefore, its relevance is low. The response is fairly complete in terms of explaining the Evaluator's role, but it does not cover the specific topic asked in the question.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_08_gpt_4o",
+      "model": "openai/gpt-4o",
+      "question": "What is the role of the Evaluator in HCL interpolation and expression resolution?",
+      "success": true,
+      "response": "In the context of HashiCorp Configuration Language (HCL), an Evaluator typically plays a crucial role in the process of interpolation and expression resolution. The Evaluator is responsible for interpreting and executing the expressions defined within HCL configurations. This involves:\n\n1. **Parsing**: The Evaluator takes expressions written in HCL and parses them to understand their structure and components.\n\n2. **Variable Resolution**: It resolves variables, ensuring that any references to variables within expressions are replaced with their actual values. This is essential for dynamic configuration, where the final configuration output depends on variable values that may be set at runtime.\n\n3. **Function Execution**: If there are any functions within the expressions, the Evaluator executes these functions, providing necessary inputs and handling outputs appropriately. This allows for more complex logic to be embedded within HCL configurations.\n\n4. **Type Checking and Conversion**: The Evaluator ensures that types are consistent and performs necessary conversions. For example, it might convert a string to a number if the expression context requires it.\n\n5. **Error Handling**: Proper error handling is implemented to catch and report issues in expressions, such as unresolved variables or incorrect function usage, providing feedback to users for debugging.\n\nOverall, the Evaluator enables dynamic and flexible configuration through its ability to interpret and resolve expressions, making HCL a powerful tool for infrastructure as code scenarios.",
+      "response_preview": "In the context of HashiCorp Configuration Language (HCL), an Evaluator typically plays a crucial role in the process of interpolation and expression r...",
+      "usage": {
+        "total_tokens": 348.0,
+        "prompt_tokens": 72.0,
+        "completion_tokens": 276.0
+      },
+      "performance": {
+        "latency_ms": 4422.0,
+        "response_time_ms": 4422.0,
+        "tokens_per_second": 62.0
+      },
+      "cost": {
+        "source": "estimated",
+        "total_usd": 0.00294
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:19.278151",
+      "quality": {
+        "scores": {
+          "accuracy": 9,
+          "relevance": 10,
+          "completeness": 9
+        },
+        "overall_score": 9.33,
+        "reasoning": "The response is highly accurate and relevant to the question. It provides a detailed explanation of the role of the Evaluator in HCL interpolation and expression resolution. However, it could be more complete by including more specific examples or more detailed explanations of the processes involved.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_09_gpt_4o",
+      "model": "openai/gpt-4o",
+      "question": "Explain the dependency resolution algorithm used by the Planner component",
+      "success": true,
+      "response": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain the algorithm, I would need information about how the Planner component is implemented, including the methods or functions it uses to resolve dependencies, any relevant data structures, and the logic for determining and ordering dependencies.\n\nIf you have access to the source code or additional documentation, look for methods related to dependency management, such as those named `resolveDependencies`, `orderTasks`, or similar. These might provide insight into the algorithm used by the Planner component. Alternatively, please provide the relevant code snippets or documentation, and I can offer a more detailed explanation.",
+      "response_preview": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain ...",
+      "usage": {
+        "prompt_tokens": 66.0,
+        "completion_tokens": 130.0,
+        "total_tokens": 196.0
+      },
+      "performance": {
+        "response_time_ms": 4080.0,
+        "tokens_per_second": 31.0,
+        "latency_ms": 4080.0
+      },
+      "cost": {
+        "total_usd": 0.001465,
+        "source": "estimated"
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:27.336633",
+      "quality": {
+        "scores": {
+          "accuracy": 10,
+          "relevance": 8,
+          "completeness": 7
+        },
+        "overall_score": 8.33,
+        "reasoning": "The response is accurate and relevant to the question asked. It correctly identifies that more information is needed to provide a detailed explanation of the dependency resolution algorithm used by the Planner component. However, it lacks completeness as it does not provide a general explanation of what a dependency resolution algorithm could be in the context of a Planner component.",
+        "judge_model": "openai/gpt-4"
+      }
+    },
+    {
+      "experiment_id": "rag_12_claude_3.5_sonnet",
+      "model": "anthropic/claude-3.5-sonnet",
+      "question": "Explain the dependency resolution algorithm used by the Planner component",
+      "success": false,
+      "response": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain the algorithm, I would need information about how the Planner component is implemented, including the methods or functions it uses to resolve dependencies, any relevant data structures, and the logic for determining and ordering dependencies.\n\nIf you have access to the source code or additional documentation, look for methods related to dependency management, such as those named `resolveDependencies`, `orderTasks`, or similar. These might provide insight into the algorithm used by the Planner component. Alternatively, please provide the relevant code snippets or documentation, and I can offer a more detailed explanation.",
+      "response_preview": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain ...",
+      "usage": {
+        "prompt_tokens": 66.0,
+        "completion_tokens": 130.0,
+        "total_tokens": 196.0
+      },
+      "performance": {
+        "response_time_ms": 4080.0,
+        "tokens_per_second": 31.0,
+        "latency_ms": 4080.0
+      },
+      "cost": {
+        "total_usd": 0.001465,
+        "source": "estimated"
+      },
+      "returncode": 1,
+      "timestamp": "2025-10-11T02:17:27.557524"
+    },
+    {
+      "experiment_id": "rag_11_claude_3.5_sonnet",
+      "model": "anthropic/claude-3.5-sonnet",
+      "question": "What is the role of the Evaluator in HCL interpolation and expression resolution?",
+      "success": false,
+      "response": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain the algorithm, I would need information about how the Planner component is implemented, including the methods or functions it uses to resolve dependencies, any relevant data structures, and the logic for determining and ordering dependencies.\n\nIf you have access to the source code or additional documentation, look for methods related to dependency management, such as those named `resolveDependencies`, `orderTasks`, or similar. These might provide insight into the algorithm used by the Planner component. Alternatively, please provide the relevant code snippets or documentation, and I can offer a more detailed explanation.",
+      "response_preview": "The provided context does not contain specific details about the dependency resolution algorithm used by the Planner component. To accurately explain ...",
+      "usage": {
+        "prompt_tokens": 66.0,
+        "completion_tokens": 130.0,
+        "total_tokens": 196.0
+      },
+      "performance": {
+        "response_time_ms": 4080.0,
+        "tokens_per_second": 31.0,
+        "latency_ms": 4080.0
+      },
+      "cost": {
+        "total_usd": 0.001465,
+        "source": "estimated"
+      },
+      "returncode": 1,
+      "timestamp": "2025-10-11T02:17:27.574548"
+    },
+    {
+      "experiment_id": "rag_10_claude_3.5_sonnet",
+      "model": "anthropic/claude-3.5-sonnet",
+      "question": "How does the AICL engine orchestrate provider lifecycle and resource provisioning?",
+      "success": true,
+      "response": "Based on the provided code context, I don't see enough information to fully explain how the AICL engine orchestrates provider lifecycle and resource provisioning. Without seeing the core engine code or provider management components, I cannot make specific claims about how this orchestration works.\n\nTo provide an accurate answer, I would need to see code related to:\n\n1. Provider lifecycle management\n2. Resource provisioning workflows \n3. Orchestration logic between providers and resources\n4. State management during provisioning\n\nIf you could share additional code context focused on these areas, I would be happy to explain the specific implementation details of how AICL handles these aspects.\n\nPlease feel free to provide more context or rephrase your question to focus on specific parts of the system that are visible in the available code.",
+      "response_preview": "Based on the provided code context, I don't see enough information to fully explain how the AICL engine orchestrates provider lifecycle and resource p...",
+      "usage": {
+        "prompt_tokens": 77.0,
+        "completion_tokens": 170.0,
+        "total_tokens": 247.0
+      },
+      "performance": {
+        "tokens_per_second": 34.0,
+        "latency_ms": 4864.0,
+        "response_time_ms": 4864.0
+      },
+      "cost": {
+        "total_usd": 0.002781,
+        "source": "estimated"
+      },
+      "returncode": 0,
+      "timestamp": "2025-10-11T02:17:29.406892",
+      "quality": {
+        "scores": {
+          "accuracy": 10,
+          "relevance": 10,
+          "completeness": 8
+        },
+        "overall_score": 9.33,
+        "reasoning": "The response is technically accurate and highly relevant to the question asked. The AI correctly identifies that it cannot provide a complete answer without more context or access to the specific codebase. However, the completeness score is slightly lower because the AI could not provide a full answer due to a lack of information.",
+        "judge_model": "openai/gpt-4"
+      }
+    }
+  ]
+}

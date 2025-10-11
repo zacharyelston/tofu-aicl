@@ -10,8 +10,10 @@ import json
 import subprocess
 import shutil
 import yaml
+import time
 from pathlib import Path
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from llm_grader import LLMGrader
 
 class RAGGradedMatrixRunner:
@@ -177,23 +179,67 @@ resource "chat" "answer" {{
         
         return graded_results
     
-    def run_matrix(self, questions, models):
+    def run_matrix(self, questions, models, parallel=False, max_workers=4):
         """Run matrix of RAG experiments with grading"""
         print("\n" + "="*70)
         print("🧪 RAG MATRIX WITH QUALITY GRADING")
         print("="*70)
-        print(f"📊 Testing {len(models)} models × {len(questions)} questions = {len(models) * len(questions)} experiments")
-        print(f"👨‍⚖️ Judge Model: {self.judge_model}\n")
+        total_experiments = len(models) * len(questions)
+        print(f"📊 Testing {len(models)} models × {len(questions)} questions = {total_experiments} experiments")
+        print(f"👨‍⚖️ Judge Model: {self.judge_model}")
         
+        if parallel:
+            print(f"⚡ Parallel mode: {max_workers} workers\n")
+        else:
+            print(f"🔄 Sequential mode\n")
+        
+        # Prepare all experiment configs
+        experiments = []
         experiment_num = 1
         for model in models:
             for question in questions:
                 experiment_id = f"rag_{experiment_num:02d}_{model.split('/')[-1].replace('-', '_')}"
-                
-                result = self.run_rag_experiment(question, model, experiment_id)
-                self.results.append(result)
-                
+                experiments.append({
+                    'id': experiment_id,
+                    'model': model,
+                    'question': question,
+                    'num': experiment_num
+                })
                 experiment_num += 1
+        
+        start_time = time.time()
+        
+        if parallel:
+            # Run experiments in parallel
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_exp = {
+                    executor.submit(self.run_rag_experiment, exp['question'], exp['model'], exp['id']): exp
+                    for exp in experiments
+                }
+                
+                for future in as_completed(future_to_exp):
+                    exp = future_to_exp[future]
+                    try:
+                        result = future.result()
+                        self.results.append(result)
+                    except Exception as e:
+                        print(f"❌ Error in experiment {exp['id']}: {e}")
+                        self.results.append({
+                            'experiment_id': exp['id'],
+                            'model': exp['model'],
+                            'question': exp['question'],
+                            'success': False,
+                            'error': str(e)
+                        })
+        else:
+            # Run experiments sequentially
+            for exp in experiments:
+                result = self.run_rag_experiment(exp['question'], exp['model'], exp['id'])
+                self.results.append(result)
+        
+        elapsed_time = time.time() - start_time
+        print(f"\n⏱️  Total execution time: {elapsed_time:.1f}s")
+        print(f"📊 Average time per experiment: {elapsed_time/total_experiments:.1f}s\n")
         
         # Grade all responses
         self.results = self.grade_responses(self.results)
@@ -289,8 +335,12 @@ def main():
     # Update judge model from config
     runner.judge_model = config['test_config'].get('judge_model', 'openai/gpt-4')
     
+    # Get parallel settings
+    parallel = config['test_config'].get('parallel', False)
+    max_workers = config['test_config'].get('max_workers', 4)
+    
     # Run the matrix
-    runner.run_matrix(test_questions, models)
+    runner.run_matrix(test_questions, models, parallel=parallel, max_workers=max_workers)
     
     print(f"✨ RAG quality validation complete! Check {runner.output_dir} for results")
 

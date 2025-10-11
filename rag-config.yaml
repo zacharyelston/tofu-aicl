@@ -3,32 +3,36 @@
 
 # Models to test (OpenRouter format)
 models:
-  - name: "Claude 3.5 Sonnet"
-    id: "anthropic/claude-3.5-sonnet"
-    enabled: true
-  - name: "GPT-4"
-    id: "openai/gpt-4"
-    enabled: true
-  - name: "GPT-4o"
-    id: "openai/gpt-4o"
+  # Top performing models from validation
+  - name: "Mistral Large"
+    id: "mistralai/mistral-large"
     enabled: true
   - name: "GPT-4o-mini"
     id: "openai/gpt-4o-mini"
     enabled: true
-  - name: "Mistral Large"
-    id: "mistralai/mistral-large"
+  - name: "GPT-4o"
+    id: "openai/gpt-4o"
     enabled: true
-  - name: "Claude 3 Opus"
-    id: "anthropic/claude-3-opus"
+  - name: "Claude 3.5 Sonnet"
+    id: "anthropic/claude-3.5-sonnet"
+    enabled: true
+  
+  # Additional models (disabled)
+  - name: "GPT-4"
+    id: "openai/gpt-4"
     enabled: false
-  - name: "Gemini 1.5 Pro"
-    id: "google/gemini-pro-1.5"
+  - name: "Claude Sonnet 4.5"
+    id: "anthropic/claude-sonnet-4.5"
     enabled: false
 
 # Test configuration
 test_config:
   # Number of questions to test (from questions.txt)
   num_questions: 3
+  
+  # Parallel execution settings
+  parallel: true
+  max_workers: 4  # Number of parallel workers
   
   # Pinecone namespace for vector search
   pinecone_namespace: "tofu-aicl-codebase"

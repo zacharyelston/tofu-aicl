@@ -120,6 +120,12 @@ python compare_matrix.py            # State file analysis
 
 **Key Insight**: GPT-4o-mini excels at RAG tasks, outperforming expensive models!
 
+**Performance Optimizations:**
+- ✅ Parallel execution: 1.9x speedup with 4 workers (3.8s vs 7s per experiment)
+- ✅ Configuration-based testing: rag-config.yaml for easy model selection
+- ✅ Batch processing: Independent experiment isolation
+- See `PERFORMANCE_OPTIMIZATIONS.md` for details
+
 **Infrastructure Validation:**
 - Multi-provider orchestration: ✅ Working
 - State management: ✅ Reliable persistence
