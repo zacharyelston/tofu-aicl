@@ -88,9 +88,9 @@ class ModelCatalog:
                 capabilities=model_data.get('capabilities', [])
             )
             self._models[model.id] = model
-            # Also index by name for backward compatibility
-            if model.name != model.id:
-                self._models[model.name] = model
+            # Note: We don't index by name anymore as it causes conflicts
+            # when multiple providers have models with the same name (e.g., gpt-4o-mini)
+            # Providers should use exact model IDs from the catalog
         
         # Load embedding models
         for model_data in data.get('embedding_models', []):
@@ -108,8 +108,6 @@ class ModelCatalog:
                 dimensions=model_data.get('dimensions')
             )
             self._models[model.id] = model
-            if model.name != model.id:
-                self._models[model.name] = model
         
         # Load judge models
         for model_data in data.get('judge_models', []):
@@ -127,8 +125,6 @@ class ModelCatalog:
                 reliability_score=model_data.get('reliability_score')
             )
             self._models[model.id] = model
-            if model.name != model.id:
-                self._models[model.name] = model
         
         # Load categories
         self._categories = data.get('categories', {})

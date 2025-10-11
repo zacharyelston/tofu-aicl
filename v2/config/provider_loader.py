@@ -116,21 +116,31 @@ class ProviderConfig:
         """Check if provider supports a specific runtime mode"""
         return self.runtime.mode == "both" or self.runtime.mode == mode
     
-    def get_model(self, model_name: str) -> Optional[Model]:
+    def get_model(self, model_name_or_id: str) -> Optional[Model]:
         """
-        Get model by name from centralized ModelCatalog
+        Get model by name or ID from centralized ModelCatalog
+        
+        First tries to match by model ID. If not found, searches by model name
+        but only returns models that belong to this provider.
         
         Falls back to legacy self.models for backward compatibility.
         """
         # Try centralized catalog first
         if self._model_catalog:
-            model = self._model_catalog.get(model_name)
-            if model:
+            # First try direct ID lookup
+            model = self._model_catalog.get(model_name_or_id)
+            if model and model.provider == self.name:
                 return model
+            
+            # Try searching by name within this provider's models only
+            for model_id in self.model_ids:
+                model = self._model_catalog.get(model_id)
+                if model and model.name == model_name_or_id:
+                    return model
         
         # Fallback to legacy models (backward compatibility)
         for model in self.models:
-            if model.name == model_name:
+            if model.name == model_name_or_id:
                 # Convert to Model (this is hacky but maintains compatibility)
                 from v2.config.model_catalog import Model
                 return Model(

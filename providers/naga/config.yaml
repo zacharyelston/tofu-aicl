@@ -31,27 +31,16 @@ provider:
       - embed
       - query
   
-  models:
-    - name: naga/qwen-2.5-72b
-      type: chat
-      context_window: 32000
-      cost_per_1k_input: 0.00125
-      cost_per_1k_output: 0.005
-      quality_score: 8.5
-    
-    - name: naga/llama-3.1-70b
-      type: chat
-      context_window: 128000
-      cost_per_1k_input: 0.0009
-      cost_per_1k_output: 0.0009
-      quality_score: 8.0
-    
-    - name: naga/text-embedding-3-small
-      type: embedding
-      context_window: 8192
-      cost_per_1k_input: 0.00001
-      cost_per_1k_output: 0
-      quality_score: 7.0
+  # Models are now referenced from centralized ModelCatalog (v2/config/models.yaml)
+  model_ids:
+    - naga-gpt-4o
+    - naga-gpt-4o-mini
+    - naga-qwen-72b
+    - naga-llama-70b
+    - naga-text-embedding-3-small
+    - naga-text-embedding-3-large
+    - gemini-embedding-001
+    - judge-gpt-4o
   
   health:
     endpoint: ValidateConfig
