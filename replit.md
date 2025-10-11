@@ -31,6 +31,31 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider offering cost savings for chat and embeddings.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform for document upload, intelligent retrieval, and multimodal processing.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+
+## Recent Changes
+
+### October 11, 2025 - Complete Technical Specifications (COMPLETED)
+
+**Created Modular Specification Documents:**
+- ✅ 12 comprehensive specification files in `outline/` directory
+- ✅ 4,574+ lines of detailed technical documentation
+- ✅ Language-agnostic implementation guidance
+- ✅ Complete rebuild instructions for any programming language
+
+**Specification Coverage:**
+1. **Foundation** (01-02): Vision, goals, architecture overview
+2. **Core** (03-04): Components, provider system, gRPC APIs
+3. **Configuration** (05-06): HCL format, API specs, resource types
+4. **Data** (07-08): Models, schemas, storage abstraction
+5. **Features** (09-10): Experiments, grading, deployment model
+6. **Implementation** (11-12): Phase-by-phase guide, directory structure
+
+**Use Cases:**
+- Rebuild in Go/Rust/TypeScript with complete specifications
+- Onboard new developers with comprehensive documentation
+- Design reviews and architectural decisions
+- Product roadmap planning
+
 ### October 11, 2025 - Model Catalog Integration (COMPLETED)
 
 **Eliminated Model Duplication Across System:**
