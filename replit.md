@@ -57,6 +57,25 @@ generate_experiments.py            # Auto-enriches from catalog
 
 **Impact:** All models auto-enriched with cost, quality, dimensions from single catalog. No manual sync needed.
 
+**Provider Auto-Discovery (Verified):**
+- ✅ ProviderConfigLoader scans `providers/` directory automatically
+- ✅ Drop folder with `config.yaml` → provider instantly available
+- ✅ No manual registration code required
+- ✅ 6/6 comprehensive auto-discovery tests passing
+
+**Adding New Provider:**
+```bash
+# Just drop folder:
+providers/
+  my_provider/
+    config.yaml    # Provider definition
+    server.py      # gRPC implementation
+
+# Instantly available:
+loader = ProviderConfigLoader()
+provider = loader.get("my_provider")  # ✅ Works!
+```
+
 ### October 11, 2025 - Configuration-as-Data Refactorings (COMPLETED)
 
 **Three Major Refactorings Following Configuration-as-Data Pattern:**
