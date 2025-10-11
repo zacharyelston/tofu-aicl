@@ -99,33 +99,42 @@ python compare_matrix.py            # State file analysis
 
 ## Recent Changes
 
-### October 11, 2025 - Naga.ai Integration
+### October 11, 2025 - Naga.ai Integration & Embedding Comparison
 
 **Cost-Effective AI Provider Integration:**
 - ✅ Created Naga.ai provider (OpenAI-compatible, 50% cost savings)
 - ✅ Added to provider registry with full gRPC implementation
 - ✅ API key (`NAGA_API_KEY`) securely stored in Replit Secrets
-- ✅ Basic functionality tested and validated
+- ✅ Tested 200+ models available via Naga API
+- ✅ Validated embedding models in RAG pipeline
+
+**Embedding Comparison Results:**
+- Tested 3 Naga embedding models with GPT-4o + Mistral Large judge
+- Winner: `text-embedding-3-large` (3072d) - 8.0/10 quality
+- Runner-up: `gemini-embedding-001` (3072d) - 7.0/10 avg
+- All models: 100% success rate, 50% cost savings
 
 **Current Implementation:**
 - Resource types: `naga_chat` and `naga_embedding`
 - Base URL: https://api.naga.ac/v1
-- Supports same models as OpenRouter/OpenAI at half the cost
+- Supports 200+ models across 25 providers at half the cost
 
 **Known Limitation (Temporary):**
-- Use `naga_chat` (not `chat`) to route to Naga provider
+- Use `naga_chat`/`naga_embedding` (not `chat`/`embedding`) to route to Naga provider
 - Due to hardcoded resource-to-provider mapping in executor
 - Architect has provided roadmap for config-driven provider selection
 
 **Documentation Added:**
 - `NAGA_INTEGRATION.md` - Complete usage guide
+- `NAGA_EMBEDDING_COMPARISON.md` - Embedding test results
 - `PROVIDER_SELECTION_ROADMAP.md` - Architecture improvement plan
+- `list_naga_models.py` - Script to query available models
 - Updated `rag-config.yaml` with Naga model examples
 
-**Cost Comparison:**
-- OpenRouter: $0.003/1K tokens
-- Naga.ai: $0.0015/1K tokens  
-- **Savings: 50%** 💰
+**Cost Savings:**
+- Embeddings: 50% off (e.g., $0.000065 vs $0.00013 for 3-large)
+- Chat: 50% off (e.g., $2.50 vs $5.00 for GPT-4o)
+- **Total Framework Savings: 50%** 💰
 
 ### October 10, 2025 - Complete Framework Validation (Infrastructure + Quality + RAG)
 

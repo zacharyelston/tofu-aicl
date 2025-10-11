@@ -1,0 +1,37 @@
+terraform {
+  required_providers {
+    naga = { source = "aicl/naga" }
+    pinecone = { source = "aicl/pinecone" }
+  }
+}
+
+resource "naga_embedding" "question_vector" {
+  model = "text-embedding-3-small"
+  text = "What is the role of the Evaluator component in the AICL framework?"
+  aiclResourceName = "question_vector"
+}
+
+resource "query" "results" {
+  index_name = "tofu-aicl"
+  namespace = "tofu-aicl-codebase"
+  top_k = 5
+  vector = "${resource.naga_embedding.question_vector.attributes.embeddings[0].values}"
+  aiclResourceName = "results"
+}
+
+resource "naga_chat" "answer" {
+  model = "gpt-4o-2024-08-06"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful assistant that answers questions about the AICL framework. Use the provided context."
+    },
+    {
+      role = "user"
+      content = "Question: What is the role of the Evaluator component in the AICL framework?\n\nContext: ${resource.query.results.attributes.matches}\n\nProvide a detailed answer."
+    }
+  ]
+  max_tokens = 500
+  temperature = 0.7
+  aiclResourceName = "answer"
+}

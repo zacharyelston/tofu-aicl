@@ -1,0 +1,32 @@
+terraform {
+  required_providers {
+    naga = { source = "aicl/naga" }
+    pinecone = { source = "aicl/pinecone" }
+  }
+}
+
+resource "naga_embedding" "question_vector" {
+  model = "text-embedding-3-small"
+  text = "What is the role of the Evaluator component?"
+  aiclResourceName = "question_vector"
+}
+
+resource "query" "results" {
+  index_name = "tofu-aicl"
+  namespace = "tofu-aicl-codebase"
+  top_k = 5
+  vector = "${resource.naga_embedding.question_vector.attributes.embeddings[0].values}"
+  aiclResourceName = "results"
+}
+
+resource "naga_chat" "answer" {
+  model = "gpt-4o-2024-08-06"
+  messages = [
+    {
+      role = "user"
+      content = "Based on this context, what is the role of the Evaluator?\n\nContext: ${resource.query.results.attributes.matches}"
+    }
+  ]
+  max_tokens = 300
+  aiclResourceName = "answer"
+}
