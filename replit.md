@@ -99,6 +99,46 @@ python compare_matrix.py            # State file analysis
 
 ## Recent Changes
 
+### October 11, 2025 - Ragie.io RAG-as-a-Service Integration
+
+**Fully Managed RAG Platform:**
+- ✅ Created Ragie provider (providers/ragie/server.py) with gRPC implementation
+- ✅ Document upload support (multimodal: PDFs, videos, audio, images, text)
+- ✅ Intelligent retrieval with hybrid search and re-ranking
+- ✅ API key (`RAGIE_API_KEY`) securely stored in Replit Secrets
+- ✅ Integration tested and validated
+
+**Ragie Capabilities:**
+- Automatic document indexing (vector + keyword + summary indexes)
+- Multimodal support (text, PDFs, images, audio, video, PowerPoint, Word)
+- Metadata filtering and partitions for multi-tenant applications
+- Enterprise security (SOC 2, HIPAA, GDPR compliant)
+- Data connectors (Google Drive, Notion, Confluence)
+
+**Resource Types:**
+- `ragie_upload` / `ragie_document` - Upload documents for indexing
+- `ragie_retrieval` / `ragie_query` - Semantic search with re-ranking
+
+**Processing Modes:**
+- `fast` - Text extraction only (default, 20x faster)
+- `hi_res` - Includes images and tables (PDFs, PowerPoint, Word)
+
+**Important Note:**
+- Documents are processed asynchronously (status: "partitioning")
+- Queries after upload may return 0 results until indexing completes
+- Recommended: Upload in one run, query in subsequent runs
+
+**Documentation Added:**
+- `RAGIE_INTEGRATION.md` - Complete usage guide with examples
+- `ragie_example.aicl` - Sample RAG pipeline configuration
+- Updated `replit.md` with Ragie integration details
+
+**Use Cases:**
+- ✅ Production RAG applications (vs manual Pinecone + embeddings)
+- ✅ Multimodal document processing
+- ✅ Enterprise knowledge bases with Google Drive/Notion sync
+- ✅ Multi-tenant SaaS with partition-based data isolation
+
 ### October 11, 2025 - Naga.ai Integration & Embedding Comparison
 
 **Cost-Effective AI Provider Integration:**
