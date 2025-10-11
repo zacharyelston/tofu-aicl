@@ -13,8 +13,8 @@ from aicl.state.manager import StateManager, ResourceState
 from aicl.parser import HCLParser
 from aicl.planner import Planner
 from aicl.executor import Executor
-from aicl.provider_registry import get_registry
 from aicl.observability import get_tracer, get_meter, initialize_observability, shutdown_observability
+from v2.config import ProviderConfigLoader
 import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
@@ -53,7 +53,7 @@ class AICLEngine:
         self.provider_containers: Dict[str, ProviderContainer] = {}
         self.state_manager = StateManager()
         self.parsed_config = self._parse_config()
-        self.next_port = 50051
+        self.provider_loader = ProviderConfigLoader()  # Load provider configs from YAML
         
         initialize_observability()
         self.tracer = get_tracer(__name__)
@@ -93,26 +93,26 @@ class AICLEngine:
             span.set_attribute("provider.mode", "subprocess")
             
             print("Starting providers in subprocess mode...")
-            registry = get_registry()
 
             for name, config in providers.items():
                 print(f"Starting subprocess for provider '{name}'...")
                 with self.tracer.start_as_current_span(f"start_provider.{name}") as provider_span:
                     provider_span.set_attribute("provider.name", name)
                     try:
-                        # Get provider metadata from registry
+                        # Get provider config from loader
                         source = config.get('source', '')
-                        provider_metadata = registry.get(source)
+                        provider_config = self.provider_loader.get(source)
 
-                        if not provider_metadata:
-                            print(f"Warning: Provider '{source}' not found in registry, using source name directly")
-                            provider_name = source.split('/')[-1] if '/' in source else name
-                        else:
-                            provider_name = provider_metadata.name
+                        if not provider_config:
+                            raise ValueError(f"Provider '{source}' not found in provider configs. Available providers: {[c.name for c in self.provider_loader.list_all()]}")
 
-                        # Find the provider server script
-                        provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / provider_name
-                        server_script = provider_dir / 'server.py'
+                        # Validate subprocess mode is supported
+                        if not provider_config.supports_mode("subprocess"):
+                            raise ValueError(f"Provider '{provider_config.name}' does not support subprocess mode (mode: {provider_config.runtime.mode})")
+
+                        # Find the provider server script using config
+                        provider_dir = Path(__file__).parent.parent.parent.parent / 'providers' / provider_config.name
+                        server_script = provider_dir / provider_config.entrypoint
 
                         if not server_script.exists():
                             raise FileNotFoundError(f"Provider server script not found: {server_script}")
@@ -135,10 +135,10 @@ class AICLEngine:
                                         key, value = line.strip().split('=', 1)
                                         env_vars[key] = value
 
-                        # Assign a port
-                        port = self.next_port
-                        self.next_port += 1
+                        # Use configured port from provider config (no more dynamic assignment)
+                        port = provider_config.default_port
                         env_vars['PORT'] = str(port)
+                        provider_span.set_attribute("provider.port", port)
 
                         # Start the provider as a subprocess
                         process = subprocess.Popen(
@@ -195,21 +195,25 @@ class AICLEngine:
     def _start_providers_docker(self):
         print("Starting provider containers...")
         providers = self.parsed_config.get('terraform', [{}])[0].get('required_providers', [{}])[0]
-        registry = get_registry()
 
         for name, config in providers.items():
-            # Try to get image from registry first, fall back to HCL config
+            # Get provider config from loader
             source = config.get('source', '')
-            provider_metadata = registry.get(source)
+            provider_config = self.provider_loader.get(source)
 
-            if provider_metadata:
-                image = provider_metadata.container_image
-            elif 'container' in config and 'image' in config['container']:
-                image = config['container']['image']
-            else:
-                raise ValueError(f"No container image found for provider '{name}' in registry or config")
+            if not provider_config:
+                raise ValueError(f"Provider '{source}' not found in provider configs. Available providers: {[c.name for c in self.provider_loader.list_all()]}")
 
-            print(f"Starting container for provider '{name}' with image '{image}'...")
+            # Validate Docker mode is supported
+            if not provider_config.supports_mode("docker"):
+                raise ValueError(f"Provider '{provider_config.name}' does not support Docker mode (mode: {provider_config.runtime.mode})")
+
+            # Get container image from config
+            if not provider_config.container_image:
+                raise ValueError(f"No container image configured for provider '{provider_config.name}'")
+
+            image = provider_config.container_image
+            print(f"Starting container for provider '{name}' ({provider_config.display_name}) with image '{image}'...")
             try:
                 env_vars = {}
                 env_file_path = self.config_path.parent / '.env'
@@ -220,11 +224,13 @@ class AICLEngine:
                                 key, value = line.strip().split('=', 1)
                                 env_vars[key] = value
 
+                # Use internal port from provider config
+                internal_port = provider_config.docker.internal_port if provider_config.docker else 50051
                 container = self.docker_client.containers.run(
                     image=image,
                     detach=True,
                     auto_remove=True,
-                    ports={'50051/tcp': None},
+                    ports={f'{internal_port}/tcp': None},
                     environment=env_vars
                 )
                 time.sleep(5) # Wait for container to be ready
@@ -234,8 +240,8 @@ class AICLEngine:
                 print(f"Container status: {container.status}")
                 print(f"Container logs: {container.logs().decode('utf-8')[-500:]}")
 
-                host_port = container.ports['50051/tcp'][0]['HostPort']
-                print(f"Connecting to provider on 127.0.0.1:{host_port}")
+                host_port = container.ports[f'{internal_port}/tcp'][0]['HostPort']
+                print(f"Connecting to provider on 127.0.0.1:{host_port} (internal:{internal_port})")
                 channel = grpc.insecure_channel(f'127.0.0.1:{host_port}')
                 stub = provider_pb2_grpc.ProviderStub(channel)
 
