@@ -1,0 +1,37 @@
+# Text Splitter Provider Configuration
+
+provider:
+  name: text_splitter
+  display_name: Text Splitter
+  version: 1.0.0
+  source: aicl/text_splitter
+  description: Chunk text documents for embeddings and vector storage
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50057
+    mode: both
+  
+  docker:
+    image: aicl/text_splitter:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars: []
+    optional_vars: []
+  
+  capabilities:
+    types:
+      - text_processing
+    operations:
+      - split
+      - chunk
+  
+  features:
+    - Configurable chunk size and overlap
+    - Multiple splitting strategies
+    - Preserves context across chunks
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

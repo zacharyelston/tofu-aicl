@@ -1,0 +1,37 @@
+# Pinecone Provider Configuration
+
+provider:
+  name: pinecone
+  display_name: Pinecone
+  version: 1.0.0
+  source: aicl/pinecone
+  description: Vector database for similarity search and indexing
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50054
+    mode: both
+  
+  docker:
+    image: aicl/pinecone:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - PINECONE_API_KEY
+      - PINECONE_HOST_URL
+    optional_vars:
+      - PINECONE_INDEX_NAME
+  
+  capabilities:
+    types:
+      - vector_database
+    operations:
+      - upsert
+      - query
+      - delete
+      - create_index
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

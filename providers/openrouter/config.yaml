@@ -1,0 +1,58 @@
+# OpenRouter Provider Configuration
+
+provider:
+  name: openrouter
+  display_name: OpenRouter
+  version: 1.0.0
+  source: aicl/openrouter
+  description: Access 100+ AI models through a single API (embeddings, chat, query)
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50055
+    mode: both
+  
+  docker:
+    image: aicl/openrouter:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - OPENROUTER_API_KEY
+    optional_vars:
+      - OPENROUTER_BASE_URL
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - query
+  
+  models:
+    - name: openai/gpt-4o
+      type: chat
+      context_window: 128000
+      cost_per_1k_input: 0.0025
+      cost_per_1k_output: 0.010
+      quality_score: 9.5
+    
+    - name: anthropic/claude-3.5-sonnet
+      type: chat
+      context_window: 200000
+      cost_per_1k_input: 0.003
+      cost_per_1k_output: 0.015
+      quality_score: 9.7
+    
+    - name: mistralai/mistral-large-2411
+      type: chat
+      context_window: 128000
+      cost_per_1k_input: 0.002
+      cost_per_1k_output: 0.006
+      quality_score: 9.0
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

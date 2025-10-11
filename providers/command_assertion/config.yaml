@@ -1,0 +1,34 @@
+# Command Assertion Provider Configuration
+
+provider:
+  name: command_assertion
+  display_name: Command Assertion
+  version: 1.0.0
+  source: aicl/command_assertion
+  description: Validation and testing for AI pipelines
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50058
+    mode: both
+  
+  docker:
+    image: aicl/command_assertion:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars: []
+    optional_vars: []
+  
+  capabilities:
+    types:
+      - testing
+      - validation
+    operations:
+      - assert
+      - validate
+      - test
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

@@ -1,0 +1,39 @@
+# Ragie.io Provider Configuration
+
+provider:
+  name: ragie
+  display_name: Ragie.io
+  version: 1.0.0
+  source: aicl/ragie
+  description: Fully managed RAG-as-a-Service with document upload and intelligent retrieval
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50053
+    mode: subprocess
+  
+  environment:
+    required_vars:
+      - RAGIE_API_KEY
+    optional_vars: []
+  
+  capabilities:
+    types:
+      - rag
+      - document_processing
+    operations:
+      - upload
+      - retrieve
+      - delete
+      - chunk
+  
+  features:
+    - Multimodal document support (PDF, DOCX, images)
+    - Automatic chunking and indexing
+    - Intelligent reranking
+    - Recency bias for time-sensitive queries
+    - Partition-based data isolation
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

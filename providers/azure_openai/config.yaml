@@ -1,0 +1,53 @@
+# Azure OpenAI Provider Configuration
+
+provider:
+  name: azure_openai
+  display_name: Azure OpenAI
+  version: 1.0.0
+  source: aicl/azure_openai
+  description: Enterprise OpenAI embeddings via Azure with enhanced security and compliance
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50059
+    mode: both
+  
+  docker:
+    image: aicl/azure_openai:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - AZURE_OPENAI_API_KEY
+      - AZURE_OPENAI_ENDPOINT
+    optional_vars:
+      - AZURE_OPENAI_API_VERSION
+      - AZURE_OPENAI_DEPLOYMENT_NAME
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - create_embedding
+  
+  models:
+    - name: gpt-4o
+      type: chat
+      context_window: 128000
+      cost_per_1k_input: 0.0025
+      cost_per_1k_output: 0.010
+      quality_score: 9.5
+    
+    - name: text-embedding-3-small
+      type: embedding
+      context_window: 8192
+      cost_per_1k_input: 0.00002
+      cost_per_1k_output: 0
+      quality_score: 7.0
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

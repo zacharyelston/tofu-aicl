@@ -1,0 +1,66 @@
+# OpenAI Provider Configuration
+
+provider:
+  name: openai
+  display_name: OpenAI
+  version: 1.0.0
+  source: aicl/openai
+  description: OpenAI embeddings and chat models with industry-leading quality
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50051
+    mode: both
+  
+  docker:
+    image: aicl/openai:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - OPENAI_API_KEY
+    optional_vars:
+      - OPENAI_ORG_ID
+      - OPENAI_BASE_URL
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - create_embedding
+  
+  models:
+    - name: gpt-4o
+      type: chat
+      context_window: 128000
+      cost_per_1k_input: 0.0025
+      cost_per_1k_output: 0.010
+      quality_score: 9.5
+    
+    - name: gpt-4o-mini
+      type: chat
+      context_window: 128000
+      cost_per_1k_input: 0.00015
+      cost_per_1k_output: 0.0006
+      quality_score: 8.5
+    
+    - name: text-embedding-3-small
+      type: embedding
+      context_window: 8192
+      cost_per_1k_input: 0.00002
+      cost_per_1k_output: 0
+      quality_score: 7.0
+    
+    - name: text-embedding-3-large
+      type: embedding
+      context_window: 8192
+      cost_per_1k_input: 0.00013
+      cost_per_1k_output: 0
+      quality_score: 9.0
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000
