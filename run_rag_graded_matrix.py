@@ -9,6 +9,7 @@ import sys
 import json
 import subprocess
 import shutil
+import yaml
 from pathlib import Path
 from datetime import datetime
 from llm_grader import LLMGrader
@@ -255,22 +256,38 @@ resource "chat" "answer" {{
 
 
 def main():
-    runner = RAGGradedMatrixRunner()
+    # Load configuration
+    config_file = "rag-config.yaml"
+    if not os.path.exists(config_file):
+        print(f"❌ Configuration file not found: {config_file}")
+        sys.exit(1)
+    
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    runner = RAGGradedMatrixRunner(output_dir=config['output']['directory'])
     
     # Load questions from file
-    print("📝 Loading test questions from questions.txt...")
-    questions = runner.load_questions()
+    questions_file = config.get('questions_file', 'questions.txt')
+    print(f"📝 Loading test questions from {questions_file}...")
+    questions = runner.load_questions(questions_file)
     print(f"   Loaded {len(questions)} questions\n")
     
-    # Select a subset for testing (first 3 questions)
-    test_questions = questions[:3]
+    # Select test questions based on config
+    num_questions = config['test_config'].get('num_questions', 3)
+    test_questions = questions[:num_questions]
     
-    # Models to test - Latest versions
-    models = [
-        "anthropic/claude-3.5-sonnet",  # Latest Claude
-        "openai/gpt-4",                  # GPT-4
-        "mistralai/mistral-large"        # Latest Mistral
-    ]
+    # Get enabled models from config
+    models = [m['id'] for m in config['models'] if m.get('enabled', True)]
+    
+    print(f"🤖 Testing {len(models)} models:")
+    for model_config in config['models']:
+        if model_config.get('enabled', True):
+            print(f"   ✅ {model_config['name']} ({model_config['id']})")
+    print()
+    
+    # Update judge model from config
+    runner.judge_model = config['test_config'].get('judge_model', 'openai/gpt-4')
     
     # Run the matrix
     runner.run_matrix(test_questions, models)
