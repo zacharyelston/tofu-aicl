@@ -25,6 +25,10 @@ class Executor:
             'chat': 'openrouter',
             'upsert': 'pinecone',
             'query': 'pinecone',
+            'ragie_upload': 'ragie',    # Ragie document upload
+            'ragie_document': 'ragie',  # Alias for ragie_upload
+            'ragie_retrieval': 'ragie', # Ragie retrieval/query
+            'ragie_query': 'ragie',     # Alias for ragie_retrieval
         }
 
     def execute_node(self, node_id, resource_map):

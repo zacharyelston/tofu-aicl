@@ -72,6 +72,13 @@ class ProviderRegistry:
                 container_image="aicl/naga:1.0.0",
                 description="AI models via Naga.ai (OpenAI-compatible, 50% lower cost)"
             ),
+            ProviderMetadata(
+                name="ragie",
+                source="aicl/ragie",
+                version="1.0.0",
+                container_image="aicl/ragie:1.0.0",
+                description="Fully managed RAG-as-a-Service (document upload, retrieval)"
+            ),
         ]
 
         for provider in default_providers:
