@@ -20,6 +20,8 @@ class Executor:
             'text_splitter': 'text_splitter',
             'embedding': 'openai',
             'azure_openai_embedding': 'azure_openai',
+            'naga_embedding': 'naga',  # Naga embeddings
+            'naga_chat': 'naga',       # Naga chat
             'chat': 'openrouter',
             'upsert': 'pinecone',
             'query': 'pinecone',

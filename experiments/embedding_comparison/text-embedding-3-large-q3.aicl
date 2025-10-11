@@ -1,0 +1,51 @@
+terraform {
+  required_providers {
+    naga = {
+      source = "aicl/naga"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+    }
+  }
+}
+
+# 1. Generate embedding for the question using OpenAI Text Embedding 3 Large
+resource "naga_embedding" "question_vector" {
+  model = "text-embedding-3-large"
+  text = "Explain how provider communication works via gRPC."
+  aiclResourceName = "question_vector"
+}
+
+# 2. Query Pinecone for similar code chunks
+resource "query" "results" {
+  index_name = "tofu-aicl"
+  namespace = "tofu-aicl-codebase"
+  top_k = 5
+  vector = "${resource.naga_embedding.question_vector.attributes.embeddings[0].values}"
+  aiclResourceName = "results"
+}
+
+# 3. Generate answer using GPT-4o (consistent chat model)
+resource "naga_chat" "answer" {
+  model = "gpt-4o-2024-08-06"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful assistant that answers questions about the AICL framework codebase. Use the provided code context to give accurate, detailed answers."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+Question: Explain how provider communication works via gRPC.
+
+Context from codebase:
+${resource.query.results.attributes.matches}
+
+Please provide a detailed answer based on the context above.
+EOT
+    }
+  ]
+  max_tokens = 500
+  temperature = 0.7
+  aiclResourceName = "answer"
+}
