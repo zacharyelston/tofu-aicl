@@ -3,12 +3,15 @@ Provider Configuration Loader
 
 Loads provider metadata from YAML config files instead of hardcoding in Python.
 This follows the same pattern as the SQL config refactor - externalize config to data files.
+
+Now integrates with centralized ModelCatalog to eliminate model duplication.
 """
 
 import yaml
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
+from v2.config.model_catalog import ModelCatalog, Model
 
 
 @dataclass
@@ -42,7 +45,12 @@ class ProviderCapabilities:
 
 @dataclass
 class ProviderModel:
-    """Model metadata"""
+    """
+    DEPRECATED: Use ModelCatalog instead.
+    
+    This class is kept for backward compatibility but providers should
+    now reference model IDs from the centralized ModelCatalog.
+    """
     name: str
     type: str
     context_window: int
@@ -64,6 +72,9 @@ class ProviderConfig:
     Provider configuration loaded from YAML
     
     Replaces hardcoded ProviderMetadata in provider_registry.py
+    
+    Models are now referenced by ID from the centralized ModelCatalog
+    instead of being duplicated in provider configs.
     """
     name: str
     display_name: str
@@ -74,10 +85,12 @@ class ProviderConfig:
     docker: Optional[ProviderDocker]
     environment: ProviderEnvironment
     capabilities: ProviderCapabilities
-    models: List[ProviderModel] = field(default_factory=list)
+    model_ids: List[str] = field(default_factory=list)  # References to ModelCatalog
+    models: List[ProviderModel] = field(default_factory=list)  # DEPRECATED: For backward compat
     health: ProviderHealth = field(default_factory=lambda: ProviderHealth())
     features: List[str] = field(default_factory=list)
     supported_formats: List[str] = field(default_factory=list)
+    _model_catalog: Optional[ModelCatalog] = field(default=None, repr=False)
     
     @property
     def container_image(self) -> Optional[str]:
@@ -103,12 +116,48 @@ class ProviderConfig:
         """Check if provider supports a specific runtime mode"""
         return self.runtime.mode == "both" or self.runtime.mode == mode
     
-    def get_model(self, model_name: str) -> Optional[ProviderModel]:
-        """Get model by name"""
+    def get_model(self, model_name: str) -> Optional[Model]:
+        """
+        Get model by name from centralized ModelCatalog
+        
+        Falls back to legacy self.models for backward compatibility.
+        """
+        # Try centralized catalog first
+        if self._model_catalog:
+            model = self._model_catalog.get(model_name)
+            if model:
+                return model
+        
+        # Fallback to legacy models (backward compatibility)
         for model in self.models:
             if model.name == model_name:
-                return model
+                # Convert to Model (this is hacky but maintains compatibility)
+                from v2.config.model_catalog import Model
+                return Model(
+                    id=model.name,
+                    name=model.name,
+                    display_name=model.name,
+                    provider=self.name,
+                    type=model.type,
+                    context_window=model.context_window,
+                    cost_per_1k_input=model.cost_per_1k_input,
+                    cost_per_1k_output=model.cost_per_1k_output,
+                    quality_score=model.quality_score
+                )
         return None
+    
+    def get_all_models(self) -> List[Model]:
+        """Get all models for this provider from centralized catalog"""
+        if not self._model_catalog:
+            return []
+        
+        models = []
+        for model_id in self.model_ids:
+            model = self._model_catalog.get(model_id)
+            if model:
+                models.append(model)
+        
+        return models
 
 
 class ProviderConfigValidationError(Exception):
@@ -120,9 +169,12 @@ class ProviderConfigLoader:
     """
     Load provider configurations from YAML files with schema validation
     
+    Now integrates with ModelCatalog for centralized model management.
+    
     Usage:
         loader = ProviderConfigLoader()
         openai_config = loader.get("openai")
+        models = openai_config.get_all_models()  # From ModelCatalog
         all_providers = loader.list_all()
     """
     
@@ -140,6 +192,7 @@ class ProviderConfigLoader:
         
         self.providers_dir = Path(providers_dir)
         self.fail_fast = fail_fast
+        self.model_catalog = ModelCatalog()  # Initialize centralized catalog
         self._configs: Dict[str, ProviderConfig] = {}
         self._name_to_config: Dict[str, ProviderConfig] = {}  # Track by name only
         self._load_all_configs()
@@ -282,17 +335,22 @@ class ProviderConfigLoader:
             operations=cap_data.get('operations', [])
         )
         
-        # Parse models (optional)
+        # Parse model_ids (new pattern) or legacy models (backward compat)
+        model_ids = provider_data.get('model_ids', [])
+        
+        # Fallback: Support legacy 'models' field for backward compatibility
         models = []
-        for model_data in provider_data.get('models', []):
-            models.append(ProviderModel(
-                name=model_data['name'],
-                type=model_data['type'],
-                context_window=model_data['context_window'],
-                cost_per_1k_input=model_data['cost_per_1k_input'],
-                cost_per_1k_output=model_data['cost_per_1k_output'],
-                quality_score=model_data['quality_score']
-            ))
+        if not model_ids and 'models' in provider_data:
+            print(f"Warning: {config_file} uses deprecated 'models' field. Migrate to 'model_ids' and use ModelCatalog.")
+            for model_data in provider_data['models']:
+                models.append(ProviderModel(
+                    name=model_data['name'],
+                    type=model_data['type'],
+                    context_window=model_data['context_window'],
+                    cost_per_1k_input=model_data['cost_per_1k_input'],
+                    cost_per_1k_output=model_data['cost_per_1k_output'],
+                    quality_score=model_data['quality_score']
+                ))
         
         # Parse health (optional)
         health_data = provider_data.get('health', {})
@@ -301,7 +359,7 @@ class ProviderConfigLoader:
             timeout_ms=health_data.get('timeout_ms', 5000)
         )
         
-        return ProviderConfig(
+        config = ProviderConfig(
             name=provider_data['name'],
             display_name=provider_data['display_name'],
             version=provider_data['version'],
@@ -311,11 +369,17 @@ class ProviderConfigLoader:
             docker=docker,
             environment=environment,
             capabilities=capabilities,
+            model_ids=model_ids,
             models=models,
             health=health,
             features=provider_data.get('features', []),
             supported_formats=provider_data.get('supported_formats', [])
         )
+        
+        # Inject model catalog for centralized model lookup
+        config._model_catalog = self.model_catalog
+        
+        return config
     
     def get(self, name_or_source: str) -> Optional[ProviderConfig]:
         """
