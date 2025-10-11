@@ -426,19 +426,6 @@ class NagaProvider(provider_pb2_grpc.ProviderServicer):
         planned_state.update(request.proposed_config)
         return provider_pb2.PlanResourceChangeResponse(planned_state=planned_state)
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(NagaProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"Naga.ai provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    # Set the API key from environment for local testing
-    api_key = os.getenv("NAGA_API_KEY")
-    if not api_key:
-        print("Error: NAGA_API_KEY environment variable not set.")
-    else:
-        serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(NagaProvider())

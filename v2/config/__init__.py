@@ -17,7 +17,14 @@ from .provider_loader import (
     ProviderHealth
 )
 
+from .model_catalog import (
+    Model,
+    ModelCatalog,
+    get_model_catalog
+)
+
 __all__ = [
+    # Provider configs
     'ProviderConfig',
     'ProviderConfigLoader',
     'ProviderConfigValidationError',
@@ -26,5 +33,10 @@ __all__ = [
     'ProviderEnvironment',
     'ProviderCapabilities',
     'ProviderModel',
-    'ProviderHealth'
+    'ProviderHealth',
+    
+    # Model catalog
+    'Model',
+    'ModelCatalog',
+    'get_model_catalog'
 ]
