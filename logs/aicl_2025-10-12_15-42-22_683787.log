@@ -1,0 +1,175 @@
+2025-10-12 15:42:22 | INFO     | __main__:main | AICL CLI starting
+2025-10-12 15:42:22 | INFO     | cli.commands.run:run_command | Starting run
+2025-10-12 15:42:22 | INFO     | cli.runners.local:run | Running locally
+2025-10-12 15:42:22 | ERROR    | cli.runners.local:_execute_engine | Execution failed
+Traceback (most recent call last):
+
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser_state.py", line 77, in feed_token
+    action, arg = states[state][token.type]
+    │             │      │      │     └ <member 'type' of 'Token' objects>
+    │             │      │      └ Token('COLON', ':')
+    │             │      └ 396
+    │             └ {0: {'new_line_or_comment': (Shift, 170), 'NL_OR_COMMENT': (Shift, 504), 'IF': (Shift, 596), 'for_cond': (Shift, 277), 'RSQB'...
+    └ Reduce
+
+KeyError: 'COLON'
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "/Users/zacelston/code/tofu-aicl/./aicl_modular", line 122, in <module>
+    app()
+    └ <typer.main.Typer object at 0x103d7d400>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/main.py", line 308, in __call__
+    return get_command(self)(*args, **kwargs)
+           │           │      │       └ {}
+           │           │      └ ()
+           │           └ <typer.main.Typer object at 0x103d7d400>
+           └ <function get_command at 0x10386b240>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1462, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function TyperGroup.main at 0x10386aca0>
+           └ <TyperGroup aicl>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/core.py", line 784, in main
+    return _main(
+           └ <function _main at 0x103869a80>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/core.py", line 192, in _main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x104fc8440>
+         │    └ <function Group.invoke at 0x103132b60>
+         └ <TyperGroup aicl>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1850, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+           │               │       │       │      └ <click.core.Context object at 0x104fc7ed0>
+           │               │       │       └ <function Command.invoke at 0x103131940>
+           │               │       └ <TyperCommand run>
+           │               └ <click.core.Context object at 0x104fc7ed0>
+           └ <function Group.invoke.<locals>._process_result at 0x104fd4180>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1246, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'config_file': 'experiments/self-assessment/simple-judge-test.aicl', 'workdir': PosixPath('.'), 'experiment_id': 'default-ex...
+           │   │      │    │           └ <click.core.Context object at 0x104fc7ed0>
+           │   │      │    └ <function run at 0x104f4fb00>
+           │   │      └ <TyperCommand run>
+           │   └ <function Context.invoke at 0x103130b80>
+           └ <click.core.Context object at 0x104fc7ed0>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 814, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'config_file': 'experiments/self-assessment/simple-judge-test.aicl', 'workdir': PosixPath('.'), 'experiment_id': 'default-ex...
+           │         └ ()
+           └ <function run at 0x104f4fb00>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/main.py", line 685, in wrapper
+    return callback(**use_params)
+           │          └ {'ctx': <click.core.Context object at 0x104fc7ed0>, 'config_file': PosixPath('experiments/self-assessment/simple-judge-test.a...
+           └ <function run at 0x104f4f7e0>
+  File "/Users/zacelston/code/tofu-aicl/./aicl_modular", line 64, in run
+    sys.exit(run_command(
+    │   │    └ <function run_command at 0x1048c5800>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+
+  File "/Users/zacelston/code/tofu-aicl/cli/commands/run.py", line 36, in run_command
+    result = runner.run(config_file, workdir, experiment_id)
+             │      │   │            │        └ 'default-exp'
+             │      │   │            └ PosixPath('.')
+             │      │   └ PosixPath('experiments/self-assessment/simple-judge-test.aicl')
+             │      └ <function LocalRunner.run at 0x104f067a0>
+             └ <cli.runners.local.LocalRunner object at 0x103d7cc20>
+
+  File "/Users/zacelston/code/tofu-aicl/cli/runners/local.py", line 35, in run
+    return self._execute_engine(config_file)
+           │    │               └ PosixPath('experiments/self-assessment/simple-judge-test.aicl')
+           │    └ <function LocalRunner._execute_engine at 0x104f06840>
+           └ <cli.runners.local.LocalRunner object at 0x103d7cc20>
+
+> File "/Users/zacelston/code/tofu-aicl/cli/runners/local.py", line 46, in _execute_engine
+    engine = AICLEngine(config_path=str(config_file))
+             │                          └ PosixPath('experiments/self-assessment/simple-judge-test.aicl')
+             └ <class 'src.aicl.core.engine.AICLEngine'>
+
+  File "/Users/zacelston/code/tofu-aicl/src/aicl/core/engine.py", line 55, in __init__
+    self.parsed_config = self._parse_config()
+    │                    │    └ <function AICLEngine._parse_config at 0x105abd620>
+    │                    └ <src.aicl.core.engine.AICLEngine object at 0x105a5d2b0>
+    └ <src.aicl.core.engine.AICLEngine object at 0x105a5d2b0>
+
+  File "/Users/zacelston/code/tofu-aicl/src/aicl/core/engine.py", line 74, in _parse_config
+    return parser.parse()
+           │      └ <function HCLParser.parse at 0x10575c680>
+           └ <aicl.parser.HCLParser object at 0x105a5d550>
+
+  File "/Users/zacelston/code/tofu-aicl/src/aicl/parser.py", line 9, in parse
+    return hcl2.load(f)
+           │    │    └ <_io.TextIOWrapper name='experiments/self-assessment/simple-judge-test.aicl' mode='r' encoding='UTF-8'>
+           │    └ <function load at 0x104fdf240>
+           └ <module 'hcl2' from '/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/hcl2/__init__.py'>
+
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/hcl2/api.py", line 16, in load
+    return loads(file.read(), with_meta=with_meta)
+           │     │    │                 └ False
+           │     │    └ <method 'read' of '_io.TextIOWrapper' objects>
+           │     └ <_io.TextIOWrapper name='experiments/self-assessment/simple-judge-test.aicl' mode='r' encoding='UTF-8'>
+           └ <function loads at 0x1054ffc40>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/hcl2/api.py", line 29, in loads
+    tree = parser().parse(text + "\n")
+           │              └ '# Simple Judge Test\n# Just test the judging system without full RAG/fix cycle\n\nconfig:\n  name: "Test Judging System"\n  ...
+           └ <functools._lru_cache_wrapper object at 0x1050e2b90>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/lark.py", line 676, in parse
+    return self.parser.parse(text, start=start, on_error=on_error)
+           │    │      │     │           │               └ None
+           │    │      │     │           └ None
+           │    │      │     └ '# Simple Judge Test\n# Just test the judging system without full RAG/fix cycle\n\nconfig:\n  name: "Test Judging System"\n  ...
+           │    │      └ <function ParsingFrontend.parse at 0x1054eaca0>
+           │    └ <lark.parser_frontends.ParsingFrontend object at 0x105a5ea50>
+           └ Lark(open('<deserialized>'), parser='lalr', lexer='contextual', ...)
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parser_frontends.py", line 123, in parse
+    return self.parser.parse(stream, chosen_start, **kw)
+           │    │      │     │       │               └ {}
+           │    │      │     │       └ 'start'
+           │    │      │     └ <lark.lexer.LexerThread object at 0x105a5ee40>
+           │    │      └ <function LALR_Parser.parse at 0x1054ea840>
+           │    └ <lark.parsers.lalr_parser.LALR_Parser object at 0x105a5e660>
+           └ <lark.parser_frontends.ParsingFrontend object at 0x105a5ea50>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser.py", line 42, in parse
+    return self.parser.parse(lexer, start)
+           │    │      │     │      └ 'start'
+           │    │      │     └ <lark.lexer.LexerThread object at 0x105a5ee40>
+           │    │      └ <function _Parser.parse at 0x1054ea980>
+           │    └ <lark.parsers.lalr_parser._Parser object at 0x105a5e900>
+           └ <lark.parsers.lalr_parser.LALR_Parser object at 0x105a5e660>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser.py", line 88, in parse
+    return self.parse_from_state(parser_state)
+           │    │                └ <lark.parsers.lalr_parser_state.ParserState object at 0x105f27fc0>
+           │    └ <function _Parser.parse_from_state at 0x1054eaa20>
+           └ <lark.parsers.lalr_parser._Parser object at 0x105a5e900>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser.py", line 111, in parse_from_state
+    raise e
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser.py", line 102, in parse_from_state
+    state.feed_token(token)
+    │     │          └ Token('COLON', ':')
+    │     └ <function ParserState.feed_token at 0x1054e9bc0>
+    └ <lark.parsers.lalr_parser_state.ParserState object at 0x105f27fc0>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/lark/parsers/lalr_parser_state.py", line 80, in feed_token
+    raise UnexpectedToken(token, expected, state=self, interactive_parser=None)
+          │               │      │               └ <lark.parsers.lalr_parser_state.ParserState object at 0x105f27fc0>
+          │               │      └ {'NL_OR_COMMENT', 'IN', 'FOR_EACH', 'NAME', 'FOR', 'LBRACE', 'IF', 'EQ', 'DBLQUOTE'}
+          │               └ Token('COLON', ':')
+          └ <class 'lark.exceptions.UnexpectedToken'>
+
+lark.exceptions.UnexpectedToken: Unexpected token Token('COLON', ':') at line 4, column 7.
+Expected one of: 
+	* NL_OR_COMMENT
+	* IN
+	* FOR_EACH
+	* NAME
+	* FOR
+	* LBRACE
+	* IF
+	* EQ
+	* DBLQUOTE
+

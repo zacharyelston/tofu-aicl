@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  tofu-aicl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tofu-aicl:latest
+    container_name: tofu-aicl
+    env_file:
+      - .env
+    volumes:
+      # Mount local directories for development
+      - ./docs:/app/docs:ro
+      - ./experiments:/app/experiments
+      - ./terraform.tfstate.d:/app/terraform.tfstate.d
+    command: python3 run.py rag_pipeline_test.aicl
+    
+  # Test service with simple configuration
+  tofu-aicl-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tofu-aicl:latest
+    container_name: tofu-aicl-test
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src:ro
+      - ./experiments:/app/experiments
+      - ./cli:/app/cli:ro
+      - ./tests:/app/tests:ro
+      - ./aicl_modular:/app/aicl_modular:ro
+    command: python3 run.py test_simple.aicl
+    profiles:
+      - test
+
+  # Interactive shell for debugging
+  tofu-aicl-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tofu-aicl:latest
+    container_name: tofu-aicl-shell
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - debug

@@ -41,8 +41,6 @@ resource "loader_files" "docs" {
                 assert len(config['resource']) == 1
             finally:
                 os.unlink(f.name)
-    
-                os.unlink(f.name)
 
 @pytest.mark.skip(reason="Requires provider infrastructure")
 class TestEngineWithProviders:

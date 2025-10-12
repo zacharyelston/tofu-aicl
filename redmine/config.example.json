@@ -1,0 +1,54 @@
+{
+  "redmine_url": "https://your-redmine.example.com",
+  "api_key": "YOUR_API_KEY_HERE",
+  "project_id": "aicl-testing",
+  "watch_interval": 30,
+  
+  "custom_field_ids": {
+    "model_name": 1,
+    "spec_version": 2,
+    "score": 3,
+    "execution_time": 4,
+    "test_status": 5,
+    "scenario_id": 6,
+    "max_points": 7
+  },
+  
+  "tracker_ids": {
+    "test_run": 1,
+    "scenario_test": 2,
+    "level_test": 3,
+    "contract_test": 4,
+    "bug": 5,
+    "enhancement": 6
+  },
+  
+  "status_ids": {
+    "new": 1,
+    "queued": 2,
+    "running": 3,
+    "complete": 4,
+    "failed": 5
+  },
+  
+  "ai_models": {
+    "claude-3.5": {
+      "name": "Claude 3.5 Sonnet",
+      "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "gpt-4": {
+      "name": "GPT-4 Turbo",
+      "api_key_env": "OPENAI_API_KEY"
+    },
+    "gemini-pro": {
+      "name": "Gemini Pro",
+      "api_key_env": "GOOGLE_API_KEY"
+    }
+  },
+  
+  "notifications": {
+    "email_on_complete": true,
+    "email_on_failure": true,
+    "webhook_url": null
+  }
+}

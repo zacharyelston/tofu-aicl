@@ -14,6 +14,17 @@ class ResourceState:
     attributes: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
     status: str = "unknown"
+    created_at: Optional[str] = None
+    last_modified: Optional[str] = None
+    
+    def __post_init__(self):
+        """Set timestamps if not provided"""
+        if not self.created_at:
+            now = datetime.utcnow().isoformat()
+            self.created_at = now
+            self.last_modified = now
+        elif not self.last_modified:
+            self.last_modified = self.created_at
 
 @dataclass
 class StateFile:

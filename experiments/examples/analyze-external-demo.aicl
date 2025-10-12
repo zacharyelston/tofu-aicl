@@ -1,0 +1,38 @@
+# Demo: Analyze External Codebase
+# Shows how to use AICL to analyze code from another project
+
+variable "target_path" {
+  type        = string
+  description = "Path to external codebase (mounted in Docker)"
+  default     = "/mnt/external"
+}
+
+variable "project_name" {
+  type        = string
+  description = "Name of the project being analyzed"
+  default     = "External Project"
+}
+
+# Declare provider
+provider "loader" {
+  source = "aicl/file_loader"
+}
+
+# Load code from external project
+resource "loader_files" "external_code" {
+  path             = var.target_path
+  aiclResourceName = "external"
+}
+
+# Output what was loaded
+output "project_name" {
+  value = var.project_name
+}
+
+output "target_path" {
+  value = "Analyzed code at: ${var.target_path}"
+}
+
+output "success_message" {
+  value = "✅ Successfully loaded external codebase for analysis"
+}

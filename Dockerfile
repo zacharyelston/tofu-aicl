@@ -23,7 +23,8 @@ COPY src/ /app/src/
 
 # Install Python dependencies
 RUN pip install --upgrade pip \
-    && pip install -e .
+    && pip install -e . \
+    && pip install PyYAML
 
 # Copy the rest of the application code
 COPY . /app/

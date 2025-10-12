@@ -1,0 +1,194 @@
+# AICL Self-Assessment: Fix Failing Test
+# Phase 2: Use RAG + LLM + Judge to fix test_parse_config
+
+config:
+  name: "Self-Fix: test_parse_config"
+  description: "Automatically fix failing test using RAG context and LLM judging"
+
+variables:
+  target_file: "tests/integration/test_engine.py"
+  target_function: "test_parse_config"
+  issue: "FileNotFoundError when cleaning up temp file"
+  index_name: "aicl-codebase"
+
+steps:
+  # Step 1: Read current failing test
+  - name: "Read Failing Test"
+    provider: "file_loader"
+    config:
+      path: "${var.target_file}"
+    outputs:
+      current_code: "{{.content}}"
+
+  # Step 2: Query RAG for similar patterns
+  - name: "Query: Temp File Patterns"
+    provider: "pinecone"
+    config:
+      action: "query"
+      index: "${var.index_name}"
+      namespace: "self-assessment"
+      query: "pytest temporary file cleanup patterns NamedTemporaryFile delete"
+      top_k: 5
+      include_metadata: true
+    outputs:
+      temp_file_patterns: "{{.results}}"
+
+  - name: "Query: Test Best Practices"
+    provider: "pinecone"
+    config:
+      action: "query"
+      index: "${var.index_name}"
+      query: "pytest test file handling cleanup context manager"
+      top_k: 3
+    outputs:
+      test_patterns: "{{.results}}"
+
+  # Step 3: LLM analyzes issue with RAG context
+  - name: "Analyze Issue"
+    provider: "naga"
+    model: "claude-3-5-sonnet"
+    prompt: |
+      Analyze this failing test in the AICL framework.
+      
+      FAILING TEST:
+      ```python
+      {{.current_code}}
+      ```
+      
+      ISSUE:
+      ${var.issue}
+      
+      SIMILAR PATTERNS FROM CODEBASE:
+      {{.temp_file_patterns}}
+      
+      BEST PRACTICES:
+      {{.test_patterns}}
+      
+      Provide:
+      1. Root cause analysis
+      2. Why it fails
+      3. What pattern should be used (from RAG results)
+    outputs:
+      analysis: "{{.response}}"
+
+  # Step 4: Generate fix
+  - name: "Generate Fix"
+    provider: "naga"
+    model: "claude-3-5-sonnet"
+    prompt: |
+      Fix the test based on this analysis:
+      
+      {{.analysis}}
+      
+      CURRENT CODE:
+      ```python
+      {{.current_code}}
+      ```
+      
+      REQUIREMENTS:
+      1. Fix the FileNotFoundError
+      2. Follow pytest best practices from RAG results
+      3. Use proper temp file handling (NamedTemporaryFile with delete=False)
+      4. Keep test logic unchanged
+      5. Return ONLY the fixed test_parse_config function
+      
+      Output format:
+      ```python
+      def test_parse_config(self):
+          # your fixed code
+      ```
+    outputs:
+      proposed_fix: "{{.response}}"
+
+  # Step 5: Create test file with fix
+  - name: "Apply Fix to Test File"
+    provider: "command"
+    config:
+      commands:
+        - "# This would apply the fix (simulated for now)"
+        - "echo 'Fix would be applied here'"
+    outputs:
+      apply_result: "{{.stdout}}"
+
+  # Step 6: Run tests to verify
+  - name: "Run Tests"
+    provider: "command"
+    config:
+      commands:
+        - "docker-compose run --rm tofu-aicl-test pytest tests/integration/test_engine.py::TestAICLEngine::test_parse_config -v"
+    outputs:
+      test_exit_code: "{{.exit_code}}"
+      test_output: "{{.stdout}}"
+
+  # Step 7: Judge the fix quality
+  - name: "Judge Fix Quality"
+    provider: "naga"
+    model: "gpt-4"
+    prompt: |
+      You are evaluating a code fix for the AICL framework.
+      
+      ORIGINAL ISSUE:
+      ${var.issue}
+      
+      ANALYSIS:
+      {{.analysis}}
+      
+      PROPOSED FIX:
+      {{.proposed_fix}}
+      
+      TEST RESULTS:
+      Exit Code: {{.test_exit_code}}
+      Output: {{.test_output}}
+      
+      EVALUATION CRITERIA (100 points total):
+      
+      1. CORRECTNESS (40 points):
+         - Fixes the FileNotFoundError?
+         - Tests pass?
+         - No new errors introduced?
+      
+      2. CODE QUALITY (30 points):
+         - Follows pytest patterns?
+         - Clean and readable?
+         - Proper resource management?
+      
+      3. BEST PRACTICES (20 points):
+         - Uses context managers?
+         - Follows patterns from RAG results?
+         - Pythonic code?
+      
+      4. MAINTAINABILITY (10 points):
+         - Clear intent?
+         - Easy to understand?
+         - Well-commented if needed?
+      
+      Provide JSON output:
+      {
+        "total_score": 0-100,
+        "breakdown": {
+          "correctness": 0-40,
+          "code_quality": 0-30,
+          "best_practices": 0-20,
+          "maintainability": 0-10
+        },
+        "decision": "ACCEPT" or "REJECT",
+        "reasoning": "detailed explanation",
+        "improvements": ["suggestion 1", "suggestion 2"]
+      }
+    outputs:
+      judgment: "{{.response}}"
+      score: "{{.judgment.total_score}}"
+      decision: "{{.judgment.decision}}"
+
+assertions:
+  - name: "Fix Must Pass Tests"
+    condition: "{{.test_exit_code}} == 0"
+    message: "Tests must pass after fix"
+  
+  - name: "Quality Gate: 80+"
+    condition: "{{.score}} >= 80"
+    message: "Fix quality must be >= 80 points"
+  
+  - name: "Judge Must Accept"
+    condition: "{{.decision}} == 'ACCEPT'"
+    message: "Judge must accept the fix"

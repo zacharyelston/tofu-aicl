@@ -1,0 +1,326 @@
+# Redmica Source Code Structure for RAG Ingestion
+# Generated: 2025-10-11
+# Source: /Users/zacelston/code/redmica
+
+## TIER 1: Essential API & Models (Priority: HIGH)
+
+### Core Issue Management
+app/models/issue.rb                          # 2141 lines - Core issue model with associations
+app/controllers/issues_controller.rb         # 742 lines - REST API controller
+app/models/custom_field.rb                   # 371 lines - Custom fields system
+app/models/tracker.rb                        # Issue type/tracker definitions
+app/models/issue_status.rb                   # Status and workflow
+app/models/project.rb                        # Project container
+
+### API Infrastructure
+config/routes.rb                             # 20634 bytes - API routes
+app/controllers/application_controller.rb    # 22971 bytes - Base controller
+lib/redmine/views/api_template_handler.rb    # API response rendering
+
+### Documentation
+README.md                                    # Project overview
+doc/INSTALL.md                              # Installation guide
+doc/UPGRADING.md                            # Upgrade guide
+
+---
+
+## TIER 2: Integration Support (Priority: MEDIUM)
+
+### Issue Extensions
+app/models/journal.rb                        # Issue history and comments
+app/models/attachment.rb                     # File attachment handling
+app/models/watcher.rb                        # Notifications and watchers
+app/models/issue_relation.rb                # Issue relationships
+app/models/issue_category.rb                # Issue categories
+app/models/issue_priority.rb                # Priority levels
+
+### Custom Fields
+app/models/issue_custom_field.rb            # Issue-specific custom fields
+app/models/custom_field_enumeration.rb      # Dropdown values
+app/models/custom_field_value.rb            # Field value handling
+app/controllers/custom_fields_controller.rb  # Field management API
+
+### Project & User Management
+app/models/member.rb                         # Project membership
+app/models/role.rb                          # User roles
+app/models/user.rb                          # User model
+app/controllers/projects_controller.rb       # Project API
+
+---
+
+## TIER 3: Advanced Features (Priority: LOW)
+
+### Queries and Filtering
+app/models/issue_query.rb                    # Advanced issue filtering
+app/models/query.rb                         # Base query class
+app/controllers/queries_controller.rb        # Query API
+
+### Time Tracking
+app/models/time_entry.rb                    # Time logging
+app/controllers/timelog_controller.rb        # Time entry API
+
+### Workflows
+app/models/workflow.rb                      # Status transition rules
+app/controllers/workflows_controller.rb      # Workflow management
+
+### Authentication
+app/controllers/account_controller.rb        # Login/logout
+app/models/auth_source.rb                   # LDAP/external auth
+
+---
+
+## TIER 4: Configuration & Reference (Priority: REFERENCE)
+
+### Configuration
+config/settings.yml                          # 7947 bytes - App settings
+config/configuration.yml.example             # 8754 bytes - Config template
+config/database.yml.example                  # Database config
+config/icon_source.yml                      # Icon configuration
+
+### Routes Detail
+config/routes.rb                            # Complete API routing
+
+### Localization
+config/locales/en.yml                       # English translations
+config/locales/*.yml                        # 52 total locales
+
+### Initializers
+config/initializers/                        # Startup configuration
+  10_patches.rb                             # Core patches
+  backtrace_silencers.rb                    # Error handling
+  inflections.rb                            # String inflections
+
+---
+
+## Directory Structure Summary
+
+```
+redmica/
+├── app/
+│   ├── controllers/        58 files  # REST API endpoints
+│   │   ├── issues_controller.rb                   # Primary API
+│   │   ├── attachments_controller.rb              # File uploads
+│   │   ├── custom_fields_controller.rb            # Field management
+│   │   └── ...
+│   │
+│   ├── models/            83 files  # Data models
+│   │   ├── issue.rb                              # Core issue
+│   │   ├── custom_field.rb                        # Custom fields
+│   │   ├── tracker.rb                            # Issue types
+│   │   ├── issue_status.rb                       # Statuses
+│   │   ├── project.rb                            # Projects
+│   │   ├── journal.rb                            # History
+│   │   └── ...
+│   │
+│   ├── views/             56 dirs  # API templates
+│   │   ├── issues/                               # Issue views
+│   │   ├── projects/                             # Project views
+│   │   └── ...
+│   │
+│   └── helpers/           52 files  # View helpers
+│
+├── config/                # Configuration
+│   ├── routes.rb                                 # API routes
+│   ├── settings.yml                              # Settings
+│   ├── locales/          52 files                # Translations
+│   └── initializers/     10 files                # Startup code
+│
+├── lib/redmine/          # Core libraries
+│   ├── views/
+│   │   └── api_template_handler.rb               # API rendering
+│   ├── field_format.rb                           # Custom field types
+│   └── ...
+│
+├── db/migrate/           322 files  # Database migrations
+│
+└── test/                 541 files  # Test suite
+    ├── functional/                               # Controller tests
+    ├── unit/                                     # Model tests
+    └── integration/                              # Integration tests
+```
+
+---
+
+## Key API Endpoints for Integration
+
+### Issues (Primary)
+```
+GET    /issues.json                    # List issues
+GET    /issues/:id.json                # Get issue details
+POST   /issues.json                    # Create issue
+PUT    /issues/:id.json                # Update issue
+DELETE /issues/:id.json                # Delete issue
+```
+
+### Attachments
+```
+POST   /uploads.json                   # Upload file
+GET    /attachments/:id                # Download file
+```
+
+### Projects
+```
+GET    /projects.json                  # List projects
+GET    /projects/:id.json              # Get project
+POST   /projects.json                  # Create project
+```
+
+### Trackers
+```
+GET    /trackers.json                  # List trackers
+```
+
+### Issue Statuses
+```
+GET    /issue_statuses.json            # List statuses
+```
+
+### Custom Fields
+```
+GET    /custom_fields.json             # List fields
+```
+
+---
+
+## Python Library Mapping
+
+### python-redmine ↔ Redmica
+```python
+# Create issue
+redmine.issue.create()              → POST /issues.json
+
+# Get issue
+redmine.issue.get(id)               → GET /issues/:id.json
+
+# Update issue
+issue.save()                        → PUT /issues/:id.json
+
+# Filter issues
+redmine.issue.filter()              → GET /issues.json?filters
+
+# Add attachment
+issue.uploads = [...]               → POST /uploads.json
+```
+
+---
+
+## Critical Files for RAG (Prioritized)
+
+### Must Ingest (15 files)
+1. app/models/issue.rb
+2. app/controllers/issues_controller.rb
+3. app/models/custom_field.rb
+4. config/routes.rb
+5. app/models/tracker.rb
+6. app/models/issue_status.rb
+7. app/models/project.rb
+8. app/models/journal.rb
+9. app/models/attachment.rb
+10. app/controllers/application_controller.rb
+11. lib/redmine/views/api_template_handler.rb
+12. README.md
+13. doc/INSTALL.md
+14. config/settings.yml
+15. app/models/custom_field_value.rb
+
+### Should Ingest (10 files)
+16. app/models/watcher.rb
+17. app/models/issue_query.rb
+18. app/models/member.rb
+19. app/models/role.rb
+20. app/controllers/attachments_controller.rb
+21. app/controllers/custom_fields_controller.rb
+22. app/models/user.rb
+23. app/models/workflow.rb
+24. config/configuration.yml.example
+25. doc/UPGRADING.md
+
+### Reference (Optional, 10+ files)
+26. Test files (examples of API usage)
+27. Additional controllers
+28. Helper modules
+29. Locale files (if multi-language needed)
+30. Migration files (schema understanding)
+
+---
+
+## File Statistics
+
+Total Ruby files:       ~2000+
+Total Markdown files:   ~15
+Total YAML files:       ~70
+Total Lines of Code:    ~500,000+
+
+Core API files:         ~25 files
+Essential models:       ~15 files
+Integration-critical:   ~40 files total
+
+---
+
+## Usage for RAG System
+
+### Ingestion Strategy
+
+1. **Phase 1: Core** (15 files, ~1 hour processing)
+   - Issue model and controller
+   - Custom fields
+   - Routes and API
+   
+2. **Phase 2: Extensions** (10 files, ~30 min processing)
+   - Journal, attachments, watchers
+   - Queries and permissions
+   
+3. **Phase 3: Reference** (optional, ~1 hour processing)
+   - Test files for examples
+   - Configuration and docs
+   
+### RAG Queries
+
+Example questions the RAG should answer:
+- "How do I create an issue with custom fields via API?"
+- "What is the journal model used for?"
+- "How do parent-child issue relationships work?"
+- "What custom field types are available?"
+- "How do I attach files to an issue?"
+- "What API authentication methods exist?"
+- "How do issue status workflows work?"
+
+---
+
+## Integration Verification
+
+✅ REST API:           Full support, JSON format
+✅ Custom Fields:      Extensible system with types
+✅ Trackers:           Customizable issue types
+✅ Status Workflow:    Configurable transitions
+✅ Child Issues:       Parent-child relationships
+✅ Attachments:        File upload support
+✅ API Library:        python-redmine compatible
+✅ Authentication:     API key support
+
+All integration requirements: MET
+Modifications needed: NONE
+
+---
+
+## Command to Generate Full File List
+
+```bash
+# In /Users/zacelston/code/redmica
+
+# All Ruby files
+find app/ lib/ -name "*.rb" | sort > ruby_files.txt
+
+# All config files
+find config/ -name "*.yml" -o -name "*.rb" | sort > config_files.txt
+
+# All documentation
+find . -name "*.md" -o -name "*.txt" | sort > docs.txt
+
+# Size analysis
+find app/models -name "*.rb" -exec wc -l {} \; | sort -rn | head -20
+```
+
+---
+
+END OF STRUCTURE DOCUMENT

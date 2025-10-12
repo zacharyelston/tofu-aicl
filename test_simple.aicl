@@ -1,0 +1,17 @@
+# Simple test configuration for Docker container validation
+# Tests basic provider functionality without external API calls
+
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+  }
+}
+
+resource "loader_files" "test" {
+  path = "./src"
+  glob = "**/*.py"
+  max_files = 5
+}

@@ -1,0 +1,89 @@
+# AICL Self-Assessment: Index Codebase
+# Phase 1: Create RAG knowledge base of AICL framework
+
+config:
+  name: "Index AICL Codebase for Self-Assessment"
+  description: "Build RAG index of v2 specs, code, tests for self-improvement"
+
+variables:
+  index_name: "aicl-codebase"
+  chunk_size: 1000
+  overlap: 200
+
+steps:
+  # Index v2 specifications
+  - name: "Index v2.1 Progressive Spec"
+    provider: "file_loader"
+    config:
+      path: "docs/v2.1/"
+      recursive: true
+      extensions: [".md"]
+    outputs:
+      v21_docs: "{{.files}}"
+
+  - name: "Index v2.2 Contract Spec"
+    provider: "file_loader"
+    config:
+      path: "docs/v2.2/"
+      recursive: true
+      extensions: [".md"]
+    outputs:
+      v22_docs: "{{.files}}"
+
+  - name: "Index v2.3 Scenario Spec"
+    provider: "file_loader"
+    config:
+      path: "docs/v2.3/"
+      recursive: true
+      extensions: [".md"]
+    outputs:
+      v23_docs: "{{.files}}"
+
+  # Index core implementation
+  - name: "Index Core Code"
+    provider: "file_loader"
+    config:
+      path: "src/aicl/"
+      recursive: true
+      extensions: [".py"]
+    outputs:
+      core_code: "{{.files}}"
+
+  # Index test patterns
+  - name: "Index Tests"
+    provider: "file_loader"
+    config:
+      path: "tests/"
+      recursive: true
+      extensions: [".py"]
+    outputs:
+      test_code: "{{.files}}"
+
+  # Index CLI patterns
+  - name: "Index CLI"
+    provider: "file_loader"
+    config:
+      path: "cli/"
+      recursive: true
+      extensions: [".py"]
+    outputs:
+      cli_code: "{{.files}}"
+
+  # Create embeddings and store in Pinecone
+  - name: "Create Embeddings"
+    provider: "pinecone"
+    config:
+      action: "upsert"
+      index: "${var.index_name}"
+      namespace: "self-assessment"
+      documents:
+        - "{{.v21_docs}}"
+        - "{{.v22_docs}}"
+        - "{{.v23_docs}}"
+        - "{{.core_code}}"
+        - "{{.test_code}}"
+        - "{{.cli_code}}"
+      metadata:
+        source: "aicl-framework"
+        version: "current"
+        indexed_at: "{{.timestamp}}"
