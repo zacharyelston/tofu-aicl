@@ -1,0 +1,27 @@
+# AICL Self-Review: Code Quality  
+# Use AICL to analyze the AICL codebase
+
+# Declare providers
+provider "loader" {
+  source = "aicl/file_loader"
+}
+
+variable "review_message" {
+  type    = string
+  default = "AICL reviewing itself"
+}
+
+# Load Python files
+resource "loader_files" "aicl_code" {
+  path = "src/aicl"
+  aiclResourceName = "code"
+}
+
+# Output message
+output "message" {
+  value = var.review_message
+}
+
+output "files_loaded" {
+  value = "Code loaded from ${resource.loader_files.aicl_code.path}"
+}

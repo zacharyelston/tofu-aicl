@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""
+AICL CLI - Modular Architecture
+
+Main entry point - orchestrates commands, doesn't implement them.
+Each command lives in its own file for easy editing.
+"""
+
+import sys
+from pathlib import Path
+from typing import Optional, List, Annotated
+
+import typer
+from loguru import logger
+
+# Import configuration and logging
+from cli.config import load_settings
+from cli.logging_setup import setup_logging
+
+# Import commands (each in its own file)
+from cli.commands.run import run_command
+from cli.commands.validate import validate_command
+from cli.commands.state import list_state, show_resource
+
+# Import utilities (only what's needed)
+# from cli.utils.output import console, print_info
+
+# Create Typer app
+app = typer.Typer(
+    name="aicl",
+    help="🚀 AICL - Modular CLI Architecture",
+    add_completion=True,
+)
+
+
+@app.callback()
+def main(
+    ctx: typer.Context,
+    verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
+    config_file: Annotated[Optional[Path], typer.Option("--config", "-c")] = None,
+    env_file: Annotated[Optional[Path], typer.Option("--env-file", "-e")] = None,
+):
+    """Global options - keeps main file small"""
+    ctx.obj = {
+        "logger": setup_logging(verbose),
+        "settings": load_settings(
+            config_file=str(config_file) if config_file else None,
+            env_file=str(env_file) if env_file else None
+        )
+    }
+    logger.info("AICL CLI starting", version="2.0.0")
+
+
+@app.command()
+def run(
+    ctx: typer.Context,
+    config_file: Annotated[Path, typer.Argument()],
+    workdir: Annotated[Path, typer.Option("--workdir", "-w")] = Path("."),
+    experiment_id: Annotated[str, typer.Option("--experiment-id")] = "default-exp",
+    docker: Annotated[Optional[bool], typer.Option("--docker/--no-docker")] = None,
+    mount: Annotated[Optional[List[str]], typer.Option("--mount")] = None,
+):
+    """🚀 Run AICL configuration"""
+    sys.exit(run_command(
+        config_file, workdir, experiment_id, docker, mount, ctx.obj["settings"]
+    ))
+
+
+@app.command()
+def validate(
+    ctx: typer.Context,
+    config_file: Annotated[Path, typer.Argument()],
+):
+    """✅ Validate configuration"""
+    sys.exit(validate_command(config_file))
+
+
+# State commands - grouped but still modular
+state_app = typer.Typer(help="📊 Manage state")
+app.add_typer(state_app, name="state")
+
+
+@state_app.command("list")
+def state_list_cmd(
+    ctx: typer.Context,
+    experiment_id: Annotated[str, typer.Option("--experiment-id")] = "default-exp",
+):
+    """📋 List resources"""
+    # Ensure parent context is available
+    settings = ctx.parent.obj["settings"] if ctx.parent else ctx.obj["settings"]
+    sys.exit(list_state(experiment_id, settings))
+
+
+@state_app.command("show")
+def state_show_cmd(
+    ctx: typer.Context,
+    resource_id: Annotated[str, typer.Argument()],
+    experiment_id: Annotated[str, typer.Option("--experiment-id")] = "default-exp",
+):
+    """🔍 Show resource"""
+    # Ensure parent context is available
+    settings = ctx.parent.obj["settings"] if ctx.parent else ctx.obj["settings"]
+    sys.exit(show_resource(resource_id, experiment_id, settings))
+
+
+@app.command()
+def config(ctx: typer.Context):
+    """⚙️  Show configuration"""
+    import yaml
+    from cli.utils.output import show_syntax
+    
+    config_dict = ctx.obj["settings"].as_dict()
+    show_syntax(
+        yaml.dump(config_dict, default_flow_style=False),
+        language="yaml",
+        title="⚙️  Current Configuration"
+    )
+    return 0  # Return exit code
+
+
+if __name__ == "__main__":
+    app()

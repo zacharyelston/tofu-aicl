@@ -1,0 +1,23 @@
+terraform {
+  required_providers {
+    naga = {
+      source = "aicl/naga"
+    }
+  }
+}
+
+# Test Naga.ai chat with a simple question
+# Note: Using "naga_chat" resource type to route to naga provider
+# (Temporary workaround until config-driven provider selection is implemented)
+resource "naga_chat" "naga_test" {
+  model = "openai/gpt-4o-mini"
+  messages = [
+    {
+      role = "user"
+      content = "What is 5 + 3? Answer with just the number."
+    }
+  ]
+  max_tokens = 50
+  temperature = 0.7
+  aiclResourceName = "naga_test"
+}

@@ -1,0 +1,80 @@
+2025-10-12 15:42:09 | INFO     | __main__:main | AICL CLI starting
+2025-10-12 15:42:09 | INFO     | cli.commands.run:run_command | Starting run
+2025-10-12 15:42:09 | INFO     | cli.runners.local:run | Running locally
+2025-10-12 15:42:10 | ERROR    | cli.runners.local:_execute_engine | Execution failed
+Traceback (most recent call last):
+
+  File "/Users/zacelston/code/tofu-aicl/./aicl_modular", line 122, in <module>
+    app()
+    └ <typer.main.Typer object at 0x103939400>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/main.py", line 308, in __call__
+    return get_command(self)(*args, **kwargs)
+           │           │      │       └ {}
+           │           │      └ ()
+           │           └ <typer.main.Typer object at 0x103939400>
+           └ <function get_command at 0x102dff240>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1462, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function TyperGroup.main at 0x102dfeca0>
+           └ <TyperGroup aicl>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/core.py", line 784, in main
+    return _main(
+           └ <function _main at 0x102dfda80>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/core.py", line 192, in _main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x104793b60>
+         │    └ <function Group.invoke at 0x102cf6b60>
+         └ <TyperGroup aicl>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1850, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+           │               │       │       │      └ <click.core.Context object at 0x1048d0f50>
+           │               │       │       └ <function Command.invoke at 0x102cf5940>
+           │               │       └ <TyperCommand run>
+           │               └ <click.core.Context object at 0x1048d0f50>
+           └ <function Group.invoke.<locals>._process_result at 0x1048bdb20>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 1246, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'config_file': 'experiments/self-assessment/simple-judge-test.aicl', 'workdir': PosixPath('.'), 'experiment_id': 'default-ex...
+           │   │      │    │           └ <click.core.Context object at 0x1048d0f50>
+           │   │      │    └ <function run at 0x1048bd4e0>
+           │   │      └ <TyperCommand run>
+           │   └ <function Context.invoke at 0x102cf4b80>
+           └ <click.core.Context object at 0x1048d0f50>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/click/core.py", line 814, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'config_file': 'experiments/self-assessment/simple-judge-test.aicl', 'workdir': PosixPath('.'), 'experiment_id': 'default-ex...
+           │         └ ()
+           └ <function run at 0x1048bd4e0>
+  File "/Users/zacelston/code/tofu-aicl/.venv/lib/python3.13/site-packages/typer/main.py", line 685, in wrapper
+    return callback(**use_params)
+           │          └ {'ctx': <click.core.Context object at 0x1048d0f50>, 'config_file': PosixPath('experiments/self-assessment/simple-judge-test.a...
+           └ <function run at 0x1048bd1c0>
+  File "/Users/zacelston/code/tofu-aicl/./aicl_modular", line 64, in run
+    sys.exit(run_command(
+    │   │    └ <function run_command at 0x1046877e0>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+
+  File "/Users/zacelston/code/tofu-aicl/cli/commands/run.py", line 36, in run_command
+    result = runner.run(config_file, workdir, experiment_id)
+             │      │   │            │        └ 'default-exp'
+             │      │   │            └ PosixPath('.')
+             │      │   └ PosixPath('experiments/self-assessment/simple-judge-test.aicl')
+             │      └ <function LocalRunner.run at 0x10480c180>
+             └ <cli.runners.local.LocalRunner object at 0x104793e00>
+
+  File "/Users/zacelston/code/tofu-aicl/cli/runners/local.py", line 35, in run
+    return self._execute_engine(config_file)
+           │    │               └ PosixPath('experiments/self-assessment/simple-judge-test.aicl')
+           │    └ <function LocalRunner._execute_engine at 0x10480c220>
+           └ <cli.runners.local.LocalRunner object at 0x104793e00>
+
+> File "/Users/zacelston/code/tofu-aicl/cli/runners/local.py", line 43, in _execute_engine
+    from src.aicl.core.engine import AICLEngine
+
+  File "/Users/zacelston/code/tofu-aicl/src/aicl/core/engine.py", line 12, in <module>
+    from aicl.state.manager import StateManager, ResourceState
+
+ModuleNotFoundError: No module named 'aicl'

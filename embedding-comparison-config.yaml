@@ -1,0 +1,60 @@
+# Embedding Model Comparison Configuration
+# 4-way comparison of embedding models using Naga.ai
+# Chat Model: GPT-4o (consistent across all experiments)
+# Judge: Mistral Large (previous winner: 9.7/10)
+
+embeddings:
+  - name: "OpenAI Text Embedding 3 Small"
+    id: "text-embedding-3-small"
+    provider: "naga"
+    dimensions: 1536
+    enabled: true
+    
+  - name: "OpenAI Text Embedding 3 Large"
+    id: "text-embedding-3-large"
+    provider: "naga"
+    dimensions: 3072
+    enabled: true
+    
+  - name: "OpenAI Ada 002 (Classic)"
+    id: "text-embedding-ada-002"
+    provider: "naga"
+    dimensions: 1536
+    enabled: false  # Disabled for initial test
+    
+  - name: "Google Gemini Embedding"
+    id: "gemini-embedding-001"
+    provider: "naga"
+    dimensions: 768
+    enabled: false  # Disabled for initial test
+
+# Consistent chat model across all experiments
+chat_model:
+  name: "GPT-4o"
+  id: "gpt-4o-2024-08-06"
+  provider: "naga"
+  resource_type: "naga_chat"
+
+# Judge configuration
+judge:
+  model: "mistralai/mistral-large"  # Winner from previous validation (9.7/10)
+  provider: "openrouter"
+
+# Test configuration
+test_config:
+  num_questions: 2  # Start with fewer questions
+  pinecone_namespace: "tofu-aicl-codebase"
+  top_k: 5
+  max_workers: 1  # Sequential execution to avoid provider conflicts
+  
+# Cost tracking
+pricing:
+  embeddings:
+    text-embedding-3-small: 0.00002  # per 1K tokens (Naga pricing: 50% off)
+    text-embedding-3-large: 0.00013   # per 1K tokens
+    text-embedding-ada-002: 0.00010   # per 1K tokens
+    gemini-embedding-001: 0.00001     # per 1K tokens (estimate)
+  chat:
+    gpt-4o: 0.0025  # per 1K tokens input (Naga: 50% off OpenAI pricing)
+  judge:
+    mistral-large: 0.003  # per 1K tokens (OpenRouter pricing)

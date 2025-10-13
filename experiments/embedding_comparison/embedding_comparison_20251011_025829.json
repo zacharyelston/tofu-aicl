@@ -1,0 +1,134 @@
+{
+  "timestamp": "2025-10-11T02:58:29.094895",
+  "chat_model": {
+    "name": "GPT-4o",
+    "id": "gpt-4o-2024-08-06",
+    "provider": "naga",
+    "resource_type": "naga_chat"
+  },
+  "judge_model": "mistralai/mistral-large",
+  "total_experiments": 12,
+  "successful": 0,
+  "results": [
+    {
+      "experiment_id": "text-embedding-3-small-q1",
+      "embedding_model": "OpenAI Text Embedding 3 Small",
+      "embedding_id": "text-embedding-3-small",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 17.770402193069458
+    },
+    {
+      "experiment_id": "text-embedding-3-small-q2",
+      "embedding_model": "OpenAI Text Embedding 3 Small",
+      "embedding_id": "text-embedding-3-small",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 15.218386173248291
+    },
+    {
+      "experiment_id": "text-embedding-3-small-q3",
+      "embedding_model": "OpenAI Text Embedding 3 Small",
+      "embedding_id": "text-embedding-3-small",
+      "chat_model": "GPT-4o",
+      "question": "Explain how provider communication works via gRPC.",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 20.3712317943573
+    },
+    {
+      "experiment_id": "text-embedding-3-large-q1",
+      "embedding_model": "OpenAI Text Embedding 3 Large",
+      "embedding_id": "text-embedding-3-large",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 17.581867694854736
+    },
+    {
+      "experiment_id": "text-embedding-3-large-q2",
+      "embedding_model": "OpenAI Text Embedding 3 Large",
+      "embedding_id": "text-embedding-3-large",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 19.270614862442017
+    },
+    {
+      "experiment_id": "text-embedding-3-large-q3",
+      "embedding_model": "OpenAI Text Embedding 3 Large",
+      "embedding_id": "text-embedding-3-large",
+      "chat_model": "GPT-4o",
+      "question": "Explain how provider communication works via gRPC.",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 26.34738779067993
+    },
+    {
+      "experiment_id": "text-embedding-ada-002-q1",
+      "embedding_model": "OpenAI Ada 002 (Classic)",
+      "embedding_id": "text-embedding-ada-002",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 10.282354831695557
+    },
+    {
+      "experiment_id": "text-embedding-ada-002-q2",
+      "embedding_model": "OpenAI Ada 002 (Classic)",
+      "embedding_id": "text-embedding-ada-002",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 12.804523944854736
+    },
+    {
+      "experiment_id": "text-embedding-ada-002-q3",
+      "embedding_model": "OpenAI Ada 002 (Classic)",
+      "embedding_id": "text-embedding-ada-002",
+      "chat_model": "GPT-4o",
+      "question": "Explain how provider communication works via gRPC.",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 17.4182186126709
+    },
+    {
+      "experiment_id": "gemini-embedding-001-q1",
+      "embedding_model": "Google Gemini Embedding",
+      "embedding_id": "gemini-embedding-001",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 16.99812650680542
+    },
+    {
+      "experiment_id": "gemini-embedding-001-q2",
+      "embedding_model": "Google Gemini Embedding",
+      "embedding_id": "gemini-embedding-001",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 16.98755121231079
+    },
+    {
+      "experiment_id": "gemini-embedding-001-q3",
+      "embedding_model": "Google Gemini Embedding",
+      "embedding_id": "gemini-embedding-001",
+      "chat_model": "GPT-4o",
+      "question": "Explain how provider communication works via gRPC.",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 22.823379039764404
+    }
+  ]
+}

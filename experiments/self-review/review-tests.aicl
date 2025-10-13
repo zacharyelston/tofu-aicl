@@ -1,0 +1,61 @@
+# AICL Self-Review: Test Coverage
+# Analyze test quality and coverage
+
+variable "test_dir" {
+  type    = string
+  default = "tests"
+}
+
+# Load test files
+resource "loader_files" "test_files" {
+  provider = "file_loader"
+  
+  path      = var.test_dir
+  recursive = true
+  pattern   = "test_*.py"
+}
+
+# Load source files to compare
+resource "loader_files" "source_files" {
+  provider = "file_loader"
+  
+  path      = "src/aicl"
+  recursive = true
+  pattern   = "*.py"
+}
+
+# Analyze test coverage
+resource "naga_completion" "test_analysis" {
+  provider = "naga"
+  
+  model = "gpt-4"
+  
+  prompt = <<-EOT
+    Analyze test coverage for the AICL framework.
+    
+    TEST FILES:
+    ${resource.loader_files.test_files.files}
+    
+    SOURCE FILES:
+    ${resource.loader_files.source_files.files}
+    
+    ANALYZE:
+    1. Which modules have tests?
+    2. Which modules lack tests?
+    3. Test quality (unit vs integration)
+    4. Edge cases covered?
+    5. Mock usage appropriateness
+    
+    Provide:
+    - Coverage estimate (%)
+    - Untested modules (list)
+    - Test quality score (1-10)
+    - Priority areas for new tests
+  EOT
+  
+  max_tokens = 3000
+}
+
+output "test_report" {
+  value = resource.naga_completion.test_analysis.response
+}

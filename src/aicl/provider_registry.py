@@ -1,5 +1,23 @@
+"""
+DEPRECATED: This module is deprecated and will be removed in a future version.
+
+Use v2.config.ProviderConfigLoader instead.
+All provider metadata is now loaded from providers/<name>/config.yaml files.
+
+Migration:
+    from aicl.provider_registry import get_registry
+    registry = get_registry()
+    provider = registry.get("openai")
+    
+    # Replace with:
+    from v2.config import ProviderConfigLoader
+    loader = ProviderConfigLoader()
+    provider = loader.get("openai")
+"""
+
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+import warnings
 
 @dataclass
 class ProviderMetadata:
@@ -65,6 +83,20 @@ class ProviderRegistry:
                 container_image="aicl/azure_openai:1.0.0",
                 description="Azure OpenAI embeddings"
             ),
+            ProviderMetadata(
+                name="naga",
+                source="aicl/naga",
+                version="1.0.0",
+                container_image="aicl/naga:1.0.0",
+                description="AI models via Naga.ai (OpenAI-compatible, 50% lower cost)"
+            ),
+            ProviderMetadata(
+                name="ragie",
+                source="aicl/ragie",
+                version="1.0.0",
+                container_image="aicl/ragie:1.0.0",
+                description="Fully managed RAG-as-a-Service (document upload, retrieval)"
+            ),
         ]
 
         for provider in default_providers:
@@ -95,4 +127,10 @@ class ProviderRegistry:
 _global_registry = ProviderRegistry()
 
 def get_registry() -> ProviderRegistry:
+    warnings.warn(
+        "get_registry() is deprecated. Use v2.config.ProviderConfigLoader instead. "
+        "Provider metadata is now loaded from providers/<name>/config.yaml files.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return _global_registry

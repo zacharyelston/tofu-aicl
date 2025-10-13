@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Code quality review
+  review-code:
+    build:
+      context: ../..
+      dockerfile: experiments/self-review/Dockerfile.review
+    image: aicl-self-review:latest
+    container_name: aicl-review-code
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../experiments/self-review:/app/experiments/self-review
+      - ./results:/app/results
+    command: python3 -m aicl.cli run review-code-quality.aicl
+    profiles:
+      - code
+
+  # Test coverage review
+  review-tests:
+    build:
+      context: ../..
+      dockerfile: experiments/self-review/Dockerfile.review
+    image: aicl-self-review:latest
+    container_name: aicl-review-tests
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../tests:/app/tests:ro
+      - ../../experiments/self-review:/app/experiments/self-review
+      - ./results:/app/results
+    command: python3 -m aicl.cli run review-tests.aicl
+    profiles:
+      - tests
+
+  # Architecture review
+  review-architecture:
+    build:
+      context: ../..
+      dockerfile: experiments/self-review/Dockerfile.review
+    image: aicl-self-review:latest
+    container_name: aicl-review-arch
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../cli:/app/cli:ro
+      - ../../docs:/app/docs:ro
+      - ../../experiments/self-review:/app/experiments/self-review
+      - ./results:/app/results
+    command: python3 -m aicl.cli run review-architecture.aicl
+    profiles:
+      - arch
+
+  # Interactive shell for manual review  
+  review-shell:
+    image: python:3.9-slim
+    container_name: aicl-review-shell
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../:/app
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - shell

@@ -1,9 +1,7 @@
-import grpc
 import os
 import json
 import uuid
 import requests
-from concurrent import futures
 from typing import Dict, Any
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.json_format import MessageToDict, ParseDict
@@ -193,15 +191,6 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             del self.resources[resource_id]
         return provider_pb2.DeleteResourceResponse()
 
-def serve(port=50051):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(OpenAIProvider(), server)
-    server.add_insecure_port(f'[::]:{port}')
-    server.start()
-    print(f"OpenAI Provider started on port {port}")
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 50051
-    serve(port)
+    from v2.runtime import create_provider_server
+    create_provider_server(OpenAIProvider())

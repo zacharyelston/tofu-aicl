@@ -1,3 +1,6 @@
+# Simple test configuration for Docker container validation
+# Tests basic provider functionality without external API calls
+
 terraform {
   required_providers {
     loader = {
@@ -7,7 +10,8 @@ terraform {
   }
 }
 
-resource "loader_files" "docs" {
-  path = "docs"
-  glob = "*.md"
+resource "loader_files" "test" {
+  path = "./src"
+  glob = "**/*.py"
+  max_files = 5
 }

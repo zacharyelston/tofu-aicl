@@ -1,0 +1,37 @@
+# Azure OpenAI Provider Configuration
+
+provider:
+  name: azure_openai
+  display_name: Azure OpenAI
+  version: 1.0.0
+  source: aicl/azure_openai
+  description: Enterprise OpenAI embeddings via Azure with enhanced security and compliance
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50059
+    mode: subprocess
+  
+  environment:
+    required_vars:
+      - AZURE_OPENAI_API_KEY
+      - AZURE_OPENAI_ENDPOINT
+    optional_vars:
+      - AZURE_OPENAI_API_VERSION
+      - AZURE_OPENAI_DEPLOYMENT_NAME
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - create_embedding
+  
+  # Note: Azure OpenAI uses deployment-based model access, not direct model names
+  # Pricing varies by deployment and region. Models are configured via AZURE_OPENAI_DEPLOYMENT_NAME
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

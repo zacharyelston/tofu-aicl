@@ -228,15 +228,6 @@ class AzureOpenAIProvider(provider_pb2_grpc.ProviderServicer):
             del self.resources[resource_id]
         return provider_pb2.DeleteResourceResponse()
 
-def serve(port=50051):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(AzureOpenAIProvider(), server)
-    server.add_insecure_port(f'[::]:{port}')
-    server.start()
-    print(f"Azure OpenAI Provider started on port {port}")
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 50051
-    serve(port)
+    from v2.runtime import create_provider_server
+    create_provider_server(AzureOpenAIProvider())

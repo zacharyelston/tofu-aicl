@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-10-10T20:33:10.530658",
+  "total_experiments": 9,
+  "success_rate": "9/9",
+  "results": [
+    {
+      "model": "anthropic/claude-3.5-sonnet",
+      "task": "Explain in 2 sentences",
+      "topic": "declarative infrastructure",
+      "success": true,
+      "elapsed": 5.47,
+      "response_length": 397,
+      "response_preview": "Declarative infrastructure is an approach where you specify the desired end state of your infrastruc...",
+      "tokens": 93,
+      "latency_ms": 2664,
+      "cost_usd": 0.001179
+    },
+    {
+      "model": "anthropic/claude-3.5-sonnet",
+      "task": "List 3 benefits of",
+      "topic": "HCL configuration syntax",
+      "success": true,
+      "elapsed": 10.52,
+      "response_length": 900,
+      "response_preview": "Here are 3 benefits of HCL (HashiCorp Configuration Language) syntax:\n\n1. Human-Readable Format\n- Us...",
+      "tokens": 215,
+      "latency_ms": 7733,
+      "cost_usd": 0.002997
+    },
+    {
+      "model": "anthropic/claude-3.5-sonnet",
+      "task": "Write a haiku about",
+      "topic": "AI orchestration",
+      "success": true,
+      "elapsed": 4.26,
+      "response_length": 111,
+      "response_preview": "Here's a haiku about AI orchestration:\n\nSystems dance as one\nAlgorithms flow like streams\nMachines w...",
+      "tokens": 46,
+      "latency_ms": 1448,
+      "cost_usd": 0.000498
+    },
+    {
+      "model": "openai/gpt-4",
+      "task": "Explain in 2 sentences",
+      "topic": "declarative infrastructure",
+      "success": true,
+      "elapsed": 5.75,
+      "response_length": 334,
+      "response_preview": "Declarative infrastructure is a concept in IT where, instead of issuing commands to set up your infr...",
+      "tokens": 78,
+      "latency_ms": 2708,
+      "cost_usd": 0.00417
+    },
+    {
+      "model": "openai/gpt-4",
+      "task": "List 3 benefits of",
+      "topic": "HCL configuration syntax",
+      "success": true,
+      "elapsed": 7.35,
+      "response_length": 543,
+      "response_preview": "1. Easy to Understand: HCL configuration syntax is designed to be human-readable, making it easier f...",
+      "tokens": 123,
+      "latency_ms": 4487,
+      "cost_usd": 0.00687
+    },
+    {
+      "model": "openai/gpt-4",
+      "task": "Write a haiku about",
+      "topic": "AI orchestration",
+      "success": true,
+      "elapsed": 4.04,
+      "response_length": 61,
+      "response_preview": "In circuits they sing,\nOrchestra of AI minds,\nSilicon echoes.",
+      "tokens": 31,
+      "latency_ms": 1253,
+      "cost_usd": 0.00138
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "task": "Explain in 2 sentences",
+      "topic": "declarative infrastructure",
+      "success": true,
+      "elapsed": 8.65,
+      "response_length": 379,
+      "response_preview": "Declarative infrastructure is an approach to managing IT resources where the desired state of the in...",
+      "tokens": 75,
+      "latency_ms": 5775,
+      "cost_usd": 3.8e-05
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "task": "List 3 benefits of",
+      "topic": "HCL configuration syntax",
+      "success": true,
+      "elapsed": 10.05,
+      "response_length": 1402,
+      "response_preview": "HCL (HashiCorp Configuration Language) is a domain-specific language used primarily for configuratio...",
+      "tokens": 277,
+      "latency_ms": 7230,
+      "cost_usd": 0.000159
+    },
+    {
+      "model": "openai/gpt-4o-mini",
+      "task": "Write a haiku about",
+      "topic": "AI orchestration",
+      "success": true,
+      "elapsed": 8.56,
+      "response_length": 72,
+      "response_preview": "Notes of code align,  \nHarmony in circuits hum,  \nFuture's song unfolds.",
+      "tokens": 33,
+      "latency_ms": 5754,
+      "cost_usd": 1.3e-05
+    }
+  ]
+}

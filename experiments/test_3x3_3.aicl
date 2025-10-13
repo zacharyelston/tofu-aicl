@@ -1,0 +1,18 @@
+terraform {
+  required_providers {
+    openrouter = {
+      source = "aicl/openrouter"
+    }
+  }
+}
+
+resource "chat" "test_response" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Write a haiku about: AI orchestration"
+    }
+  ]
+  aiclResourceName = "test_response"
+}

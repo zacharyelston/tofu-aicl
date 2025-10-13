@@ -1,0 +1,74 @@
+# AICL Self-Review: Architecture Analysis
+# Evaluate overall architecture and design
+
+# Load core components
+resource "loader_files" "core" {
+  provider = "file_loader"
+  path     = "src/aicl/core"
+  pattern  = "*.py"
+}
+
+resource "loader_files" "cli" {
+  provider = "file_loader"
+  path     = "cli"
+  pattern  = "*.py"
+}
+
+resource "loader_files" "docs" {
+  provider = "file_loader"
+  path     = "docs"
+  pattern  = "*.md"
+}
+
+# Architecture review
+resource "naga_completion" "architecture_review" {
+  provider = "naga"
+  
+  model = "claude-3-5-sonnet"
+  
+  prompt = <<-EOT
+    Review the AICL framework architecture.
+    
+    CORE COMPONENTS:
+    ${resource.loader_files.core.files}
+    
+    CLI COMPONENTS:
+    ${resource.loader_files.cli.files}
+    
+    DOCUMENTATION:
+    ${resource.loader_files.docs.files}
+    
+    EVALUATE:
+    1. Separation of Concerns
+       - Is each module focused?
+       - Clear boundaries?
+    
+    2. Modularity
+       - Reusable components?
+       - Plugin architecture?
+    
+    3. Extensibility
+       - Easy to add providers?
+       - Easy to add commands?
+    
+    4. Consistency
+       - Naming conventions?
+       - Pattern usage?
+    
+    5. Documentation
+       - Architecture clearly explained?
+       - Examples provided?
+    
+    Provide:
+    - Architecture score (1-10)
+    - Design strengths
+    - Design weaknesses
+    - Refactoring suggestions
+  EOT
+  
+  max_tokens = 4000
+}
+
+output "architecture_report" {
+  value = resource.naga_completion.architecture_review.response
+}

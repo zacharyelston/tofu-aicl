@@ -231,14 +231,6 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
 
     # Other methods remain the same...
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(PineconeProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"Pinecone provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(PineconeProvider())

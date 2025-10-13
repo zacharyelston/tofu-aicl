@@ -1,0 +1,74 @@
+# Simple Judge Test
+# Just test the judging system without full RAG/fix cycle
+
+config:
+  name: "Test Judging System"
+  description: "Verify the LLM judge evaluates code quality correctly"
+
+variables:
+  test_code: |
+    def get_items():
+        """Return list of items"""
+        return []
+
+steps:
+  # Test the judge with a simple fix
+  - name: "Judge Sample Fix"
+    provider: "naga"
+    model: "gpt-4"
+    prompt: |
+      You are a code quality judge.
+      
+      TASK: Evaluate this fix
+      
+      ISSUE: Function returned None instead of empty list
+      
+      ORIGINAL:
+      ```python
+      def get_items():
+          pass
+      ```
+      
+      FIX:
+      ```python
+      ${var.test_code}
+      ```
+      
+      CRITERIA (100 points):
+      1. Correctness (40): Fixes the issue?
+      2. Code Quality (30): Clean and readable?
+      3. Best Practices (20): Pythonic?
+      4. Maintainability (10): Clear intent?
+      
+      Return ONLY valid JSON:
+      {
+        "total_score": 0-100,
+        "breakdown": {
+          "correctness": 0-40,
+          "code_quality": 0-30,
+          "best_practices": 0-20,
+          "maintainability": 0-10
+        },
+        "decision": "ACCEPT" or "REJECT",
+        "reasoning": "brief explanation"
+      }
+    outputs:
+      judgment: "{{.response}}"
+
+  # Display results
+  - name: "Show Results"
+    provider: "command"
+    config:
+      commands:
+        - echo "Judge Score {{.judgment.total_score}}"
+        - echo "Decision {{.judgment.decision}}"
+        - echo "Reasoning {{.judgment.reasoning}}"
+
+assertions:
+  - name: "Score in Valid Range"
+    condition: "{{.judgment.total_score}} >= 0 && {{.judgment.total_score}} <= 100"
+    message: "Score must be 0-100"
+  
+  - name: "Has Decision"
+    condition: "{{.judgment.decision}} == 'ACCEPT' || {{.judgment.decision}} == 'REJECT'"
+    message: "Decision must be ACCEPT or REJECT"

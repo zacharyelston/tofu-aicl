@@ -21,6 +21,10 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
         config = MessageToDict(request.config)
         path = config.get('path', '.')
         glob = config.get('glob', '**/*')
+        
+        # Get resource name from AICL config for consistent ID generation
+        resource_name = config.get('aiclResourceName', Path(path).name)
+        resource_id = f"{request.type_name}-{resource_name}"
 
         documents = []
         try:
@@ -38,7 +42,7 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
             ParseDict(output_attributes, output_struct)
 
             new_state = provider_pb2.ResourceState(
-                id=f"loader-{Path(path).name}",
+                id=resource_id,
                 type=request.type_name,
                 attributes=output_struct
             )
@@ -69,14 +73,6 @@ class FileLoaderProvider(provider_pb2_grpc.ProviderServicer):
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(FileLoaderProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"File Loader provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(FileLoaderProvider())

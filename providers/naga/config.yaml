@@ -1,0 +1,47 @@
+# Naga.ai Provider Configuration
+
+provider:
+  name: naga
+  display_name: Naga.ai
+  version: 1.0.0
+  source: aicl/naga
+  description: OpenAI-compatible AI provider with 50% cost savings on chat and embeddings
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50052
+    mode: both
+  
+  docker:
+    image: aicl/naga:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - NAGA_API_KEY
+    optional_vars:
+      - NAGA_BASE_URL
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - query
+  
+  # Models are now referenced from centralized ModelCatalog (v2/config/models.yaml)
+  model_ids:
+    - naga-gpt-4o
+    - naga-gpt-4o-mini
+    - naga-qwen-72b
+    - naga-llama-70b
+    - naga-text-embedding-3-small
+    - naga-text-embedding-3-large
+    - gemini-embedding-001
+    - judge-gpt-4o
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

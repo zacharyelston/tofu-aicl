@@ -1,112 +1,80 @@
-# RAG System Configuration
-# All settings for RAG testing and evaluation
+# RAG Test Configuration
+# Configure models, questions, and test parameters for RAG validation
 
-# ============================================
-# FILES TO INDEX
-# ============================================
-files_to_index:
-  # Priority: 1. Use this list, 2. Scan rag-config/ dir, 3. Default hardcoded
-  # Leave empty to use directory scanning or defaults
-  - src/aicl/parser.py
-  - src/aicl/evaluator.py
-  - src/aicl/planner.py
-  - src/aicl/executor.py
-  - src/aicl/core/engine.py
-  - src/aicl/state/manager.py
-  - src/aicl/provider_registry.py
+# Models to test (OpenRouter/Naga.ai format)
+models:
+  # Top performing models from validation
+  - name: "Mistral Large"
+    id: "mistralai/mistral-large"
+    provider: "openrouter"  # or "naga" for 50% lower cost
+    enabled: true
+  - name: "GPT-4o-mini"
+    id: "openai/gpt-4o-mini"
+    provider: "openrouter"
+    enabled: true
+  - name: "GPT-4o"
+    id: "openai/gpt-4o"
+    provider: "openrouter"
+    enabled: true
+  - name: "Claude 3.5 Sonnet"
+    id: "anthropic/claude-3.5-sonnet"
+    provider: "openrouter"
+    enabled: true
+  
+  # Naga.ai models (same models, 50% cheaper)
+  # Note: Use "naga_chat" resource type until config-driven provider selection is implemented
+  - name: "GPT-4o (Naga.ai)"
+    id: "openai/gpt-4o"
+    provider: "naga"
+    resource_type: "naga_chat"
+    enabled: false
+  
+  # Additional models (disabled)
+  - name: "GPT-4"
+    id: "openai/gpt-4"
+    provider: "openrouter"
+    enabled: false
 
-# ============================================
-# MODELS TO TEST
-# ============================================
-models_to_test:
-  - model_id: anthropic/claude-3.5-sonnet
-    display_name: Claude 3.5 Sonnet
-    
-  - model_id: openai/gpt-4
-    display_name: GPT-4
-    
-  # Add more models as needed
-  # - model_id: openai/gpt-4o
-  #   display_name: GPT-4o
-
-# ============================================
-# LLM JUDGE CONFIGURATION
-# ============================================
-judge:
-  model: anthropic/claude-3.5-sonnet
-  temperature: 0.1
-  max_tokens: 1000
-
-# ============================================
-# EVALUATION PROMPT TEMPLATE
-# ============================================
-evaluation_prompt: |
-  You are an expert evaluator assessing RAG system outputs. Compare these answers to the question and rate each on:
-
-  1. **Accuracy** (0-10): Correctness based on technical details
-  2. **Completeness** (0-10): How thoroughly it answers the question
-  3. **Clarity** (0-10): How well-explained and understandable
-  4. **Code Specificity** (0-10): References to actual code/files
-
-  Question: {question}
-
-  {answers}
-
-  Provide your evaluation in JSON format:
-  {{
-    "evaluations": [
-      {{"model": "model_name", "accuracy": X, "completeness": X, "clarity": X, "code_specificity": X, "total": X, "reasoning": "brief explanation"}},
-      ...
-    ],
-    "winner": "model_name",
-    "summary": "brief comparison summary"
-  }}
-
-# ============================================
-# SYSTEM PROMPT FOR ANSWERING
-# ============================================
-system_prompt: |
-  You are a helpful assistant that answers questions about the tofu-aicl codebase based on provided context.
-
-# ============================================
-# USER PROMPT TEMPLATE FOR ANSWERING
-# ============================================
-user_prompt_template: |
-  Context:
-  {context}
-
-  Question: {question}
-
-  Provide a clear, technical answer based on the context above.
-
-# ============================================
-# RETRIEVAL SETTINGS
-# ============================================
-retrieval:
-  top_k: 10  # Number of chunks to retrieve from Pinecone
-  code_chunks_to_use: 3  # Top N code files to include in context
-  doc_chunks_to_use: 2   # Top N doc files to include in context
-  min_chunk_size: 50     # Skip chunks smaller than this
-
-# ============================================
-# MODEL SETTINGS
-# ============================================
-model_settings:
-  temperature: 0.3
+# Test configuration
+test_config:
+  # Number of questions to test (from questions.txt)
+  num_questions: 3
+  
+  # Parallel execution settings
+  parallel: true
+  max_workers: 4  # Number of parallel workers
+  
+  # Pinecone namespace for vector search
+  pinecone_namespace: "tofu-aicl-codebase"
+  
+  # Top-k results from vector search
+  top_k: 5
+  
+  # Embedding model
+  embedding_model: "text-embedding-3-small"
+  
+  # Max tokens for LLM responses
   max_tokens: 500
+  
+  # Judge model for quality grading
+  judge_model: "openai/gpt-4"
+  
+  # Quality grading criteria
+  quality_criteria:
+    - accuracy
+    - relevance
+    - completeness
 
-# ============================================
-# CHUNKING SETTINGS (for indexing)
-# ============================================
-chunking:
-  chunk_size: 1000
-  overlap: 200
-  min_chunk_size: 50
+# Output configuration
+output:
+  directory: "experiments/rag-graded-results"
+  save_configs: true
+  save_state_files: true
+  
+# System prompt for RAG responses
+system_prompt: |
+  You are an expert on the AICL framework. Answer questions accurately based on 
+  the provided code context. Be specific and reference actual implementation details.
 
-# ============================================
-# PINECONE SETTINGS
-# ============================================
-pinecone:
-  namespace: tofu-aicl-codebase
-  embedding_model: text-embedding-3-small
-  embedding_dimensions: 1024
+# Questions file
+questions_file: "questions.txt"
