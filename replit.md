@@ -34,6 +34,36 @@ The project integrates with several external services and APIs:
 
 ## Recent Changes
 
+### October 13, 2025 - Multi-Provider Comparison & Bug Fixes (COMPLETED)
+
+**Critical Bug Fixes - Provider Execution:**
+- ✅ Fixed executor resource routing mapping (added openai_chat, openrouter_chat, loader_files)
+- ✅ Implemented OpenAI chat completion in provider (was only doing embeddings)
+- ✅ Fixed OpenRouter to handle openrouter_chat resource type
+- ✅ Self-building experiments now execute successfully (82/100 quality score achieved)
+
+**Multi-Provider Comparison Experiments:**
+- ✅ Created provider comparison framework with LLM-as-Judge evaluation
+- ✅ Working simple comparison: GPT-4o vs GPT-4o-mini vs GPT-4o-creative
+- ✅ Automatic cost tracking and value analysis
+- ✅ Structured JSON evaluation with rankings and reasoning
+- ✅ Created `COMPARISON_EXPERIMENTS.md` documentation
+
+**Working Experiments:**
+```bash
+# Self-building (generates provider code)
+python run.py experiments/self-build/add-echo-provider-v2.aicl
+
+# Multi-provider comparison with judging
+python run_simple_comparison.py
+```
+
+**Results Demonstrated:**
+- Self-building: Generated Echo provider (2,685 chars) with 82/100 quality
+- Comparison: GPT-4o won (88/100), GPT-4o-mini best value (82/100, ~10x cheaper)
+
+**Impact:** System can now modify its own source code AND objectively compare AI provider quality/cost.
+
 ### October 11, 2025 - Complete Technical Specifications (COMPLETED)
 
 **Created Comprehensive Specification Package:**

@@ -73,7 +73,7 @@ class OpenRouterProvider(provider_pb2_grpc.ProviderServicer):
             return self._generate_embeddings(resource_id, config, request.type_name)
 
         # Handle chat/query
-        elif request.type_name in ["chat", "openrouter_query"]:
+        elif request.type_name in ["chat", "openrouter_chat", "openrouter_query"]:
             return self._execute_chat(resource_id, config, request.type_name)
 
         # Default: just store config

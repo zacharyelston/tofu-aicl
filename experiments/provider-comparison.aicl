@@ -1,0 +1,136 @@
+# Multi-Provider Comparison Experiment
+# Test the same question across multiple providers and judge the quality
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    naga = { source = "aicl/naga" }
+    openrouter = { source = "aicl/openrouter" }
+  }
+}
+
+variable "test_question" {
+  type    = string
+  default = "Explain the difference between declarative and imperative programming in 3 sentences."
+  description = "Question to test across all providers"
+}
+
+variable "judge_model" {
+  type    = string
+  default = "gpt-4o"
+  description = "Model to use for judging responses"
+}
+
+# Test 1: OpenAI GPT-4o-mini (fast, cheap)
+resource "openai_chat" "test_openai" {
+  model = "gpt-4o-mini"
+  temperature = 0.7
+  max_tokens = 500
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "test_openai"
+}
+
+# Test 2: Naga GPT-4o-mini (cost-optimized)
+resource "naga_chat" "test_naga" {
+  model = "openai/gpt-4o-mini"
+  temperature = 0.7
+  max_tokens = 500
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "test_naga"
+}
+
+# Test 3: OpenRouter Claude Haiku (different architecture)
+resource "openrouter_chat" "test_claude" {
+  model = "anthropic/claude-3-haiku"
+  temperature = 0.7
+  max_tokens = 500
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "test_claude"
+}
+
+# Judge: Compare all responses
+resource "openai_chat" "judge_comparison" {
+  model = var.judge_model
+  temperature = 0.0
+  max_tokens = 2000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert judge evaluating AI responses. Provide objective, detailed analysis."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Compare these three AI responses to the question: "${var.test_question}"
+        
+        RESPONSE A (OpenAI GPT-4o-mini):
+        ${resource.openai_chat.test_openai.attributes.content}
+        
+        RESPONSE B (Naga GPT-4o-mini):
+        ${resource.naga_chat.test_naga.attributes.content}
+        
+        RESPONSE C (Claude 3 Haiku):
+        ${resource.openrouter_chat.test_claude.attributes.content}
+        
+        Evaluate each response on:
+        1. ACCURACY (40 points): Correctness and technical precision
+        2. CLARITY (30 points): How well explained and understandable
+        3. COMPLETENESS (20 points): Covers all aspects of the question
+        4. CONCISENESS (10 points): Stays within 3 sentences as requested
+        
+        Respond ONLY with valid JSON:
+        {
+          "rankings": [
+            {"provider": "Response A/B/C", "score": 85, "rank": 1},
+            {"provider": "Response A/B/C", "score": 78, "rank": 2},
+            {"provider": "Response A/B/C", "score": 72, "rank": 3}
+          ],
+          "analysis": {
+            "response_a": {
+              "score": 85,
+              "strengths": ["strength 1", "strength 2"],
+              "weaknesses": ["weakness 1"]
+            },
+            "response_b": {
+              "score": 78,
+              "strengths": ["strength 1"],
+              "weaknesses": ["weakness 1", "weakness 2"]
+            },
+            "response_c": {
+              "score": 72,
+              "strengths": ["strength 1"],
+              "weaknesses": ["weakness 1"]
+            }
+          },
+          "winner": "Response A",
+          "reasoning": "Detailed explanation of why this response is best",
+          "cost_analysis": {
+            "openai_direct": "$X.XXXX",
+            "naga_savings": "$X.XXXX (XX% cheaper)",
+            "claude_cost": "$X.XXXX"
+          }
+        }
+      EOT
+    }
+  ]
+  aiclResourceName = "judge_comparison"
+}
