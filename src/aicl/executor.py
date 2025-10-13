@@ -70,18 +70,31 @@ class Executor:
             try:
                 with self.tracer.start_as_current_span("provider_apply"):
                     response = provider.stub.ApplyResourceChange(req)
+                    
+                    # Check for diagnostics (errors/warnings from provider)
+                    if response.diagnostics:
+                        self._handle_diagnostics(response.diagnostics)
+                        # If there are ERROR diagnostics, fail the resource
+                        has_errors = any(d.severity == provider_pb2.Diagnostic.ERROR for d in response.diagnostics)
+                        if has_errors:
+                            span.set_attribute("resource.status", "failed")
+                            raise Exception(f"Provider '{provider_name}' returned errors for resource '{res_name}'")
+                    
                     state = response.new_state
 
-                    # Fallback: Generate ID if provider returned empty
-                    resource_id = state.id
-                    if not resource_id or resource_id.strip() == "":
-                        resource_id = f"{res_type}-{res_name}"
-                        print(f"Warning: Provider '{provider_name}' returned empty ID for resource '{res_name}', using fallback: {resource_id}")
+                    # Validate provider response
+                    if not state.id or state.id.strip() == "":
+                        span.set_attribute("resource.status", "failed")
+                        raise Exception(f"Provider '{provider_name}' returned empty ID for resource '{res_name}'")
+                    
+                    if not state.type or state.type.strip() == "":
+                        span.set_attribute("resource.status", "failed")
+                        raise Exception(f"Provider '{provider_name}' returned empty type for resource '{res_name}'")
 
                     attributes = MessageToDict(state.attributes)
                     metadata = MessageToDict(state.metadata)
                     resource_state = ResourceState(
-                        id=resource_id, type=state.type, provider=provider_name,
+                        id=state.id, type=state.type, provider=provider_name,
                         attributes=attributes, metadata=metadata, status=state.status
                     )
                     self.state_manager.add_resource(resource_state)
