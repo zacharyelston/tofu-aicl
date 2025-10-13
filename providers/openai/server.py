@@ -61,6 +61,10 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
         # Handle embeddings
         if request.type_name in ["embedding", "openai_embedding"]:
             return self._generate_embeddings(resource_id, config, request.type_name)
+        
+        # Handle chat
+        if request.type_name in ["chat", "openai_chat"]:
+            return self._generate_chat(resource_id, config, request.type_name)
 
         # Default: just store config
         self.resources[resource_id] = {
@@ -174,6 +178,90 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             diag = self._create_diagnostic(
                 provider_pb2.Diagnostic.ERROR,
                 f"Embeddings generation failed: {str(e)}",
+                str(e)
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        except Exception as e:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                f"Unexpected error: {str(e)}",
+                str(e)
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+
+    def _generate_chat(self, resource_id, config, type_name):
+        """Generate chat completion using OpenAI API"""
+        messages = config.get('messages', [])
+        model = config.get('model', 'gpt-4o-mini')
+        temperature = config.get('temperature', 1.0)
+        max_tokens = config.get('max_tokens')
+        
+        if not messages:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                "No messages provided for chat completion"
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        try:
+            # Prepare request payload
+            payload = {
+                "model": model,
+                "messages": messages,
+                "temperature": temperature
+            }
+            if max_tokens:
+                payload["max_tokens"] = int(max_tokens)
+            
+            # Call OpenAI API
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json=payload
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            # Extract response
+            choice = result.get('choices', [{}])[0]
+            message = choice.get('message', {})
+            content = message.get('content', '')
+            
+            # Store result
+            result_data = {
+                'content': content,
+                'role': message.get('role', 'assistant'),
+                'model': model,
+                'usage': result.get('usage', {}),
+                'finish_reason': choice.get('finish_reason', 'stop')
+            }
+            
+            self.resources[resource_id] = {
+                "id": resource_id,
+                "type_name": type_name,
+                "attributes": result_data
+            }
+            
+            # Create response
+            new_state_struct = Struct()
+            ParseDict(result_data, new_state_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=resource_id,
+                type=type_name,
+                attributes=new_state_struct,
+                status='ready'
+            )
+            
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+        
+        except requests.exceptions.RequestException as e:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                f"Chat completion failed: {str(e)}",
                 str(e)
             )
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])

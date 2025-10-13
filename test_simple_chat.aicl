@@ -1,0 +1,16 @@
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+  }
+}
+
+resource "openai_chat" "test" {
+  model = "gpt-4o-mini"
+  messages = [
+    {
+      role = "user"
+      content = "Say 'Hello from AICL' and nothing else."
+    }
+  ]
+  aiclResourceName = "test"
+}

@@ -17,18 +17,22 @@ class Executor:
         # Map resource types to provider names
         self.resource_to_provider = {
             'file_loader': 'file_loader',
+            'loader_files': 'file_loader',  # Alias for file_loader
             'text_splitter': 'text_splitter',
             'embedding': 'openai',
+            'openai_embedding': 'openai',   # OpenAI embeddings
+            'openai_chat': 'openai',        # OpenAI chat
             'azure_openai_embedding': 'azure_openai',
-            'naga_embedding': 'naga',  # Naga embeddings
-            'naga_chat': 'naga',       # Naga chat
-            'chat': 'openrouter',
+            'naga_embedding': 'naga',       # Naga embeddings
+            'naga_chat': 'naga',            # Naga chat
+            'openrouter_chat': 'openrouter', # OpenRouter chat
+            'chat': 'openrouter',            # Default chat to OpenRouter
             'upsert': 'pinecone',
             'query': 'pinecone',
-            'ragie_upload': 'ragie',    # Ragie document upload
-            'ragie_document': 'ragie',  # Alias for ragie_upload
-            'ragie_retrieval': 'ragie', # Ragie retrieval/query
-            'ragie_query': 'ragie',     # Alias for ragie_retrieval
+            'ragie_upload': 'ragie',        # Ragie document upload
+            'ragie_document': 'ragie',      # Alias for ragie_upload
+            'ragie_retrieval': 'ragie',     # Ragie retrieval/query
+            'ragie_query': 'ragie',         # Alias for ragie_retrieval
         }
 
     def execute_node(self, node_id, resource_map):
