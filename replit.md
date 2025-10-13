@@ -29,3 +29,49 @@ The project integrates with several external services and APIs:
 -   **Naga.ai**: An OpenAI-compatible AI provider.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
+## Recent Changes
+
+### October 13, 2025 - Azure AI Foundry Terraform Integration Analysis (COMPLETED)
+
+**Analyzed How Azure Terraform Complements AICL:**
+- ✅ **Azure AI Foundry Terraform** = Cloud infrastructure layer (servers, AI resources, deployments)
+- ✅ **AICL** = AI workflow layer (RAG pipelines, experiments, agents)
+- ✅ They work at different layers - like Terraform (infra) vs Kubernetes (apps)
+- ✅ Created comprehensive integration analysis (docs/AZURE_TERRAFORM_INTEGRATION.md, 461 lines)
+
+**Key Discovery:**
+- ✅ AICL already has Azure OpenAI provider (providers/azure_openai/)
+- ✅ Embeddings working, chat completion needs implementation
+- ✅ Supports Azure deployment-based model access pattern
+- ✅ Environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
+
+**Integration Flow:**
+1. Azure Terraform provisions infrastructure (AI Foundry, GPT-4o deployment, CosmosDB, Search)
+2. Outputs endpoints and keys
+3. AICL uses those resources for experiments/pipelines
+4. Complete infrastructure-as-code for AI workflows
+
+**5-Phase Integration Roadmap:**
+1. ✅ Azure provider exists (embeddings working)
+2. ⏳ Add chat completion support
+3. ⏳ Terraform output integration (vars-file detection)
+4. ⏳ Unified state management
+5. ⏳ Enterprise features (managed identity, private networking)
+
+**Impact:** Clear path for enterprise adoption using Azure-provisioned infrastructure with AICL workflows.
+
+### October 13, 2025 - Minimal Spartan Version (COMPLETED)
+
+**Created versions/minimal/ - Learning-Focused Distribution:**
+- ✅ **~820 lines total** (92% reduction from 10,000+ line full version)
+- ✅ Removed complex Executor → direct provider calls
+- ✅ Replaced StateManager → SimpleState (12 lines)
+- ✅ Single provider (Naga) instead of 9
+- ✅ No OpenTelemetry, no database - just core essentials
+- ✅ Created comprehensive README.md, ARCHITECTURE.md, EXAMPLES.md
+
+**Two Working Experiments:**
+1. **self-build.aicl** - AI generates its own provider code (Quality: 85/100)
+2. **matrix-test.aicl** - Compare model variations (Winner: Response B, 88/100)
+
+**Impact:** Anyone can now understand AICL's core concepts in ~30 minutes. Perfect for learning, prototyping, or building custom versions.
