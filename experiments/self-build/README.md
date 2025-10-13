@@ -19,55 +19,181 @@ Therefore, **AICL can build itself**.
 
 ---
 
-## Progression Path
+## 🎯 Modular Architecture (v2)
 
-### Level 1: Simple Provider (✅ Current)
-**Capability**: Add a basic provider from specification
+**All experiments refactored to use external prompt files!**
 
-**Example**: Echo provider
-- Generate provider code
-- Generate config.yaml
-- Generate tests
-- Verify quality
+### Structure
+```
+experiments/self-build/
+├── prompts/                    # ✅ 15 modular prompt files
+│   ├── echo-*.txt             # Echo provider prompts
+│   ├── anthropic-*.txt        # Anthropic provider prompts
+│   ├── replit-*.txt           # Replit provider prompts
+│   └── quality-judge*.txt     # Quality evaluation prompts
+│
+├── add-echo-provider-v2.aicl        # ✅ Refactored (uses prompts/)
+├── add-anthropic-provider-v2.aicl   # ✅ Refactored (uses prompts/)
+├── add-replit-provider-v2.aicl      # ✅ Refactored (uses prompts/)
+│
+├── add-echo-provider.aicl           # ⚠️  Deprecated (inline)
+├── add-anthropic-provider.aicl      # ⚠️  Deprecated (inline)
+└── add-replit-provider.aicl         # ⚠️  Deprecated (inline)
+```
 
-**Run**:
+### Benefits
+
+**Before (Inline)**:
+- 100+ lines of prompt text embedded in AICL files
+- Hard to edit, poor version control diffs
+- Duplicated prompts across experiments
+
+**After (Modular)**:
+- ✅ Clean separation: code vs prompts
+- ✅ Edit prompts in plain text (no AICL syntax)
+- ✅ Reusable prompts across experiments
+- ✅ Version control friendly
+- ✅ Template placeholders (`{variable}`)
+
+---
+
+## Available Challenges
+
+### ⚠️ Echo Provider (Level 1 - Deprecated)
+**File**: `add-echo-provider.aicl`, `add-echo-provider-v2.aicl`  
+**Complexity**: Low (150 lines)  
+**Status**: Reference implementation
+
+### 🔥 Anthropic Provider (Level 5 - Production)
+**File**: `add-anthropic-provider-v2.aicl`  
+**Complexity**: High (~800 lines)  
+**Features**: 3 models, streaming, circuit breaker, cost tracking  
+**Prompts**: `prompts/anthropic-*.txt` (4 files)
+
+### 🚀 Replit Provider (Level 6 - Ultimate)
+**File**: `add-replit-provider-v2.aicl`  
+**Complexity**: Very High (~1000+ lines)  
+**Features**: 3 resource types, GraphQL, deployments, databases, agents  
+**Prompts**: `prompts/replit-*.txt` (7 files)
+
+---
+
+## Quick Start
+
+### 1. Edit a Prompt
+
 ```bash
-python run.py experiments/self-build/add-echo-provider.aicl
+# Edit prompts directly - no AICL syntax needed!
+nano experiments/self-build/prompts/echo-provider-spec.txt
+```
+
+### 2. Run an Experiment
+
+```bash
+# Use v2 (modular) experiments
+python run.py experiments/self-build/add-echo-provider-v2.aicl
+python run.py experiments/self-build/add-anthropic-provider-v2.aicl
+python run.py experiments/self-build/add-replit-provider-v2.aicl
+```
+
+### 3. Review Results
+
+Check the output for:
+- Generated code quality score (0-100)
+- File contents (provider, config, tests)
+- Recommendations for next steps
+
+---
+
+## Prompt Template System
+
+### Placeholders
+
+Prompts support dynamic placeholders:
+
+```text
+REFERENCE PATTERNS:
+{rag_context}
+
+PROVIDER CODE:
+{provider_code}
+```
+
+### Loading Prompts
+
+```hcl
+# Load all prompts from directory
+resource "loader_files" "prompts" {
+  path = "./experiments/self-build/prompts"
+  glob = "*.txt"
+}
+
+# Use prompt with placeholder substitution
+resource "chat" "generate" {
+  messages = [{
+    content = replace(
+      "${lookup(resource.loader_files.prompts.attributes.files, "spec.txt", "")}",
+      "{rag_context}",
+      "${resource.query.patterns.attributes.results}"
+    )
+  }]
+}
 ```
 
 ---
 
-### Level 2: Resource Extension (🔄 Next)
+## Prompt Files Reference
+
+### Echo Provider
+- `echo-provider-spec.txt` - Main implementation prompt
+- `echo-config-spec.txt` - Config generation
+- `echo-tests-spec.txt` - Test generation
+- `quality-judge.txt` - Quality evaluation
+
+### Anthropic Provider
+- `anthropic-provider-spec.txt` - Main implementation (streaming)
+- `anthropic-config-spec.txt` - Config with 3 models
+- `anthropic-streaming-spec.txt` - Async streaming handler
+- `anthropic-tests-spec.txt` - 5 test files
+
+### Replit Provider
+- `replit-spec.txt` - 3 resource types specification
+- `replit-provider-spec.txt` - Main provider implementation
+- `replit-config-spec.txt` - Provider config
+- `replit-api-client-spec.txt` - GraphQL API client
+- `replit-tests-spec.txt` - 6 test files
+- `replit-example-spec.txt` - Usage example
+- `quality-judge-complex.txt` - Complex quality evaluation
+
+---
+
+## Progression Path
+
+### Level 1: Simple Provider (✅ Implemented)
+**Capability**: Add basic provider from specification
+
+**Status**: v2 refactored with modular prompts
+
+---
+
+### Level 2: Resource Extension (📋 Planned)
 **Capability**: Add resource types to existing providers
 
 **Example**: Batch completion for OpenAI
-- Add batch_completion resource
-- Implement async parallel requests
-- Update provider config
-- Generate tests
 
 ---
 
 ### Level 3: Utility Functions (📋 Planned)
 **Capability**: Add helper functions and utilities
 
-**Example**: Retry decorator
-- Generate utility function
-- Add to utils module
-- Write comprehensive tests
-- Integrate with existing code
+**Example**: Retry decorator with exponential backoff
 
 ---
 
 ### Level 4: Bug Fixes (📋 Planned)
 **Capability**: Automatically fix failing tests
 
-**Example**: Fix test_parse_config
-- Detect failing test
-- RAG: Find temp file patterns
-- Generate fix
-- Verify tests pass
-- Judge quality
+**Example**: Detect and fix test failures
 
 ---
 
@@ -75,391 +201,66 @@ python run.py experiments/self-build/add-echo-provider.aicl
 **Capability**: Build complete features from natural language
 
 **Example**: "Add streaming LLM responses"
-- Parse natural language spec
-- Break into subtasks
-- Generate all necessary code
-- Integration tests
-- Quality verification
 
 ---
 
 ### Level 6: Self-Optimization (🚀 Future)
 **Capability**: Optimize its own performance
 
-**Example**: Speed up planner
-- Profile codebase
-- Identify bottlenecks
-- Generate optimizations
-- Benchmark improvements
+**Example**: Profile and fix bottlenecks
 
 ---
 
-## Available Challenges
+## Current Status
 
-### ⚠️ Echo Provider (Level 1 - Deprecated)
-**File**: `add-echo-provider.aicl`  
-**Complexity**: Low (150 lines)  
-**Status**: Too simple, use as reference only
+### ✅ Completed
+- Modular prompt system (15 files)
+- 3 refactored experiments (echo, anthropic, replit)
+- External file loading via `loader_files`
+- Template placeholder system
+- Quality judging framework
 
-### 🔥 Anthropic Provider (Level 5 - Production)
-**File**: `add-anthropic-provider.aicl`  
-**Complexity**: High (~800 lines)  
-**Features**: 3 models, streaming, circuit breaker, cost tracking  
-**See**: `ANTHROPIC_CHALLENGE.md`
+### 🔧 Known Issues
+- Provider routing needs fixes for generic "chat" resources
+- RAG index exists but may need population
+- Experiments need integration testing with actual execution
 
-### 🚀 Replit Provider (Level 6 - Ultimate)
-**File**: `add-replit-provider.aicl`  
-**Complexity**: Very High (~1000+ lines)  
-**Features**: 3 resource types, GraphQL, deployments, databases, agents  
-**See**: `REPLIT_CHALLENGE.md`
+### 📋 Next Steps
+1. Fix provider routing in engine
+2. Test end-to-end code generation
+3. Validate generated code quality
+4. Implement apply mechanism
 
 ---
 
-## Quick Start
+## Architecture
 
-### 1. Run Replit Provider Challenge (Recommended)
-
-```bash
-# Run the ultimate challenge
-python run.py experiments/self-build/add-replit-provider.aicl
-
-# Review the output
-# - Check quality_evaluation score (target: 85+)
-# - Review all 7 generated files
-# - If score >= 85, apply the provider
-
-# Apply the changes
-mkdir -p providers/replit
-# Copy generated files (spec, server.py, api_client.py, config.yaml, tests, etc.)
-
-# Install dependencies
-pip install aiohttp gql
-
-# Test the new provider
-pytest providers/replit/ -v
-
-# Try the example
-python run.py examples/replit-deployment-example.aicl
+### Self-Building Pipeline
+```
+Specification → RAG Context → Code Generation → Testing → Quality Judge → Apply/Reject
 ```
 
----
-
-### 2. Run Test Suite
-
-```bash
-# Generate experiments from test variables
-python generate_experiments.py suite simple_provider
-
-# Run all experiments
-python run_experiments.py experiments/suites/simple_provider/*.aicl
-
-# Compare results
-python compare_results.py --suite simple_provider
-```
-
----
-
-## Experiment Structure
-
-### Input: Specification
-
-```yaml
-feature_type: provider
-name: echo
-description: Simple echo provider with configurable prefix
-requirements:
-  - Resource type: echo_text
-  - Input: text (string), prefix (string)
-  - Output: echoed_text (string), length metrics
-```
-
-### Process: Self-Build Pipeline
-
-```
-1. RAG Query      → Find implementation patterns
-2. Code Generation → LLM generates code
-3. Test Generation → LLM generates tests
-4. Test Execution  → Run pytest
-5. Quality Judging → LLM evaluates quality
-6. Decision        → Accept/Revise/Reject
-```
-
-### Output: Generated Code + Evaluation
-
-```json
-{
-  "generated_files": {
-    "server.py": "<provider code>",
-    "config.yaml": "<provider config>",
-    "test_echo.py": "<test code>"
-  },
-  "quality": {
-    "overall_score": 88,
-    "decision": "ACCEPT",
-    "reasoning": "Well-structured provider following AICL patterns..."
-  },
-  "recommendation": "ACCEPT: Apply to codebase"
-}
-```
-
----
-
-## Quality Evaluation
-
-### Grading Criteria (100 points)
-
-1. **Correctness (40 pts)**
-   - Implements specification
-   - Tests pass
-   - No logical errors
-   - Edge cases handled
-
-2. **Code Quality (30 pts)**
-   - Follows project patterns
-   - Clean and readable
-   - Proper error handling
-   - Resource management
-
-3. **Best Practices (20 pts)**
-   - Language idioms
-   - Design patterns
-   - Security considerations
-   - Performance awareness
-
-4. **Maintainability (10 pts)**
-   - Documentation
-   - Clear intent
-   - Self-documenting
-   - Easy to understand
-
-### Decision Thresholds
-
-- **≥ 90**: ACCEPT (Excellent)
-- **80-89**: ACCEPT (Good)
-- **70-79**: REVISE (Needs improvement)
-- **< 70**: REJECT (Inadequate)
-
----
-
-## Safety Mechanisms
-
-### 1. Sandboxed Testing
-- Isolated test environment
-- Resource limits
-- No network access
-- Rollback on failure
-
-### 2. Human Review Gate
-- Auto-apply: Score ≥ 95
-- Human review: Score 80-94
-- Auto-reject: Score < 80
-
-### 3. Git Integration
-- Commit before changes
-- Automatic rollback
-- Branch per experiment
-- PR for review
-
-### 4. Progressive Trust
-- Start with simple changes
-- Build confidence
-- Gradually increase complexity
-- Track success rate
-
----
-
-## Test Suites
-
-### Simple Provider (2-5 min)
-Add basic echo provider
-- 1-2 experiments
-- Quick validation
-- Entry point for self-building
-
-### Resource Extension (5-10 min)
-Add resource to existing provider
-- 2-4 experiments
-- Medium complexity
-- Test integration
-
-### Bug Fix (5-10 min)
-Fix failing tests automatically
-- 1-3 experiments
-- Real-world issues
-- Verify solutions
-
-### Quality Comparison (15-30 min)
-Compare code generation models
-- 6-9 experiments
-- Model evaluation
-- Best practices
-
----
-
-## Usage Examples
-
-### CLI Commands (Future)
-
-```bash
-# Add new provider
-aicl self-build add-provider --spec "Echo provider"
-
-# Add resource type
-aicl self-build add-resource \
-  --provider openai \
-  --spec "Batch completion resource"
-
-# Fix failing test
-aicl self-build fix-test \
-  --test test_parse_config
-
-# Add feature from description
-aicl self-build add-feature \
-  --spec "Add streaming LLM responses"
-
-# Optimize performance
-aicl self-build optimize \
-  --target src/aicl/core/planner.py
-```
-
----
-
-## Metrics & Success
-
-### Per-Experiment Metrics
-
-```python
-{
-  "generation": {
-    "code_lines": 156,
-    "generation_time_ms": 3200,
-    "tokens_used": 4500,
-    "cost_usd": 0.045
-  },
-  "testing": {
-    "tests_generated": 5,
-    "tests_passed": 5,
-    "coverage_pct": 92
-  },
-  "quality": {
-    "overall_score": 88,
-    "decision": "ACCEPT"
-  },
-  "application": {
-    "applied": true,
-    "rollback_needed": false
-  }
-}
-```
-
-### Success Criteria
-
-✅ **Functional**: Tests pass  
-✅ **Quality**: Score ≥ 80  
-✅ **Safe**: No security issues  
-✅ **Maintainable**: Clear code  
-
----
-
-## Example Output
-
-```
-=== SELF-BUILD EXPERIMENT: Add Echo Provider ===
-
-📋 Specification:
-   Create echo provider with prefix support
-
-🔍 RAG Context Retrieved:
-   - Found 5 provider implementation patterns
-   - Identified gRPC service structure
-   - Located v2.runtime helpers
-
-💻 Code Generated:
-   ✅ providers/echo/server.py (156 lines)
-   ✅ providers/echo/config.yaml (15 lines)
-   ✅ providers/echo/test_echo.py (87 lines)
-
-🧪 Tests Executed:
-   ✅ 5/5 tests passed
-   ✅ Coverage: 92%
-
-⚖️ Quality Evaluation:
-   Score: 88/100
-   - Correctness: 38/40
-   - Code Quality: 27/30
-   - Best Practices: 16/20
-   - Maintainability: 7/10
-   
-   Decision: ACCEPT ✅
-   Reasoning: Well-structured provider following AICL 
-   patterns. Proper error handling, clear documentation.
-   
-   Improvements:
-   - Consider adding async support
-   - Add rate limiting example
-
-💰 Cost:
-   Total tokens: 8,500
-   Estimated cost: $0.085
-
-✅ RECOMMENDATION: Apply changes to codebase
-
-Next steps:
-1. Review generated code above
-2. Copy files to providers/echo/
-3. Run: pytest providers/echo/test_echo.py
-4. Verify auto-discovery works
-```
-
----
-
-## Roadmap
-
-### Phase 1: Foundation (✅ Current)
-- [x] Design self-modification architecture
-- [x] Create example experiments
-- [x] Define quality criteria
-- [x] Build test suites
-
-### Phase 2: Basic Self-Building (🔄 In Progress)
-- [ ] Implement code_generator resource
-- [ ] Implement test_runner resource
-- [ ] Implement code_judge resource
-- [ ] Run echo provider experiment
-
-### Phase 3: Advanced Features (📋 Next)
-- [ ] Resource type extension
-- [ ] Utility function generation
-- [ ] Bug fix automation
-- [ ] Performance optimization
-
-### Phase 4: Natural Language (🎯 Goal)
-- [ ] Parse NL specifications
-- [ ] Multi-file feature generation
-- [ ] Complex feature building
-- [ ] Full self-building capability
+### Quality Grading (100 points)
+- **Correctness (40)**: Implements spec, tests pass
+- **Code Quality (30)**: Clean, follows patterns
+- **Best Practices (20)**: Idioms, security
+- **Maintainability (10)**: Documentation, clarity
 
 ---
 
 ## Contributing
 
-When adding new self-building experiments:
+### Adding New Prompts
+1. Create `.txt` file in `prompts/`
+2. Use `{placeholder}` for dynamic content
+3. Reference in experiment with `lookup(...)`
 
-1. **Define Clear Spec**: What should be built?
-2. **Create Test Variables**: Parameter space to explore
-3. **Set Quality Criteria**: How to evaluate?
-4. **Add Safety Checks**: Prevent bad code
-5. **Document Process**: Help others learn
+### Adding New Experiments
+1. Create `-v2.aicl` file
+2. Load prompts with `loader_files`
+3. Use `replace()` for placeholder substitution
+4. Test with small example first
 
 ---
 
-## Philosophy
-
-The self-building capability is about:
-- **Automation**: Reduce manual coding
-- **Quality**: Maintain high standards
-- **Learning**: Improve from feedback
-- **Safety**: Human oversight when needed
-- **Empowerment**: Let AI do the tedious work
-
-**The future is AI systems that build themselves.**
+*These files represent the foundation for AICL's self-building capability - enabling AI systems that improve themselves.*
