@@ -1,0 +1,18 @@
+# Simple Naga Test
+# Test that naga provider works with API keys
+
+provider "naga" {
+  source = "aicl/naga"
+}
+
+resource "naga_completion" "test" {
+  model = "gpt-4"
+  
+  prompt = "Say 'Hello from AICL!' and nothing else."
+  
+  max_tokens = 20
+}
+
+output "response" {
+  value = resource.naga_completion.test.response
+}
