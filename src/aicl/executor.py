@@ -72,10 +72,16 @@ class Executor:
                     response = provider.stub.ApplyResourceChange(req)
                     state = response.new_state
 
+                    # Fallback: Generate ID if provider returned empty
+                    resource_id = state.id
+                    if not resource_id or resource_id.strip() == "":
+                        resource_id = f"{res_type}-{res_name}"
+                        print(f"Warning: Provider '{provider_name}' returned empty ID for resource '{res_name}', using fallback: {resource_id}")
+
                     attributes = MessageToDict(state.attributes)
                     metadata = MessageToDict(state.metadata)
                     resource_state = ResourceState(
-                        id=state.id, type=state.type, provider=provider_name,
+                        id=resource_id, type=state.type, provider=provider_name,
                         attributes=attributes, metadata=metadata, status=state.status
                     )
                     self.state_manager.add_resource(resource_state)
