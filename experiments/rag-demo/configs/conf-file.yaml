@@ -1,0 +1,82 @@
+# RAG Demo Configuration
+# This file configures the complete RAG experiment with 3 LLMs + 1 Judge
+
+experiment:
+  name: "rag_demo_live"
+  description: "Live demo of RAG with multi-LLM comparison and AI judge"
+  verbose: true
+  slow_mode: true  # Add delays for human review
+  delay_seconds: 2  # Wait between major steps
+
+# RAG Pipeline Configuration
+rag:
+  source:
+    path: "./docs"
+    glob: "**/*.md"
+    description: "Load all markdown documentation"
+  
+  chunking:
+    chunk_size: 800
+    chunk_overlap: 100
+    strategy: "recursive"
+  
+  embedding:
+    model: "text-embedding-3-small"
+    dimensions: 1536
+    provider: "openai"
+  
+  vector_store:
+    provider: "pinecone"
+    namespace: "rag-demo-live"
+    index_name: "aicl-demo"
+    top_k: 5  # Retrieve top 5 most relevant chunks
+
+# LLM Configuration for Answering (3 models to compare)
+answer_models:
+  - name: "gpt-4o-mini"
+    provider: "openrouter"
+    model_id: "openai/gpt-4o-mini"
+    temperature: 0.3
+    max_tokens: 500
+    display_name: "GPT-4o Mini"
+  
+  - name: "claude-3.5-sonnet"
+    provider: "openrouter"
+    model_id: "anthropic/claude-3.5-sonnet"
+    temperature: 0.3
+    max_tokens: 500
+    display_name: "Claude 3.5 Sonnet"
+  
+  - name: "gemini-pro"
+    provider: "openrouter"
+    model_id: "google/gemini-pro-1.5"
+    temperature: 0.3
+    max_tokens: 500
+    display_name: "Gemini Pro 1.5"
+
+# Judge Configuration (uses RAG context for evaluation)
+judge:
+  model: "gpt-4o"
+  provider: "openrouter"
+  model_id: "openai/gpt-4o"
+  temperature: 0.1  # Low temperature for consistent judging
+  max_tokens: 800
+  criteria:
+    - "Accuracy: Does the answer correctly use information from the context?"
+    - "Completeness: Does it address all parts of the question?"
+    - "Clarity: Is the explanation clear and well-structured?"
+    - "Conciseness: Is it appropriately detailed without being verbose?"
+  
+  scoring:
+    scale: 100
+    format: "JSON with score, reasoning, and strengths/weaknesses"
+
+# Output Configuration
+output:
+  save_plan: true
+  save_state: true
+  save_apply_output: true
+  save_results: true
+  save_to_docdb: true
+  format: "json"
+  pretty_print: true
