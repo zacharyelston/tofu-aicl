@@ -1,94 +1,95 @@
 # Create RAG Index for Self-Building Experiments
 # This indexes the entire codebase into Pinecone for pattern retrieval
 
-provider "loader" {
-  source = "aicl/file_loader"
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openai = {
+      source  = "aicl/openai"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source  = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+  }
 }
 
-provider "splitter" {
-  source = "aicl/text_splitter"
-}
-
-provider "openai" {
-  api_key = env("OPENAI_API_KEY")
-}
-
-provider "pinecone" {
-  api_key = env("PINECONE_API_KEY")
-  host    = env("PINECONE_HOST_URL")
-}
-
-# Load all source code files
+# Load all Python source code
 resource "loader_files" "codebase" {
-  provider = provider.loader
-  path     = "./src"
-  glob     = "**/*.py"
+  path = "./src"
+  glob = "**/*.py"
 }
 
 # Load provider implementations
 resource "loader_files" "providers" {
-  provider = provider.loader
-  path     = "./providers"
-  glob     = "**/*.py"
+  path = "./providers"
+  glob = "**/*.py"
 }
 
 # Load v2 architecture code
 resource "loader_files" "v2_code" {
-  provider = provider.loader
-  path     = "./v2"
-  glob     = "**/*.py"
+  path = "./v2"
+  glob = "**/*.py"
 }
 
-# Load configuration files
+# Load provider configs
 resource "loader_files" "configs" {
-  provider = provider.loader
-  path     = "./providers"
-  glob     = "**/config.yaml"
+  path = "./providers"
+  glob = "**/config.yaml"
 }
 
-# Split all documents into chunks
+# Load outline specs
+resource "loader_files" "specs" {
+  path = "./outline"
+  glob = "*.md"
+}
+
+# Combine all documents
+data "local_file" "all_docs" {
+  content = jsonencode({
+    documents = concat(
+      jsondecode(resource.loader_files.codebase.attributes.documents),
+      jsondecode(resource.loader_files.providers.attributes.documents),
+      jsondecode(resource.loader_files.v2_code.attributes.documents),
+      jsondecode(resource.loader_files.configs.attributes.documents),
+      jsondecode(resource.loader_files.specs.attributes.documents)
+    )
+  })
+}
+
+# Split into chunks
 resource "splitter_text" "chunks" {
-  provider = provider.splitter
-  
-  documents = concat(
-    resource.loader_files.codebase.attributes.documents,
-    resource.loader_files.providers.attributes.documents,
-    resource.loader_files.v2_code.attributes.documents,
-    resource.loader_files.configs.attributes.documents
-  )
-  
+  documents     = data.local_file.all_docs.content.documents
   chunk_size    = 1000
   chunk_overlap = 200
 }
 
 # Generate embeddings
 resource "openai_embedding" "vectors" {
-  provider = provider.openai
-  
   texts = resource.splitter_text.chunks.attributes.chunks
   model = "text-embedding-3-small"
 }
 
-# Upsert to Pinecone with correct index and namespace
+# Upsert to Pinecone
 resource "pinecone_upsert" "index" {
-  provider = provider.pinecone
-  
   vectors   = resource.openai_embedding.vectors.attributes.embeddings
   index     = "tofu-aicl-knowledge"
   namespace = "codebase"
 }
 
-output "indexing_stats" {
+output "stats" {
   value = {
-    total_files = (
-      length(resource.loader_files.codebase.attributes.documents) +
-      length(resource.loader_files.providers.attributes.documents) +
-      length(resource.loader_files.v2_code.attributes.documents) +
-      length(resource.loader_files.configs.attributes.documents)
-    )
-    total_chunks = length(resource.splitter_text.chunks.attributes.chunks)
+    total_chunks  = length(resource.splitter_text.chunks.attributes.chunks)
     total_vectors = length(resource.openai_embedding.vectors.attributes.embeddings)
-    index_name = "tofu-aicl-knowledge"
-    namespace = "codebase"
+    index_name    = "tofu-aicl-knowledge"
+    namespace     = "codebase"
   }
 }
