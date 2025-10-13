@@ -70,7 +70,14 @@ Configure these secrets in your Replit environment:
 ### 2. Run a Simple Configuration
 
 ```bash
+# Basic usage
 python run.py config.aicl
+
+# With multiple output destinations
+python run.py config.aicl --output-file --output-docdb --output-stdout
+
+# Quiet mode with custom ID and tags
+python run.py config.aicl --quiet --experiment-id my-test --tags demo,v1
 ```
 
 Example config (`config.aicl`):
@@ -88,6 +95,18 @@ resource "chat" "greeting" {
   }
 }
 ```
+
+**CLI Flags Available:**
+- `--output-file` - Save to JSON state files (default)
+- `--output-docdb` - Save to PostgreSQL database
+- `--output-stdout` - Print to console (default)
+- `--no-stdout` - Disable console output
+- `--quiet` - Minimal output (errors only)
+- `--experiment-id ID` - Custom experiment identifier
+- `--tags TAGS` - Comma-separated tags (e.g., `rag,demo,v1`)
+- `--parallel` - Enable parallel execution (experimental)
+
+See `docs/CLI_USAGE.md` for complete documentation.
 
 ### 3. Run Matrix Experiments
 
