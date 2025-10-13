@@ -46,20 +46,34 @@ class MinimalEngine:
             stderr=subprocess.PIPE
         )
         
-        # Wait for provider to be ready
-        time.sleep(2)
-        
-        # Connect to provider
-        channel = grpc.insecure_channel(f'localhost:{port}')
-        stub = provider_pb2_grpc.ProviderStub(channel)
-        
-        # Configure provider
-        stub.Configure(provider_pb2.ConfigureRequest(config={}))
-        
-        self.provider_processes[name] = process
-        self.provider_stubs[name] = stub
-        
-        print(f"✓ {name} provider ready")
+        # Wait for provider to be ready (with retries)
+        max_retries = 10
+        for i in range(max_retries):
+            time.sleep(1)
+            try:
+                # Try to connect
+                channel = grpc.insecure_channel(f'localhost:{port}')
+                stub = provider_pb2_grpc.ProviderStub(channel)
+                
+                # Try to configure
+                stub.Configure(provider_pb2.ConfigureRequest(config={}))
+                
+                # Success!
+                self.provider_processes[name] = process
+                self.provider_stubs[name] = stub
+                print(f"✓ {name} provider ready")
+                return
+                
+            except grpc.RpcError:
+                if i < max_retries - 1:
+                    print(f"  Waiting for provider... ({i+1}/{max_retries})")
+                    continue
+                else:
+                    # Check if process died
+                    if process.poll() is not None:
+                        stderr = process.stderr.read().decode()
+                        raise Exception(f"Provider failed to start:\n{stderr}")
+                    raise
     
     def apply(self):
         """Run the AICL experiment"""
@@ -75,7 +89,7 @@ class MinimalEngine:
                 self._start_provider(
                     'naga', 
                     50052, 
-                    'versions/minimal/providers/naga/server.py'
+                    'providers/naga/server.py'
                 )
         
         # 2. Create plan
@@ -86,7 +100,6 @@ class MinimalEngine:
         
         # 3. Execute resources
         evaluator = HCLEvaluator(self.state_manager, self.parsed_config)
-        executor = Executor(self.provider_stubs, self.state_manager)
         
         for resource_id in sorted_resources:
             res_type, res_name, config_attrs = resource_map[resource_id]
@@ -97,12 +110,34 @@ class MinimalEngine:
             
             print(f"→ Creating {res_type}.{res_name}")
             
-            # Execute
-            new_state = executor.apply_resource_change(
-                resource_id=resource_id,
-                resource_type=res_type,
-                resource_name=res_name,
-                config=resolved_config
+            # Add resource metadata
+            resolved_config['aiclResourceName'] = res_name
+            resolved_config['aiclResourceType'] = res_type
+            
+            # Call provider directly
+            config_struct = Struct()
+            ParseDict(resolved_config, config_struct)
+            
+            request = provider_pb2.ApplyResourceChangeRequest(
+                type_name=res_type,
+                config=config_struct
+            )
+            
+            # Get the right provider stub
+            provider_stub = self.provider_stubs.get('naga')  # For now, only naga
+            response = provider_stub.ApplyResourceChange(request)
+            
+            # Convert to ResourceState
+            state = response.new_state
+            attributes = MessageToDict(state.attributes)
+            
+            new_state = ResourceState(
+                id=state.id,
+                type=state.type,
+                provider='naga',
+                attributes=attributes,
+                metadata={},
+                status=state.status
             )
             
             # Update state
