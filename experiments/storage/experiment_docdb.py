@@ -194,7 +194,7 @@ class ExperimentDocDB:
             params.append(provider)
         
         if tags:
-            conditions.append("metadata->'tags' ?| %s")
+            conditions.append("metadata->'tags' ?| %s::text[]")
             params.append(tags)
         
         where_clause = " AND ".join(conditions) if conditions else "1=1"
