@@ -1,0 +1,84 @@
+# Self-Build Experiment: Generate a Simple Echo Provider
+# This demonstrates AICL's ability to modify its own source code
+
+terraform {
+  required_providers {
+    naga = { source = "aicl/naga" }
+  }
+}
+
+variable "provider_name" {
+  type    = string
+  default = "echo"
+}
+
+# Generate provider code using AI
+resource "naga_chat" "generate_provider" {
+  model = "gpt-4o-mini"
+  temperature = 0.3
+  max_tokens = 2000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are a Python code generator. Generate clean, working code only. No explanations."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Generate a minimal AICL provider in Python that echoes back input text.
+        
+        Requirements:
+        - Use gRPC (proto.provider_pb2, proto.provider_pb2_grpc)
+        - Implement ApplyResourceChange method
+        - Handle resource type "echo_text"
+        - Accept config with 'text' field
+        - Return resource with 'echoed' attribute containing the same text
+        - Listen on port 50053
+        - Include proper imports and main block
+        
+        Return ONLY the Python code, no markdown, no explanations.
+      EOT
+    }
+  ]
+  
+  aiclResourceName = "generate_provider"
+}
+
+# Grade the generated code
+resource "naga_chat" "grade" {
+  model = "gpt-4o"
+  temperature = 0.0
+  max_tokens = 500
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are a code quality evaluator. Grade on a 100-point scale."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Evaluate this provider code:
+        
+        ${resource.naga_chat.generate_provider.attributes.content}
+        
+        Criteria:
+        - Correctness (40 pts): Implements required functionality
+        - Code Quality (30 pts): Clean, readable, follows patterns
+        - Completeness (20 pts): All imports, proper structure
+        - Error Handling (10 pts): Basic error checks
+        
+        Return JSON only:
+        {
+          "score": 85,
+          "grade": "ACCEPT/REJECT",
+          "strengths": ["point 1", "point 2"],
+          "issues": ["issue 1"]
+        }
+      EOT
+    }
+  ]
+  
+  aiclResourceName = "grade"
+}

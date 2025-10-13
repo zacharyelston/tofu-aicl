@@ -1,0 +1,129 @@
+# Matrix Test: Compare Naga Model Variations
+# Tests different temperature and max_tokens settings
+
+terraform {
+  required_providers {
+    naga = { source = "aicl/naga" }
+  }
+}
+
+variable "test_question" {
+  type    = string
+  default = "Explain the concept of recursion in programming using a simple real-world analogy."
+}
+
+# Test 1: Low temperature (deterministic)
+resource "naga_chat" "test_low_temp" {
+  model = "gpt-4o-mini"
+  temperature = 0.2
+  max_tokens = 150
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  
+  aiclResourceName = "test_low_temp"
+}
+
+# Test 2: Medium temperature (balanced)
+resource "naga_chat" "test_mid_temp" {
+  model = "gpt-4o-mini"
+  temperature = 0.7
+  max_tokens = 150
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  
+  aiclResourceName = "test_mid_temp"
+}
+
+# Test 3: High temperature (creative)
+resource "naga_chat" "test_high_temp" {
+  model = "gpt-4o-mini"
+  temperature = 1.2
+  max_tokens = 150
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  
+  aiclResourceName = "test_high_temp"
+}
+
+# Test 4: Longer response
+resource "naga_chat" "test_long" {
+  model = "gpt-4o-mini"
+  temperature = 0.7
+  max_tokens = 300
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  
+  aiclResourceName = "test_long"
+}
+
+# Compare all responses
+resource "naga_chat" "compare" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 600
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert evaluator. Compare and rank responses."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Question: ${var.test_question}
+        
+        RESPONSE A (temp=0.2, 150 tokens):
+        ${resource.naga_chat.test_low_temp.attributes.content}
+        
+        RESPONSE B (temp=0.7, 150 tokens):
+        ${resource.naga_chat.test_mid_temp.attributes.content}
+        
+        RESPONSE C (temp=1.2, 150 tokens):
+        ${resource.naga_chat.test_high_temp.attributes.content}
+        
+        RESPONSE D (temp=0.7, 300 tokens):
+        ${resource.naga_chat.test_long.attributes.content}
+        
+        Evaluate each on:
+        - Clarity (40 pts)
+        - Accuracy (30 pts)
+        - Creativity (20 pts)
+        - Conciseness (10 pts)
+        
+        Return JSON:
+        {
+          "winner": "A/B/C/D",
+          "rankings": [
+            {"response": "A", "score": 85, "best_for": "precision"},
+            {"response": "B", "score": 88, "best_for": "balance"},
+            {"response": "C", "score": 82, "best_for": "creativity"},
+            {"response": "D", "score": 86, "best_for": "depth"}
+          ],
+          "insights": "Key finding about temperature/length tradeoffs"
+        }
+      EOT
+    }
+  ]
+  
+  aiclResourceName = "compare"
+}
