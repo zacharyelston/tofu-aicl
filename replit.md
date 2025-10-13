@@ -25,11 +25,29 @@ The project integrates with several external services and APIs:
 -   **OpenAI API**: For embeddings and chat.
 -   **OpenRouter API**: For various AI models.
 -   **Pinecone**: A vector database.
--   **Azure OpenAI**: Optional for enterprise embeddings.
+-   **Azure OpenAI**: Optional for enterprise embeddings and chat (API version 2023-05-15).
 -   **Naga.ai**: An OpenAI-compatible AI provider.
 -   **Ragie.io**: A fully managed RAG-as-a-Service platform.
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
 ## Recent Changes
+
+### October 13, 2025 - Azure OpenAI Chat Completion Support (COMPLETED)
+
+**Added Complete Azure OpenAI Chat Support:**
+- ✅ **Implemented** `_generate_chat_completion()` method in providers/azure_openai/server.py
+- ✅ **Supports** both `messages` array and simple `prompt` formats
+- ✅ **Parameters**: temperature, max_tokens, top_p, frequency_penalty, presence_penalty
+- ✅ **Tested** with gpt-35-turbo deployment (gpt-3.5-turbo-0125 model)
+- ✅ **Returns**: content, role, model, usage stats, finish_reason
+- ✅ **API Version**: 2023-05-15 (user's Azure deployment)
+
+**Working Configuration:**
+- Endpoint: https://redot-dev-openai.openai.azure.com/
+- Embeddings: text-embedding-ada-002 (1536 dimensions)
+- Chat: gpt-35-turbo (gpt-3.5-turbo-0125)
+- Both tested and working successfully
+
+**Impact:** Azure OpenAI provider now supports both embeddings and chat completions for enterprise AI workflows.
 
 ### October 13, 2025 - Azure AI Foundry Terraform Integration Analysis (COMPLETED)
 
@@ -41,9 +59,10 @@ The project integrates with several external services and APIs:
 
 **Key Discovery:**
 - ✅ AICL already has Azure OpenAI provider (providers/azure_openai/)
-- ✅ Embeddings working, chat completion needs implementation
+- ✅ Embeddings working (text-embedding-ada-002 deployment tested)
+- ✅ Chat completion working (gpt-35-turbo deployment tested)
 - ✅ Supports Azure deployment-based model access pattern
-- ✅ Environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
+- ✅ Environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION
 
 **Integration Flow:**
 1. Azure Terraform provisions infrastructure (AI Foundry, GPT-4o deployment, CosmosDB, Search)
@@ -53,7 +72,7 @@ The project integrates with several external services and APIs:
 
 **5-Phase Integration Roadmap:**
 1. ✅ Azure provider exists (embeddings working)
-2. ⏳ Add chat completion support
+2. ✅ Chat completion support (added and tested)
 3. ⏳ Terraform output integration (vars-file detection)
 4. ⏳ Unified state management
 5. ⏳ Enterprise features (managed identity, private networking)
