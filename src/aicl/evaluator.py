@@ -27,6 +27,10 @@ class HCLEvaluator:
         # Add resources from state
         if self.state_manager.current_state:
             for resource_id, resource_state in self.state_manager.current_state.resources.items():
+                # Skip resources with empty types (invalid/failed resources)
+                if not resource_state.type or resource_state.type.strip() == "":
+                    continue
+                
                 # Resource type is stored in resource_state.type (e.g., "loader_files")
                 # Resource name is extracted from ID (e.g., "loader-docs" -> "docs")
                 res_type = resource_state.type
@@ -72,10 +76,15 @@ class HCLEvaluator:
         parts = expr.split('.')
         current = context
 
-        for part in parts:
+        for i, part in enumerate(parts):
             if isinstance(current, dict) and part in current:
                 current = current[part]
             else:
+                # Debug: Show where resolution failed
+                path_so_far = '.'.join(parts[:i])
+                print(f"[EVALUATOR] Failed to resolve '{expr}' at part '{part}' (path so far: '{path_so_far}')")
+                if isinstance(current, dict):
+                    print(f"[EVALUATOR] Available keys at this level: {list(current.keys())[:10]}")
                 return f"${{{expr}}}"
 
         return current

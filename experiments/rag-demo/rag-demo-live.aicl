@@ -68,6 +68,7 @@ resource "splitter_text" "doc_chunks" {
 resource "embedding" "doc_vectors" {
   texts = "${resource.splitter_text.doc_chunks.attributes.chunks}"
   model = "text-embedding-3-small"
+  dimensions = 1024
   aiclResourceName = "embedded_docs"
 }
 
@@ -91,6 +92,7 @@ resource "upsert" "vector_index" {
 resource "embedding" "validation_query" {
   text  = "What is AICL and what problem does it solve?"
   model = "text-embedding-3-small"
+  dimensions = 1024
   aiclResourceName = "validation_vector"
 }
 
@@ -98,6 +100,7 @@ resource "query" "validation_results" {
   vector    = "${resource.embedding.validation_query.attributes.embedding}"
   top_k     = 3
   namespace = "rag-demo-live"
+  depends_on_upsert = "${resource.upsert.vector_index.id}"
   aiclResourceName = "validation_retrieval"
 }
 
@@ -109,6 +112,7 @@ resource "query" "validation_results" {
 resource "embedding" "main_question" {
   text  = "What are the main architectural components of the AICL engine and how do they work together?"
   model = "text-embedding-3-small"
+  dimensions = 1024
   aiclResourceName = "main_question_vector"
 }
 
@@ -116,6 +120,7 @@ resource "query" "rag_context" {
   vector    = "${resource.embedding.main_question.attributes.embedding}"
   top_k     = 5
   namespace = "rag-demo-live"
+  depends_on_upsert = "${resource.upsert.vector_index.id}"
   aiclResourceName = "retrieved_context"
 }
 
@@ -162,7 +167,7 @@ resource "chat" "answer_claude" {
 
 # Answer from Gemini Pro 1.5
 resource "chat" "answer_gemini" {
-  model = "google/gemini-pro-1.5"
+  model = "google/gemini-2.0-flash-exp:free"
   messages = [
     {
       role = "system"

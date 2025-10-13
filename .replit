@@ -29,3 +29,23 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python run.py experiments/rag-demo/rag-demo-live.aicl"
+
+[[ports]]
+localPort = 50051
+externalPort = 3001
+
+[[ports]]
+localPort = 50054
+externalPort = 3002
+
+[[ports]]
+localPort = 50055
+externalPort = 3003
+
+[[ports]]
+localPort = 50056
+externalPort = 80
+
+[[ports]]
+localPort = 50057
+externalPort = 3000

@@ -151,6 +151,17 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Upsert failed: {str(e)}"
+            if e.response is not None:
+                try:
+                    error_body = e.response.json()
+                    error_detail += f" | Response: {error_body}"
+                except:
+                    error_detail += f" | Response text: {e.response.text[:500]}"
+            print(f"[PINECONE UPSERT] ERROR: {error_detail}")
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, error_detail)
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
         except Exception as e:
             print(f"[PINECONE UPSERT] ERROR: {str(e)}")
             import traceback
@@ -233,6 +244,16 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Query failed: {str(e)}"
+            if e.response is not None:
+                try:
+                    error_body = e.response.json()
+                    error_detail += f" | Response: {error_body}"
+                except:
+                    error_detail += f" | Response text: {e.response.text[:500]}"
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, error_detail)
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])

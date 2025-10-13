@@ -64,6 +64,14 @@ class Executor:
             resolved_config['aiclResourceName'] = res_name
             resolved_config['aiclResourceType'] = res_type
 
+            # Debug: Log resolved config for query resources
+            if res_type == "query":
+                print(f"[EXECUTOR] Query resource '{res_name}' resolved config:")
+                print(f"[EXECUTOR]   vector type: {type(resolved_config.get('vector'))}")
+                print(f"[EXECUTOR]   vector length: {len(resolved_config.get('vector', [])) if isinstance(resolved_config.get('vector'), list) else 'not a list'}")
+                if resolved_config.get('vector') and not isinstance(resolved_config.get('vector'), list):
+                    print(f"[EXECUTOR]   vector value: {str(resolved_config.get('vector'))[:100]}")
+
             config_struct = self._dict_to_struct(resolved_config)
             req = provider_pb2.ApplyResourceChangeRequest(type_name=res_type, config=config_struct)
 

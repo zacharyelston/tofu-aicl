@@ -118,7 +118,7 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
                 "input": text_list
             }
             if dimensions:
-                payload["dimensions"] = dimensions
+                payload["dimensions"] = int(dimensions)
 
             # Call OpenAI API
             response = requests.post(
@@ -187,10 +187,23 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
 
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Embeddings generation failed: {str(e)}"
+            if e.response is not None:
+                try:
+                    error_body = e.response.json()
+                    error_detail += f" | Response: {error_body}"
+                except:
+                    error_detail += f" | Response text: {e.response.text[:500]}"
+            print(f"[OPENAI EMBEDDING] ERROR: {error_detail}")
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, error_detail, str(e))
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
         except requests.exceptions.RequestException as e:
+            error_detail = f"Embeddings generation failed: {str(e)}"
+            print(f"[OPENAI EMBEDDING] ERROR: {error_detail}")
             diag = self._create_diagnostic(
                 provider_pb2.Diagnostic.ERROR,
-                f"Embeddings generation failed: {str(e)}",
+                error_detail,
                 str(e)
             )
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
