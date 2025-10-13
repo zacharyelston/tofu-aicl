@@ -1,0 +1,245 @@
+# ========================================
+# RAG DEMO - LIVE PRESENTATION
+# ========================================
+# This experiment demonstrates:
+# 1. Loading source documents into RAG
+# 2. Embedding and indexing
+# 3. Validation of RAG retrieval
+# 4. 3 LLMs answering with RAG context
+# 5. 4th LLM judging answers with RAG context
+# ========================================
+
+terraform {
+  required_providers {
+    loader = {
+      source  = "aicl/file_loader"
+      version = "~> 1.0"
+    }
+    splitter = {
+      source  = "aicl/text_splitter"
+      version = "~> 1.0"
+    }
+    openai = {
+      source = "aicl/openai"
+      version = "~> 1.0"
+    }
+    pinecone = {
+      source = "aicl/pinecone"
+      version = "~> 1.0"
+    }
+    openrouter = {
+      source = "aicl/openrouter"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# ========================================
+# STEP 1: LOAD SOURCE DOCUMENTS
+# ========================================
+# Load all markdown documentation from ./docs
+# This becomes our knowledge base for RAG
+
+resource "loader_files" "knowledge_base" {
+  path = "./docs"
+  glob = "**/*.md"
+  aiclResourceName = "docs_loaded"
+}
+
+# ========================================
+# STEP 2: CHUNK TEXT FOR EMBEDDINGS
+# ========================================
+# Split documents into 800-char chunks with 100-char overlap
+# Overlap ensures context isn't lost at boundaries
+
+resource "splitter_text" "doc_chunks" {
+  documents     = "${resource.loader_files.knowledge_base.attributes.documents}"
+  chunk_size    = 800
+  chunk_overlap = 100
+  aiclResourceName = "chunked_docs"
+}
+
+# ========================================
+# STEP 3: GENERATE EMBEDDINGS
+# ========================================
+# Convert text chunks to vector embeddings
+# Using OpenAI text-embedding-3-small (1536 dimensions)
+
+resource "embedding" "doc_vectors" {
+  texts = "${resource.splitter_text.doc_chunks.attributes.chunks}"
+  model = "text-embedding-3-small"
+  aiclResourceName = "embedded_docs"
+}
+
+# ========================================
+# STEP 4: INDEX IN VECTOR DATABASE
+# ========================================
+# Store embeddings in Pinecone for similarity search
+# Namespace: rag-demo-live
+
+resource "upsert" "vector_index" {
+  vectors   = "${resource.embedding.doc_vectors.attributes.embeddings}"
+  namespace = "rag-demo-live"
+  aiclResourceName = "indexed_vectors"
+}
+
+# ========================================
+# STEP 5: VALIDATION - TEST RETRIEVAL
+# ========================================
+# Validate RAG is working with a test question
+
+resource "embedding" "validation_query" {
+  text  = "What is AICL and what problem does it solve?"
+  model = "text-embedding-3-small"
+  aiclResourceName = "validation_vector"
+}
+
+resource "query" "validation_results" {
+  vector    = "${resource.embedding.validation_query.attributes.embedding}"
+  top_k     = 3
+  namespace = "rag-demo-live"
+  aiclResourceName = "validation_retrieval"
+}
+
+# ========================================
+# STEP 6: MAIN EXPERIMENT QUESTION
+# ========================================
+# The actual question for our 3-LLM comparison
+
+resource "embedding" "main_question" {
+  text  = "What are the main architectural components of the AICL engine and how do they work together?"
+  model = "text-embedding-3-small"
+  aiclResourceName = "main_question_vector"
+}
+
+resource "query" "rag_context" {
+  vector    = "${resource.embedding.main_question.attributes.embedding}"
+  top_k     = 5
+  namespace = "rag-demo-live"
+  aiclResourceName = "retrieved_context"
+}
+
+# ========================================
+# STEP 7: ANSWER GENERATION (3 LLMs)
+# ========================================
+# Get answers from 3 different models using RAG context
+
+# Answer from GPT-4o Mini
+resource "chat" "answer_gpt4o_mini" {
+  model = "openai/gpt-4o-mini"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful AI assistant that answers technical questions based on provided documentation. Use ONLY the provided context to answer. If the context doesn't contain the answer, say so. Be concise but complete."
+    },
+    {
+      role = "user"
+      content = "Context from documentation:\n${resource.query.rag_context.attributes.results}\n\nQuestion: What are the main architectural components of the AICL engine and how do they work together?\n\nProvide a clear, structured answer based only on the context above."
+    }
+  ]
+  temperature = 0.3
+  max_tokens  = 500
+  aiclResourceName = "gpt4o_mini_answer"
+}
+
+# Answer from Claude 3.5 Sonnet
+resource "chat" "answer_claude" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful AI assistant that answers technical questions based on provided documentation. Use ONLY the provided context to answer. If the context doesn't contain the answer, say so. Be concise but complete."
+    },
+    {
+      role = "user"
+      content = "Context from documentation:\n${resource.query.rag_context.attributes.results}\n\nQuestion: What are the main architectural components of the AICL engine and how do they work together?\n\nProvide a clear, structured answer based only on the context above."
+    }
+  ]
+  temperature = 0.3
+  max_tokens  = 500
+  aiclResourceName = "claude_answer"
+}
+
+# Answer from Gemini Pro 1.5
+resource "chat" "answer_gemini" {
+  model = "google/gemini-pro-1.5"
+  messages = [
+    {
+      role = "system"
+      content = "You are a helpful AI assistant that answers technical questions based on provided documentation. Use ONLY the provided context to answer. If the context doesn't contain the answer, say so. Be concise but complete."
+    },
+    {
+      role = "user"
+      content = "Context from documentation:\n${resource.query.rag_context.attributes.results}\n\nQuestion: What are the main architectural components of the AICL engine and how do they work together?\n\nProvide a clear, structured answer based only on the context above."
+    }
+  ]
+  temperature = 0.3
+  max_tokens  = 500
+  aiclResourceName = "gemini_answer"
+}
+
+# ========================================
+# STEP 8: JUDGE EVALUATION (4th LLM with RAG)
+# ========================================
+# GPT-4o evaluates all 3 answers WITH access to RAG context
+
+resource "chat" "judge_evaluation" {
+  model = "openai/gpt-4o"
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert AI evaluator assessing the quality of answers to technical questions.\n\nEVALUATION CRITERIA:\n- Accuracy (40 points): Does the answer correctly use information from the context?\n- Completeness (25 points): Does it address all parts of the question?\n- Clarity (20 points): Is the explanation clear and well-structured?\n- Conciseness (15 points): Is it appropriately detailed without verbosity?\n\nSCORING: 0-100 points total\n\nOUTPUT FORMAT (strict JSON):\n{\n  \"evaluations\": [\n    {\n      \"model\": \"model_name\",\n      \"score\": 85,\n      \"grade\": \"GOOD\",\n      \"strengths\": [\"strength 1\"],\n      \"weaknesses\": [\"weakness 1\"],\n      \"reasoning\": \"Detailed explanation\"\n    }\n  ],\n  \"winner\": \"model_name\",\n  \"winner_reasoning\": \"Why this answer was best\",\n  \"context_coverage\": \"How well answers used the context\"\n}"
+    },
+    {
+      role = "user"
+      content = "SOURCE CONTEXT (from RAG retrieval):\n${resource.query.rag_context.attributes.results}\n\nQUESTION:\nWhat are the main architectural components of the AICL engine and how do they work together?\n\nANSWER A (GPT-4o Mini):\n${resource.chat.answer_gpt4o_mini.attributes.content}\n\nANSWER B (Claude 3.5 Sonnet):\n${resource.chat.answer_claude.attributes.content}\n\nANSWER C (Gemini Pro 1.5):\n${resource.chat.answer_gemini.attributes.content}\n\nEvaluate all three answers based on the criteria. Remember you have access to the source context, so check if answers are accurate and complete. Return strict JSON only."
+    }
+  ]
+  temperature = 0.1
+  max_tokens  = 800
+  aiclResourceName = "judge_verdict"
+}
+
+# ========================================
+# OUTPUTS FOR REVIEW
+# ========================================
+
+output "validation_results" {
+  value = "${resource.query.validation_results.attributes.results}"
+  description = "Validation: Retrieved chunks to confirm RAG is working"
+}
+
+output "retrieved_context" {
+  value = "${resource.query.rag_context.attributes.results}"
+  description = "Main question: Retrieved context from RAG"
+}
+
+output "answer_gpt4o_mini" {
+  value = "${resource.chat.answer_gpt4o_mini.attributes.content}"
+  description = "Answer from GPT-4o Mini"
+}
+
+output "answer_claude" {
+  value = "${resource.chat.answer_claude.attributes.content}"
+  description = "Answer from Claude 3.5 Sonnet"
+}
+
+output "answer_gemini" {
+  value = "${resource.chat.answer_gemini.attributes.content}"
+  description = "Answer from Gemini Pro 1.5"
+}
+
+output "judge_verdict" {
+  value = "${resource.chat.judge_evaluation.attributes.content}"
+  description = "Judge evaluation (GPT-4o with RAG context)"
+}
+
+output "total_tokens" {
+  value = {
+    gpt4o_mini = "${resource.chat.answer_gpt4o_mini.attributes.usage.total_tokens}"
+    claude     = "${resource.chat.answer_claude.attributes.usage.total_tokens}"
+    gemini     = "${resource.chat.answer_gemini.attributes.usage.total_tokens}"
+    judge      = "${resource.chat.judge_evaluation.attributes.usage.total_tokens}"
+  }
+  description = "Token usage for all models"
+}
