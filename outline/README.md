@@ -31,6 +31,7 @@ tofu-aicl is a declarative AI infrastructure framework ("Terraform for AI") that
 ### Implementation
 - **[11-implementation-guide.md](11-implementation-guide.md)** - Step-by-step implementation guide, testing, deployment
 - **[12-directory-structure.md](12-directory-structure.md)** - Complete file/folder layout, configuration files
+- **[13-self-modification-experiments.md](13-self-modification-experiments.md)** - Self-building capability, code generation experiments
 
 ## Reading Order
 
@@ -52,6 +53,7 @@ tofu-aicl is a declarative AI infrastructure framework ("Terraform for AI") that
 4. Configuration Format (05)
 5. API Specifications (06)
 6. Directory Structure (12)
+7. Self-Modification (13) - **Advanced: AI building AI**
 
 ### For DevOps/Platform Engineers
 1. Deployment Model (10)
