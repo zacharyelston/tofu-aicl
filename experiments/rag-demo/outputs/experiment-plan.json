@@ -1,0 +1,70 @@
+{
+  "experiment": "RAG Demo - Live Presentation",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "Load Documents",
+      "description": "Load ./docs/**/*.md files"
+    },
+    {
+      "stage": 2,
+      "name": "Chunk Text",
+      "description": "Split into 800-char chunks with 100-char overlap"
+    },
+    {
+      "stage": 3,
+      "name": "Generate Embeddings",
+      "description": "OpenAI text-embedding-3-small (1536 dims)"
+    },
+    {
+      "stage": 4,
+      "name": "Index Vectors",
+      "description": "Store in Pinecone namespace: rag-demo-live"
+    },
+    {
+      "stage": 5,
+      "name": "Validate Retrieval",
+      "description": "Test query to confirm RAG is working"
+    },
+    {
+      "stage": 6,
+      "name": "Main Question",
+      "description": "What are the main architectural components of AICL?"
+    },
+    {
+      "stage": 7,
+      "name": "Retrieve Context",
+      "description": "Get top 5 relevant chunks from Pinecone"
+    },
+    {
+      "stage": 8,
+      "name": "Answer (GPT-4o Mini)",
+      "description": "Generate answer using RAG context"
+    },
+    {
+      "stage": 9,
+      "name": "Answer (Claude 3.5 Sonnet)",
+      "description": "Generate answer using RAG context"
+    },
+    {
+      "stage": 10,
+      "name": "Answer (Gemini Pro 1.5)",
+      "description": "Generate answer using RAG context"
+    },
+    {
+      "stage": 11,
+      "name": "Judge Evaluation",
+      "description": "GPT-4o evaluates all 3 answers WITH RAG context"
+    }
+  ],
+  "models": {
+    "embedding": "text-embedding-3-small",
+    "vector_db": "Pinecone",
+    "answer_models": [
+      "GPT-4o Mini",
+      "Claude 3.5 Sonnet",
+      "Gemini Pro 1.5"
+    ],
+    "judge_model": "GPT-4o"
+  }
+}

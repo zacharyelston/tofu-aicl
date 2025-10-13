@@ -1,0 +1,41 @@
+{
+  "experiment_id": "rag_demo_live_20251013_141551",
+  "timestamp": "2025-10-13T14:15:51.911592",
+  "status": "completed",
+  "resources_created": 10,
+  "resources": {
+    "knowledge_base": "loader_files-knowledge_base",
+    "validation_query": "embedding-validation_query",
+    "main_question": "embedding-main_question",
+    "doc_chunks": "splitter_text-doc_chunks",
+    "validation_results": "query-validation_results",
+    "rag_context": "query-rag_context",
+    "doc_vectors": "embedding-doc_vectors",
+    "answer_gpt4o_mini": "chat-answer_gpt4o_mini",
+    "answer_claude": "chat-answer_claude",
+    "judge_evaluation": "chat-judge_evaluation"
+  },
+  "pipeline_stages": {
+    "1_load_documents": "loader_files-knowledge_base",
+    "2_chunk_text": "splitter_text-doc_chunks",
+    "3_generate_embeddings": "embedding-doc_vectors",
+    "4_index_vectors": "",
+    "5_validate_retrieval": "query-validation_results",
+    "6_main_retrieval": "query-rag_context",
+    "7_answer_gpt4o_mini": "chat-answer_gpt4o_mini",
+    "8_answer_claude": "chat-answer_claude",
+    "9_answer_gemini": "",
+    "10_judge_evaluation": "chat-judge_evaluation"
+  },
+  "token_usage": {
+    "validation": 0,
+    "main_question": 0,
+    "doc_vectors": 0,
+    "gpt4o_mini": 0,
+    "claude": 0,
+    "gemini": 0,
+    "judge": 0
+  },
+  "opentelemetry_traces": 106,
+  "message": "All RAG pipeline stages completed successfully. Outputs available in execution log."
+}
