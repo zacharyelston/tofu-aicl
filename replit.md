@@ -80,10 +80,11 @@ The project integrates with several external services and APIs:
 
 **Built Complete Storage Abstraction for SQL Experiments:**
 - ✅ **Abstract Interface** (v2/storage/base.py): ExperimentStorage with save/retrieve/analyze methods
-- ✅ **In-Memory Storage** (v2/storage/memory.py): Zero-setup, fast, session-only (free CLI default)
-- ✅ **SQLite Storage** (v2/storage/sqlite_adapter.py): Persistent local database with schema versioning
+- ✅ **In-Memory Storage** (v2/storage/memory.py): Zero-setup, fast, session-only (223 lines)
+- ✅ **SQLite Storage** (v2/storage/sqlite_adapter.py): Persistent local database (292 lines)
+- ✅ **PostgreSQL Storage** (v2/storage/postgres_adapter.py): Production/team database (370 lines)
 - ✅ **SQL Configuration** (v2/storage/sql-config.yaml): All tables, indexes, and queries centralized
-- ✅ **SQL Schema File** (v2/schemas/sqlite_schema.sql): Ready-to-use database initialization
+- ✅ **Schema Files**: sqlite_schema.sql and postgres_schema.sql ready-to-use
 
 **Database Schema (4 tables):**
 - `experiments`: Metadata (id, timestamp, config_file, description)
@@ -95,13 +96,19 @@ The project integrates with several external services and APIs:
 - ✅ Save/retrieve experiments with full metadata
 - ✅ Cost analysis (total, avg, min, max)
 - ✅ Model performance comparison across experiments
-- ✅ Query best configurations by quality/cost criteria
+- ✅ Query best configurations by quality/cost/limit criteria
 - ✅ Data export to JSON
 - ✅ Schema version tracking and validation
-- ✅ Example usage demonstrated (v2/storage/example_usage.py)
+- ✅ All storage backends tested and working (example_usage.py, test_postgres.py)
 
-**Dual-Tier Architecture:**
-- **Free CLI**: In-memory (default) or SQLite (user-configured)
-- **Paid Web** (future): PostgreSQL with multi-user support
+**Multi-Tier Storage Architecture:**
+- **Free CLI**: In-memory (default) or SQLite (user-configured persistence)
+- **Production/Team**: PostgreSQL (Replit managed or external database)
 
-**Architect Approved:** Storage layer meets functional objectives, ready for SQL-based experiments.
+**PostgreSQL Features:**
+- Supports DATABASE_URL (Replit managed) and connection params (external)
+- SQL syntax conversion (? → %s placeholders)
+- Connection pooling with rollback on error
+- Schema versioning and migration support
+
+**Architect Approved:** All storage backends correctly implement interface contract, ready for production use.
