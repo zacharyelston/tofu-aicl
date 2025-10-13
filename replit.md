@@ -6,6 +6,23 @@ tofu-aicl is a declarative, container-based framework for defining and provision
 ## User Preferences
 I prefer simple language and clear explanations. I want iterative development with frequent, small updates. Ask for confirmation before making major architectural changes or introducing new external dependencies. I prefer detailed explanations for complex features. Do not make changes to files outside the explicitly defined project scope.
 
+## Recent Updates (October 13, 2025)
+**✅ Multiple Output Destinations with CLI Switches**
+- Added flexible output configuration via command-line flags
+- Supports JSON state files, PostgreSQL DocDB, and stdout independently
+- CLI flags: `--output-file`, `--output-docdb`, `--output-stdout`, `--quiet`, `--tags`, `--experiment-id`
+- See `docs/CLI_USAGE.md` for complete usage guide
+
+**✅ RAG Pipeline Dimension Mismatch Fixed**
+- Resolved Pinecone 1024-dim vs OpenAI 1536-dim embedding issue
+- Added `dimensions` parameter support to all embedding resources
+- Fixed HCL float-to-int type conversion for OpenAI API compatibility
+
+**✅ Transparent Error Handling**
+- Enhanced error logging with full API response details
+- System now "fails loudly" instead of masking errors with fallbacks
+- Improved debugging with detailed Pinecone and OpenAI error messages
+
 ## System Architecture
 The core architecture revolves around declarative AI infrastructure defined in HCL. It uses a provider architecture where each AI component (LLMs, Vector DBs, file loaders, etc.) runs as a modular gRPC service, implemented as Python subprocesses.
 

@@ -40,16 +40,50 @@ class ProviderContainer:
             self.process_or_container.stop()
 
 class AICLEngine:
-    def __init__(self, config_path: str):
+    def __init__(
+        self, 
+        config_path: str,
+        output_file: bool = True,
+        output_docdb: bool = False,
+        output_stdout: bool = True,
+        quiet: bool = False,
+        parallel: bool = False,
+        experiment_id: Optional[str] = None,
+        tags: Optional[list] = None
+    ):
         self.config_path = Path(config_path)
+        
+        # Output configuration
+        self.output_file = output_file
+        self.output_docdb = output_docdb
+        self.output_stdout = output_stdout
+        self.quiet = quiet
+        self.parallel = parallel
+        self.custom_experiment_id = experiment_id
+        self.tags = tags or []
+        
+        # Initialize DocDB if enabled
+        self.docdb = None
+        if self.output_docdb:
+            try:
+                from experiments.storage.experiment_docdb import ExperimentDocDB
+                self.docdb = ExperimentDocDB()
+                if not self.quiet:
+                    print("✓ PostgreSQL DocDB output enabled")
+            except Exception as e:
+                print(f"Warning: Could not initialize DocDB: {e}")
+                self.output_docdb = False
+        
         self.docker_client = None
         if not USE_SUBPROCESS_MODE:
             try:
                 import docker
                 self.docker_client = docker.from_env()
             except Exception as e:
-                print(f"Warning: Docker not available: {e}")
-                print("Falling back to subprocess mode")
+                if not self.quiet:
+                    print(f"Warning: Docker not available: {e}")
+                    print("Falling back to subprocess mode")
+        
         self.provider_containers: Dict[str, ProviderContainer] = {}
         self.state_manager = StateManager()
         self.parsed_config = self._parse_config()
@@ -280,6 +314,78 @@ class AICLEngine:
                 raise
 
 
+    def _save_to_docdb(self, experiment_id: str):
+        """Save experiment results to PostgreSQL DocDB"""
+        if not self.state_manager.current_state:
+            return
+        
+        try:
+            from datetime import datetime
+            
+            # Extract outputs from state
+            outputs = self.state_manager.current_state.outputs
+            
+            # Build metadata
+            metadata = {
+                'tags': self.tags,
+                'config_file': str(self.config_path),
+                'resource_count': len(self.state_manager.current_state.resources)
+            }
+            
+            # Extract resources data
+            resources_data = {}
+            for res_id, resource in self.state_manager.current_state.resources.items():
+                resources_data[res_id] = {
+                    'type': resource.type,
+                    'status': resource.status,
+                    'attributes': resource.attributes
+                }
+            
+            # Combine outputs and resources
+            full_outputs = {
+                'outputs': outputs,
+                'resources': resources_data
+            }
+            
+            # Save to DocDB
+            doc_id = self.docdb.save_experiment(
+                experiment_id=self.custom_experiment_id or experiment_id,
+                outputs=full_outputs,
+                config_file=str(self.config_path),
+                metadata=metadata,
+                run_timestamp=datetime.now()
+            )
+            
+            if not self.quiet:
+                print(f"✓ Experiment saved to DocDB (ID: {doc_id})")
+                print(f"  Query with: python experiments/query_results.py --experiment-id {self.custom_experiment_id or experiment_id}")
+        
+        except Exception as e:
+            print(f"Warning: Failed to save to DocDB: {e}")
+    
+    def _print_outputs(self):
+        """Print experiment outputs to stdout"""
+        if not self.state_manager.current_state:
+            return
+        
+        outputs = self.state_manager.current_state.outputs
+        if not outputs:
+            return
+        
+        print("\n" + "="*80)
+        print("EXPERIMENT OUTPUTS")
+        print("="*80)
+        
+        for name, value in outputs.items():
+            print(f"\n{name}:")
+            if isinstance(value, (dict, list)):
+                import json
+                print(json.dumps(value, indent=2))
+            else:
+                print(f"  {value}")
+        
+        print("\n" + "="*80)
+
     def apply(self):
         with self.tracer.start_as_current_span("apply") as span:
             experiment_id = self.parsed_config.get('variable', [{}])[0].get('experiment_id', {}).get('default', 'default-exp')
@@ -299,8 +405,20 @@ class AICLEngine:
                     executor.execute_node(node_id, resource_map)
                     self.resource_counter.add(1, {"operation": "create", "resource": node_id})
 
-            self.state_manager.save()
-            print("Apply complete.")
+            # Save state to file if enabled
+            if self.output_file:
+                self.state_manager.save()
+            
+            # Save to DocDB if enabled
+            if self.output_docdb and self.docdb:
+                self._save_to_docdb(experiment_id)
+            
+            # Print outputs if enabled
+            if self.output_stdout and not self.quiet:
+                self._print_outputs()
+            
+            if not self.quiet:
+                print("Apply complete.")
 
     def destroy(self):
         with self.tracer.start_as_current_span("destroy") as span:
