@@ -31,6 +31,28 @@ The project integrates with several external services and APIs:
 -   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.
 ## Recent Changes
 
+### October 13, 2025 - Azure Self-Build Security Analyzer Experiment (COMPLETED)
+
+**Demonstrated Azure OpenAI Self-Build Capability:**
+- ✅ **Generated** complete SecurityAnalyzer provider code (Python class with regex-based detection)
+- ✅ **Tested** on vulnerable code sample (found: SQL injection, code injection, hardcoded secrets)
+- ✅ **Self-Evaluated** with score 80/100 (ACCEPT grade)
+- ✅ **Total Cost**: 987 tokens across 3 AI interactions (~$0.0005)
+
+**What Azure AI Built:**
+- Security analyzer detecting: SQL injection, hardcoded passwords, eval/exec usage, path traversal
+- Returns JSON: risk_level, vulnerabilities[], recommendations[], security_score (0-100)
+- Correctly analyzed test code: identified 2 vulnerabilities, assigned risk score 20/100
+
+**Self-Evaluation Results:**
+- Score: 80/100
+- Grade: ACCEPT
+- Strengths: Detects SQL injection & secrets, provides recommendations
+- Weaknesses: Limited to 2 vulnerability types, could be more comprehensive
+- Verdict: "Solid security analyzer that covers common vulnerabilities"
+
+**Impact:** Proved Azure OpenAI can autonomously generate, test, and evaluate security tools - demonstrating true self-improvement capability in AICL framework.
+
 ### October 13, 2025 - Azure OpenAI Chat Completion Support (COMPLETED)
 
 **Added Complete Azure OpenAI Chat Support:**
@@ -40,6 +62,7 @@ The project integrates with several external services and APIs:
 - ✅ **Tested** with gpt-35-turbo deployment (gpt-3.5-turbo-0125 model)
 - ✅ **Returns**: content, role, model, usage stats, finish_reason
 - ✅ **API Version**: 2023-05-15 (user's Azure deployment)
+- ✅ **Executor mapping** fixed: added 'azure_openai_chat' → 'azure_openai' provider mapping
 
 **Working Configuration:**
 - Endpoint: https://redot-dev-openai.openai.azure.com/

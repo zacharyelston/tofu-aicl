@@ -23,6 +23,7 @@ class Executor:
             'openai_embedding': 'openai',   # OpenAI embeddings
             'openai_chat': 'openai',        # OpenAI chat
             'azure_openai_embedding': 'azure_openai',
+            'azure_openai_chat': 'azure_openai',  # Azure OpenAI chat
             'naga_embedding': 'naga',       # Naga embeddings
             'naga_chat': 'naga',            # Naga chat
             'openrouter_chat': 'openrouter', # OpenRouter chat
