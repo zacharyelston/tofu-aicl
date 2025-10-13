@@ -94,28 +94,52 @@ python run.py experiments/self-build/add-echo-provider.aicl
 
 ---
 
+## Available Challenges
+
+### ⚠️ Echo Provider (Level 1 - Deprecated)
+**File**: `add-echo-provider.aicl`  
+**Complexity**: Low (150 lines)  
+**Status**: Too simple, use as reference only
+
+### 🔥 Anthropic Provider (Level 5 - Production)
+**File**: `add-anthropic-provider.aicl`  
+**Complexity**: High (~800 lines)  
+**Features**: 3 models, streaming, circuit breaker, cost tracking  
+**See**: `ANTHROPIC_CHALLENGE.md`
+
+### 🚀 Replit Provider (Level 6 - Ultimate)
+**File**: `add-replit-provider.aicl`  
+**Complexity**: Very High (~1000+ lines)  
+**Features**: 3 resource types, GraphQL, deployments, databases, agents  
+**See**: `REPLIT_CHALLENGE.md`
+
+---
+
 ## Quick Start
 
-### 1. Add Echo Provider (Simplest Example)
+### 1. Run Replit Provider Challenge (Recommended)
 
 ```bash
-# Run the self-build experiment
-python run.py experiments/self-build/add-echo-provider.aicl
+# Run the ultimate challenge
+python run.py experiments/self-build/add-replit-provider.aicl
 
 # Review the output
-# - Check quality_evaluation score
-# - Review generated code
-# - If score >= 80, manually apply files
+# - Check quality_evaluation score (target: 85+)
+# - Review all 7 generated files
+# - If score >= 85, apply the provider
 
 # Apply the changes
-mkdir -p providers/echo
-# Copy generated code to files (shown in output)
+mkdir -p providers/replit
+# Copy generated files (spec, server.py, api_client.py, config.yaml, tests, etc.)
+
+# Install dependencies
+pip install aiohttp gql
 
 # Test the new provider
-pytest providers/echo/test_echo.py -v
+pytest providers/replit/ -v
 
-# The provider auto-discovers on next run
-python run.py test-echo.aicl
+# Try the example
+python run.py examples/replit-deployment-example.aicl
 ```
 
 ---
