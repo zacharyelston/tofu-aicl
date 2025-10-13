@@ -108,40 +108,45 @@ resource "chat" "greeting" {
 
 See `docs/CLI_USAGE.md` for complete documentation.
 
-### 3. Run Matrix Experiments
+### 3. Run the RAG Demo
 
-Test multiple models and configurations:
+See the full RAG pipeline in action:
 
 ```bash
-# Run code analysis comparison
-python run_code_matrix.py
+# Run complete RAG demo with multiple LLMs
+python run.py experiments/rag-demo/rag-demo-live.aicl
 
-# View comprehensive performance report
-python final_performance_report.py
+# With PostgreSQL output and tags
+python run.py experiments/rag-demo/rag-demo-live.aicl \
+  --output-docdb \
+  --experiment-id rag-demo-$(date +%Y%m%d) \
+  --tags rag,demo,pinecone
 ```
 
-## Matrix Experiment System
+See `experiments/rag-demo/README.md` for details.
 
-Run multiple AICL configurations with different variables and analyze performance:
+## Experiment System
+
+Create and run declarative AI experiments using HCL configuration:
 
 **Features:**
-- Template-based experiments with `{{ variable }}` substitution (lowercase with spaces)
-- Comprehensive metrics: tokens, timing, costs, throughput
-- Model-specific pricing (Claude, GPT-4, GPT-4o, etc.)
-- Centralized state storage and analysis tools
+- Declarative resource definitions
+- Automatic dependency resolution
+- State management and tracking
+- Multiple output destinations (file, DocDB, stdout)
+- OpenTelemetry observability
 
-**Example Matrix Template:**
+**Example Configuration:**
 ```hcl
-resource "chat" "analysis" {
-  provider = "aicl/openrouter"
-  config = {
-    model = "{{ model }}"
-    messages = [
-      {
-        role = "user"
-        content = "{{ question }}"
-      }
-    ]
+resource "openai_chat" "analysis" {
+  model = "gpt-4"
+  temperature = 0.7
+  
+  messages = [
+    {
+      role = "user"
+      content = "Analyze this code for security issues"
+    }
   }
 }
 ```
