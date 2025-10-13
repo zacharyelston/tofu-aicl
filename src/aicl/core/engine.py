@@ -152,9 +152,13 @@ class AICLEngine:
                         # Wait for the provider to start
                         time.sleep(2)
 
-                        # Connect to the provider
+                        # Connect to the provider with increased message size limits
                         print(f"Connecting to provider on 127.0.0.1:{port}")
-                        channel = grpc.insecure_channel(f'127.0.0.1:{port}')
+                        options = [
+                            ('grpc.max_receive_message_length', 50 * 1024 * 1024),  # 50MB
+                            ('grpc.max_send_message_length', 50 * 1024 * 1024),     # 50MB
+                        ]
+                        channel = grpc.insecure_channel(f'127.0.0.1:{port}', options=options)
                         stub = provider_pb2_grpc.ProviderStub(channel)
 
                         # Retry connection with exponential backoff

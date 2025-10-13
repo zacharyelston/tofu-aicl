@@ -16,9 +16,10 @@ class Executor:
 
         # Map resource types to provider names
         self.resource_to_provider = {
-            'file_loader': 'file_loader',
-            'loader_files': 'file_loader',  # Alias for file_loader
-            'text_splitter': 'text_splitter',
+            'file_loader': 'loader',  # Use terraform alias name
+            'loader_files': 'loader',  # Alias for file_loader
+            'text_splitter': 'splitter',  # Use terraform alias name
+            'splitter_text': 'splitter',  # Alias for text_splitter
             'embedding': 'openai',
             'openai_embedding': 'openai',   # OpenAI embeddings
             'openai_chat': 'openai',        # OpenAI chat
@@ -30,6 +31,7 @@ class Executor:
             'chat': 'openrouter',            # Default chat to OpenRouter
             'upsert': 'pinecone',
             'query': 'pinecone',
+            'pinecone_upsert': 'pinecone',  # Alias for upsert
             'ragie_upload': 'ragie',        # Ragie document upload
             'ragie_document': 'ragie',      # Alias for ragie_upload
             'ragie_retrieval': 'ragie',     # Ragie retrieval/query

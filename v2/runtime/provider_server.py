@@ -50,8 +50,15 @@ class ProviderServer:
         self.max_workers = max_workers
         self.graceful_shutdown_timeout = graceful_shutdown_timeout
         
-        # Create gRPC server
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
+        # Create gRPC server with increased message size limits for large RAG contexts
+        options = [
+            ('grpc.max_receive_message_length', 50 * 1024 * 1024),  # 50MB
+            ('grpc.max_send_message_length', 50 * 1024 * 1024),     # 50MB
+        ]
+        self.server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=max_workers),
+            options=options
+        )
         self._services_registered = False
     
     def register_service(self, servicer: provider_pb2_grpc.ProviderServicer):
