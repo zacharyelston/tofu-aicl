@@ -1,7 +1,15 @@
-# tofu-aicl - Declarative AI Infrastructure
+# TerraMISO - Multi-In Single-Out AI Framework
 
 ## Overview
-tofu-aicl is a declarative, container-based framework for defining and provisioning AI infrastructure (e.g., RAG pipelines, agents) using HashiCorp Configuration Language (HCL) syntax. It aims to be the "Terraform for AI workflows," enabling ephemeral, just-in-time AI infrastructure and supporting test-driven AI development through algorithmic experimentation. The project's vision is to streamline AI workflow deployment and management, allowing for self-modification and objective comparison of AI provider quality and cost.
+**TerraMISO** extends Terraform and OpenTofu with AI-powered optimization using the **MISO pattern** (Multi-In Single-Out). Multiple LLM providers analyze problems, compete with solutions, and the best answer is selected through LLM-as-Judge evaluation.
+
+**MISO = Multi-In Single-Out**: A reusable competitive optimization pattern where multiple AI providers compete and the optimal solution wins. This framework enables:
+- Terraform configuration optimization (Azure, AWS, GCP)
+- RAG pipeline evaluation with provider competition
+- Self-healing infrastructure
+- Cost optimization through multi-provider analysis
+
+The project extends (not competes with) Terraform/OpenTofu, providing a declarative AI infrastructure layer using HCL/AICL syntax. It's designed as a self-constructing tool system that other systems can adopt by including our templates and methods.
 
 ## User Preferences
 I prefer simple language and clear explanations. I want iterative development with frequent, small updates. Ask for confirmation before making major architectural changes or introducing new external dependencies. I prefer detailed explanations for complex features. Do not make changes to files outside the explicitly defined project scope.

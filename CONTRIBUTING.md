@@ -1,6 +1,8 @@
-# Contributing to tofu-aicl
+# Contributing to TerraMISO
 
-Thank you for your interest in contributing to tofu-aicl! This guide will help you get started.
+Thank you for your interest in contributing to TerraMISO! This guide will help you get started.
+
+**TerraMISO** = Multi-In Single-Out AI framework extending Terraform/OpenTofu
 
 ## 🚀 Quick Start for Contributors
 
@@ -8,8 +10,8 @@ Thank you for your interest in contributing to tofu-aicl! This guide will help y
 
 ```bash
 # Clone the repository
-git clone https://github.com/zacharyelston/tofu-aicl.git
-cd tofu-aicl
+git clone https://github.com/zacharyelston/terramiso.git
+cd terramiso
 
 # Install dependencies
 pip install -e .
@@ -147,4 +149,4 @@ Open a GitHub issue or discussion.
 
 ## 🙏 Thank You
 
-Every contribution makes tofu-aicl better!
+Every contribution makes TerraMISO better!

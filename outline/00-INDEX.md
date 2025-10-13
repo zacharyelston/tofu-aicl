@@ -1,6 +1,8 @@
-# tofu-aicl Specification Index
+# TerraMISO Specification Index
 
-**Complete technical documentation for rebuilding tofu-aicl in any language.**
+**Complete technical documentation for rebuilding TerraMISO in any language.**
+
+**TerraMISO** = Terraform/OpenTofu extension with **MISO** pattern (Multi-In Single-Out)
 
 ---
 

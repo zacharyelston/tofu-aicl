@@ -1,6 +1,12 @@
-# Changelog
+# Changelog - TerraMISO
 
-All notable changes to tofu-aicl will be documented in this file.
+All notable changes to TerraMISO (formerly tofu-aicl) will be documented in this file.
+
+**Rebranding Note** (October 13, 2025): Project renamed from tofu-aicl to **TerraMISO**
+- **TerraMISO** = Terraform/OpenTofu extension with **MISO** pattern (Multi-In Single-Out)
+- **MISO** = Multiple AI providers compete → Best solution selected → Single optimal output
+- Extends (not competes with) Terraform/OpenTofu
+- Self-constructing tool system that other systems can adopt
 
 ## [0.2.0] - 2025-10-13
 

@@ -1,10 +1,12 @@
-# tofu-aicl Technical Specifications
+# TerraMISO Technical Specifications
 
-This directory contains complete technical specifications for rebuilding the tofu-aicl framework in any programming language.
+This directory contains complete technical specifications for rebuilding the TerraMISO framework in any programming language.
 
 ## Overview
 
-tofu-aicl is a declarative AI infrastructure framework ("Terraform for AI") that enables ephemeral, just-in-time provisioning of AI workflows through Infrastructure-as-Code using HCL syntax.
+**TerraMISO** extends Terraform/OpenTofu with AI-powered optimization using the **MISO pattern** (Multi-In Single-Out). It's a declarative AI infrastructure framework that enables ephemeral, just-in-time provisioning of AI workflows through Infrastructure-as-Code using HCL/AICL syntax.
+
+**MISO = Multi-In Single-Out**: Multiple LLM providers compete → Best solution selected → Single optimal output
 
 ## Specification Documents
 

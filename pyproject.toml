@@ -1,7 +1,7 @@
 [project]
-name = "tofu-aicl"
+name = "terramiso"
 version = "0.2.0"
-description = "A declarative framework for ephemeral AI infrastructure."
+description = "Multi-In Single-Out AI framework extending Terraform/OpenTofu with intelligent optimization."
 dependencies = [
     "python-hcl2>=4.0.0",
     "docker>=5.0.0",
