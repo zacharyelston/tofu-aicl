@@ -35,6 +35,10 @@ pytest --cov=src/aicl --cov-report=html
 ### Integration Tests (`tests/integration/`)
 - **test_engine.py**: End-to-end engine workflows
 
+### Feature Tests
+- **test_cli.py**: CLI argument parsing and output configuration
+- **test_experiment_docdb.py**: PostgreSQL document database storage
+
 ## Test Coverage
 
 Current coverage focuses on core components:
@@ -42,6 +46,8 @@ Current coverage focuses on core components:
 - ✅ Evaluator: Variable and resource interpolation
 - ✅ Planner: Dependency graph and execution order
 - ✅ State Manager: Resource state persistence
+- ✅ CLI: Output destinations and flags (20 tests)
+- ✅ DocDB: Experiment storage and retrieval
 
 ## Adding Tests
 

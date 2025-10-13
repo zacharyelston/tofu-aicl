@@ -11,6 +11,7 @@ I prefer simple language and clear explanations. I want iterative development wi
 - Added flexible output configuration via command-line flags
 - Supports JSON state files, PostgreSQL DocDB, and stdout independently
 - CLI flags: `--output-file`, `--output-docdb`, `--output-stdout`, `--quiet`, `--tags`, `--experiment-id`
+- Comprehensive test suite: 20 CLI tests covering all output modes and configurations
 - See `docs/CLI_USAGE.md` for complete usage guide
 
 **✅ RAG Pipeline Dimension Mismatch Fixed**
@@ -22,6 +23,10 @@ I prefer simple language and clear explanations. I want iterative development wi
 - Enhanced error logging with full API response details
 - System now "fails loudly" instead of masking errors with fallbacks
 - Improved debugging with detailed Pinecone and OpenAI error messages
+
+**✅ Test Coverage**
+- Added `tests/test_cli.py` with 20 comprehensive tests (all passing)
+- Tests cover output flags, DocDB integration, quiet mode, and argparse
 
 ## System Architecture
 The core architecture revolves around declarative AI infrastructure defined in HCL. It uses a provider architecture where each AI component (LLMs, Vector DBs, file loaders, etc.) runs as a modular gRPC service, implemented as Python subprocesses.
