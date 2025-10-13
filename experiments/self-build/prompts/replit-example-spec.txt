@@ -1,0 +1,8 @@
+Create examples/replit-deployment-example.aicl showing:
+
+1. Create a PostgreSQL database
+2. Deploy an autoscale web app with database connection
+3. Create a Slack bot agent that queries the database
+4. Output the deployment URL and agent webhook
+
+Show realistic usage patterns using real AICL syntax.

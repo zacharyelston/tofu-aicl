@@ -1,0 +1,51 @@
+You are designing a Replit provider for the AICL framework.
+
+Based on Replit's 2025 capabilities, create a specification for THREE resource types:
+
+## 1. replit_deployment
+**Attributes**:
+- name (string): Deployment name
+- type (string): "autoscale" | "reserved_vm" | "scheduled" | "static"
+- environment (map): Environment variables
+- domain (string, optional): Custom domain
+
+**Outputs**:
+- url (string): Deployment URL
+- status (string): "active" | "building" | "failed"
+- deployment_id (string): Replit deployment ID
+
+## 2. replit_database
+**Attributes**:
+- name (string): Database name
+- type (string): "postgresql"
+- max_size_gb (int): Max storage (default: 1)
+
+**Outputs**:
+- connection_string (string): PostgreSQL connection string
+- database_id (string): Replit database ID
+- status (string): "ready" | "creating" | "failed"
+
+## 3. replit_agent
+**Attributes**:
+- name (string): Agent name
+- integration (string): "slack" | "telegram" | "email"
+- prompt (string): Agent instructions
+- schedule (string, optional): Cron schedule
+
+**Outputs**:
+- agent_id (string): Replit agent ID
+- webhook_url (string): Webhook endpoint
+- status (string): "active" | "paused" | "failed"
+
+## Platform Capabilities (2025)
+- Deployments API: Autoscale, Reserved VM, Scheduled, Static
+- Database API: PostgreSQL (serverless, managed, 10 GiB limit)
+- Extensions API: Filesystem, Shell, GraphQL
+- Agent API (Beta): Slack/Telegram bots, workflows, email
+
+Create a detailed technical specification including:
+1. Resource type schemas
+2. API endpoints to use
+3. Authentication flow (REPLIT_TOKEN)
+4. Error scenarios
+5. State management

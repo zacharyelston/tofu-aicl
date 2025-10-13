@@ -1,0 +1,191 @@
+# Self-Building Challenge: Add Anthropic Claude Provider (Refactored)
+# All prompts are in separate files for easier editing
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    openrouter = { source = "aicl/openrouter" }
+    pinecone = { source = "aicl/pinecone" }
+    loader = { source = "aicl/file_loader" }
+  }
+}
+
+variable "quality_threshold" {
+  type = number
+  default = 85
+}
+
+variable "code_model" {
+  type = string
+  default = "gpt-4o"
+}
+
+variable "judge_model" {
+  type = string
+  default = "anthropic/claude-3.5-sonnet"
+}
+
+# Load prompt templates
+resource "loader_files" "prompts" {
+  path = "./experiments/self-build/prompts"
+  glob = "*.txt"
+}
+
+# RAG: Provider patterns
+resource "embedding" "patterns_query" {
+  text = "How to implement advanced AICL provider with async streaming, multiple models, circuit breaker pattern, and production error handling"
+  model = "text-embedding-3-small"
+}
+
+resource "query" "provider_patterns" {
+  vector = "${resource.embedding.patterns_query.attributes.embedding}"
+  top_k = 10
+  namespace = "aicl-source"
+}
+
+# RAG: Streaming patterns
+resource "embedding" "streaming_query" {
+  text = "Python async streaming, server-sent events, async generators, streaming HTTP responses"
+  model = "text-embedding-3-small"
+}
+
+resource "query" "streaming_patterns" {
+  vector = "${resource.embedding.streaming_query.attributes.embedding}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+# Generate provider implementation
+resource "chat" "generate_provider" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 8000
+  
+  messages = [{
+    role = "user"
+    content = replace(
+      "${lookup(resource.loader_files.prompts.attributes.files, "anthropic-provider-spec.txt", "")}",
+      "{rag_context}",
+      "${resource.query.provider_patterns.attributes.results}"
+    )
+  }]
+}
+
+# Generate config
+resource "chat" "generate_config" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1500
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "anthropic-config-spec.txt", "")}"
+  }]
+}
+
+# Generate streaming handler
+resource "chat" "generate_streaming_handler" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 4000
+  
+  messages = [{
+    role = "user"
+    content = replace(
+      "${lookup(resource.loader_files.prompts.attributes.files, "anthropic-streaming-spec.txt", "")}",
+      "{rag_streaming_context}",
+      "${resource.query.streaming_patterns.attributes.results}"
+    )
+  }]
+}
+
+# Generate tests
+resource "chat" "generate_tests" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 5000
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "anthropic-tests-spec.txt", "")}"
+  }]
+}
+
+# Generate requirements
+resource "chat" "generate_requirements" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 500
+  
+  messages = [{
+    role = "user"
+    content = "List Python dependencies for Anthropic provider: anthropic SDK, async libs, testing. Format as requirements.txt with versions."
+  }]
+}
+
+# Judge quality
+resource "chat" "judge_quality" {
+  model = var.judge_model
+  temperature = 0.0
+  max_tokens = 3000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer. This is META - you (Claude) are judging code that implements YOU as a provider!"
+    },
+    {
+      role = "user"
+      content = replace(
+        replace(
+          replace(
+            replace(
+              "${lookup(resource.loader_files.prompts.attributes.files, "quality-judge-complex.txt", "")}",
+              "{specification}", "Anthropic provider with streaming"
+            ),
+            "{provider_code}", "${resource.chat.generate_provider.attributes.content}"
+          ),
+          "{config_code}", "${resource.chat.generate_config.attributes.content}"
+        ),
+        "{test_code}", "${resource.chat.generate_tests.attributes.content}"
+      )
+    }
+  ]
+}
+
+# Outputs
+output "generated_files" {
+  value = {
+    provider_code = resource.chat.generate_provider.attributes.content
+    provider_config = resource.chat.generate_config.attributes.content
+    streaming_handler = resource.chat.generate_streaming_handler.attributes.content
+    test_code = resource.chat.generate_tests.attributes.content
+    requirements = resource.chat.generate_requirements.attributes.content
+  }
+}
+
+output "quality_evaluation" {
+  value = resource.chat.judge_quality.attributes.content
+}
+
+output "recommendation" {
+  value = <<-EOT
+    === ANTHROPIC CLAUDE PROVIDER - RESULTS ===
+    
+    Files (${length(split("\n", resource.chat.generate_provider.attributes.content)) + length(split("\n", resource.chat.generate_streaming_handler.attributes.content)) + length(split("\n", resource.chat.generate_tests.attributes.content))} total lines):
+    1. providers/anthropic/server.py
+    2. providers/anthropic/streaming.py
+    3. providers/anthropic/config.yaml
+    4. providers/anthropic/test_*.py
+    5. requirements.txt
+    
+    Quality: [See quality_evaluation]
+    
+    IF score >= ${var.quality_threshold}:
+    - mkdir -p providers/anthropic
+    - Copy files, install deps
+    - pytest providers/anthropic/ -v
+    
+    === END ===
+  EOT
+}

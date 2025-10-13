@@ -1,0 +1,37 @@
+Generate providers/replit/api_client.py:
+
+1. **ReplitAPIClient class**:
+   - async def graphql_query(query, variables)
+   - async def create_deployment(name, type, env_vars)
+   - async def get_deployment_status(deployment_id)
+   - async def create_database(name, type, max_size)
+   - async def get_database_connection(database_id)
+   - async def create_agent(name, integration, prompt, schedule)
+   - async def get_agent_status(agent_id)
+
+2. **Authentication**:
+   - Read REPLIT_TOKEN from environment
+   - Use Authorization header for GraphQL
+   - Handle missing token gracefully (local dev vs Replit)
+
+3. **GraphQL Queries**:
+   - Include actual GraphQL queries for Replit API
+   - Use Replit Extensions API GraphQL endpoint
+   - Handle response parsing
+
+4. **Error Handling**:
+   - ReplitAPIError exception
+   - QuotaExceededError (for limits)
+   - AuthenticationError (for token issues)
+   - NetworkError (for connectivity)
+   - Retry logic with exponential backoff
+
+5. **Production Features**:
+   - Connection pooling (aiohttp)
+   - Request timeout handling
+   - Rate limiting awareness
+   - Comprehensive logging
+
+Use async/await, aiohttp for HTTP, proper exception hierarchy.
+
+Generate complete Python code with type hints.

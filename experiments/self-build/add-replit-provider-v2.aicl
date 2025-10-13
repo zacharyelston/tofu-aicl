@@ -1,0 +1,222 @@
+# Self-Building Challenge: Add Replit Provider (Refactored)
+# All prompts are in separate files for easier editing
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    openrouter = { source = "aicl/openrouter" }
+    pinecone = { source = "aicl/pinecone" }
+    loader = { source = "aicl/file_loader" }
+  }
+}
+
+variable "quality_threshold" {
+  type = number
+  default = 85
+}
+
+variable "code_model" {
+  type = string
+  default = "gpt-4o"
+}
+
+variable "judge_model" {
+  type = string
+  default = "anthropic/claude-3.5-sonnet"
+}
+
+# Load prompt templates
+resource "loader_files" "prompts" {
+  path = "./experiments/self-build/prompts"
+  glob = "*.txt"
+}
+
+# RAG: Provider patterns
+resource "embedding" "patterns_query" {
+  text = "How to implement AICL provider with multiple resource types, gRPC interface, config schema, error handling"
+  model = "text-embedding-3-small"
+}
+
+resource "query" "provider_patterns" {
+  vector = "${resource.embedding.patterns_query.attributes.embedding}"
+  top_k = 10
+  namespace = "aicl-source"
+}
+
+# RAG: API patterns
+resource "embedding" "api_query" {
+  text = "REST API integration, GraphQL queries, authentication headers, async HTTP requests in Python"
+  model = "text-embedding-3-small"
+}
+
+resource "query" "api_patterns" {
+  vector = "${resource.embedding.api_query.attributes.embedding}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+# Generate specification
+resource "chat" "generate_spec" {
+  model = "gpt-4o"
+  temperature = 0.3
+  max_tokens = 3000
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "replit-spec.txt", "")}"
+  }]
+}
+
+# Generate provider implementation
+resource "chat" "generate_provider" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 8000
+  
+  messages = [{
+    role = "user"
+    content = replace(
+      replace(
+        replace(
+          "${lookup(resource.loader_files.prompts.attributes.files, "replit-provider-spec.txt", "")}",
+          "{replit_spec}", "${resource.chat.generate_spec.attributes.content}"
+        ),
+        "{rag_provider_context}", "${resource.query.provider_patterns.attributes.results}"
+      ),
+      "{rag_api_context}", "${resource.query.api_patterns.attributes.results}"
+    )
+  }]
+}
+
+# Generate config
+resource "chat" "generate_config" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1000
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "replit-config-spec.txt", "")}"
+  }]
+}
+
+# Generate API client
+resource "chat" "generate_api_client" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 4000
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "replit-api-client-spec.txt", "")}"
+  }]
+}
+
+# Generate tests
+resource "chat" "generate_tests" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 6000
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "replit-tests-spec.txt", "")}"
+  }]
+}
+
+# Generate requirements
+resource "chat" "generate_requirements" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 500
+  
+  messages = [{
+    role = "user"
+    content = "List Python dependencies for Replit provider: aiohttp, GraphQL client, testing. Format as requirements.txt with versions."
+  }]
+}
+
+# Generate example
+resource "chat" "generate_example" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1500
+  
+  messages = [{
+    role = "user"
+    content = "${lookup(resource.loader_files.prompts.attributes.files, "replit-example-spec.txt", "")}"
+  }]
+}
+
+# Judge quality
+resource "chat" "judge_quality" {
+  model = var.judge_model
+  temperature = 0.0
+  max_tokens = 3500
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer evaluating a Replit provider implementation."
+    },
+    {
+      role = "user"
+      content = replace(
+        replace(
+          replace(
+            replace(
+              replace(
+                replace(
+                  "${lookup(resource.loader_files.prompts.attributes.files, "quality-judge-complex.txt", "")}",
+                  "{specification}", "${resource.chat.generate_spec.attributes.content}"
+                ),
+                "{provider_code}", "${resource.chat.generate_provider.attributes.content}"
+              ),
+              "{config_code}", "${resource.chat.generate_config.attributes.content}"
+            ),
+            "{api_client_code}", "${resource.chat.generate_api_client.attributes.content}"
+          ),
+          "{test_code}", "${resource.chat.generate_tests.attributes.content}"
+        ),
+        "{requirements}", "${resource.chat.generate_requirements.attributes.content}"
+      )
+    }
+  ]
+}
+
+# Outputs
+output "generated_files" {
+  value = {
+    specification = resource.chat.generate_spec.attributes.content
+    provider_code = resource.chat.generate_provider.attributes.content
+    provider_config = resource.chat.generate_config.attributes.content
+    api_client = resource.chat.generate_api_client.attributes.content
+    test_code = resource.chat.generate_tests.attributes.content
+    requirements = resource.chat.generate_requirements.attributes.content
+    example_usage = resource.chat.generate_example.attributes.content
+  }
+}
+
+output "quality_evaluation" {
+  value = resource.chat.judge_quality.attributes.content
+}
+
+output "recommendation" {
+  value = <<-EOT
+    === REPLIT PROVIDER - RESULTS ===
+    
+    🎯 3 resource types: deployment, database, agent
+    
+    Files: 7 total (~1,500 lines)
+    
+    Quality: [See quality_evaluation]
+    
+    IF score >= ${var.quality_threshold}:
+    - mkdir -p providers/replit examples
+    - Copy files, install deps
+    - pytest providers/replit/ -v
+    - python run.py examples/replit-deployment-example.aicl
+    
+    === END ===
+  EOT
+}

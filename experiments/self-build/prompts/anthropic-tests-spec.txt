@@ -1,0 +1,39 @@
+Generate comprehensive pytest tests for the Anthropic provider.
+
+TESTS TO INCLUDE:
+
+1. **Basic Functionality** (test_anthropic_basic.py):
+   - test_basic_chat - Simple message exchange
+   - test_all_models - Test each model (Sonnet, Opus, Haiku)
+   - test_system_prompt - System message handling
+   - test_temperature - Temperature parameter
+   - test_max_tokens - Token limiting
+
+2. **Streaming Tests** (test_anthropic_streaming.py):
+   - test_streaming_enabled - Basic streaming works
+   - test_streaming_incremental - Tokens arrive incrementally
+   - test_streaming_completion - Full message assembled correctly
+   - test_streaming_cancellation - Graceful stream cancel
+   - test_streaming_errors - Error handling during stream
+
+3. **Cost Tracking Tests** (test_anthropic_costs.py):
+   - test_cost_calculation_sonnet - Verify Sonnet pricing
+   - test_cost_calculation_opus - Verify Opus pricing
+   - test_cost_calculation_haiku - Verify Haiku pricing
+   - test_token_usage_tracking - Token counts accurate
+
+4. **Error Handling Tests** (test_anthropic_errors.py):
+   - test_rate_limit_retry - Retry with backoff
+   - test_circuit_breaker - Circuit opens after failures
+   - test_invalid_api_key - Auth error handling
+   - test_timeout_handling - Request timeouts
+   - test_malformed_request - Input validation
+
+5. **Integration Tests** (test_anthropic_integration.py):
+   - test_provider_discovery - Auto-discovery works
+   - test_grpc_interface - gRPC communication
+   - test_resource_cleanup - No resource leaks
+   - test_concurrent_requests - Parallel execution
+
+Use pytest, pytest-asyncio, mocking for API calls, and comprehensive assertions.
+Generate test code for all files.
