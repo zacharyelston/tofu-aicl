@@ -1,6 +1,6 @@
 import re
 from typing import Any, Dict
-from aicl.state.manager import StateManager
+from core.state_manager import StateManager
 
 class HCLEvaluator:
     def __init__(self, state_manager: StateManager, parsed_config: Dict[str, Any] = None):
