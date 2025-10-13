@@ -1,0 +1,457 @@
+# Self-Building Challenge: Add Anthropic Claude Provider with Streaming
+# This is a REAL test of AICL's self-modification capability
+
+variable "quality_threshold" {
+  type    = number
+  default = 85
+  description = "Higher threshold for complex provider (85+)"
+}
+
+variable "code_model" {
+  type    = string
+  default = "gpt-4o"
+  description = "Best model for complex code generation"
+}
+
+variable "judge_model" {
+  type    = string
+  default = "openrouter-claude-sonnet"
+  description = "Claude judges its own provider implementation"
+}
+
+provider "openai" {
+  api_key = env("OPENAI_API_KEY")
+}
+
+provider "openrouter" {
+  api_key = env("OPENROUTER_API_KEY")
+}
+
+provider "pinecone" {
+  api_key = env("PINECONE_API_KEY")
+  host    = env("PINECONE_HOST_URL")
+}
+
+# Step 1: Query RAG for advanced provider patterns
+data "vector_query" "advanced_patterns" {
+  provider  = provider.pinecone
+  index     = "tofu-aicl-knowledge"
+  namespace = "codebase"
+  
+  query_text = <<-EOT
+    How to implement advanced AICL provider with:
+    - Async streaming responses (SSE)
+    - Multiple models support
+    - Token counting and cost tracking
+    - Rate limiting and retries
+    - Circuit breaker pattern
+    - Proper resource cleanup
+    Show examples from existing providers.
+  EOT
+  
+  top_k = 10
+}
+
+# Step 2: Query for streaming implementation patterns
+data "vector_query" "streaming_patterns" {
+  provider  = provider.pinecone
+  index     = "tofu-aicl-knowledge"
+  namespace = "codebase"
+  
+  query_text = "Python async streaming, server-sent events, async generators, streaming HTTP responses"
+  top_k = 5
+}
+
+# Step 3: Generate main provider implementation
+resource "llm_completion" "generate_provider" {
+  provider    = provider.openai
+  model       = var.code_model
+  temperature = 0.2
+  max_tokens  = 8000
+  
+  prompt = <<-EOT
+    You are an expert Python developer implementing production-grade AI providers.
+    
+    SPECIFICATION:
+    Create a complete Anthropic Claude provider for the AICL framework with these requirements:
+    
+    ## Core Functionality
+    1. **Multiple Model Support**:
+       - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+       - Claude 3 Opus (claude-3-opus-20240229)
+       - Claude 3 Haiku (claude-3-haiku-20240307)
+    
+    2. **Resource Type: anthropic_chat**
+       - Input attributes:
+         - messages (list): Message history [{"role": "user", "content": "..."}]
+         - model (string): Model ID
+         - max_tokens (int): Max response tokens (default: 4096)
+         - temperature (float): 0.0-1.0 (default: 1.0)
+         - system (string, optional): System prompt
+         - stream (bool, optional): Enable streaming (default: false)
+       
+       - Output attributes:
+         - content (string): Response text
+         - usage.input_tokens (int): Input tokens used
+         - usage.output_tokens (int): Output tokens used
+         - cost (float): Estimated cost in USD
+         - stop_reason (string): "end_turn" | "max_tokens" | "stop_sequence"
+    
+    3. **Streaming Support**:
+       - Implement async streaming using Anthropic's streaming API
+       - Yield tokens incrementally for stream=true
+       - Proper async generator pattern
+       - Handle connection errors gracefully
+    
+    4. **Production Patterns**:
+       - Rate limiting with exponential backoff
+       - Circuit breaker (3 failures -> open circuit for 30s)
+       - Retry logic with jitter
+       - Proper resource cleanup (async context managers)
+       - Token counting for cost tracking
+    
+    5. **Cost Tracking**:
+       - Claude 3.5 Sonnet: $3/1M input, $15/1M output
+       - Claude 3 Opus: $15/1M input, $75/1M output
+       - Claude 3 Haiku: $0.25/1M input, $1.25/1M output
+    
+    ## Implementation Requirements
+    - Use anthropic Python SDK (pip install anthropic)
+    - Implement ProviderServicer gRPC interface
+    - Use v2.runtime.create_provider_server for boilerplate
+    - Async/await for streaming
+    - Comprehensive error handling with typed exceptions
+    - Docstrings for all public methods
+    - Type hints throughout
+    
+    ## Reference Patterns
+    ${data.vector_query.advanced_patterns.results}
+    
+    ## Streaming Patterns
+    ${data.vector_query.streaming_patterns.results}
+    
+    Generate ONLY the Python code for providers/anthropic/server.py
+    Include all necessary imports and make it production-ready.
+    
+    CODE:
+  EOT
+}
+
+# Step 4: Generate provider config with all models
+resource "llm_completion" "generate_config" {
+  provider    = provider.openai
+  model       = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens  = 1500
+  
+  prompt = <<-EOT
+    Generate config.yaml for the Anthropic Claude provider.
+    
+    REQUIREMENTS:
+    - name: anthropic
+    - display_name: Anthropic Claude
+    - version: 1.0.0
+    - default_port: 50061 (next available)
+    - mode: subprocess
+    - runtime.entrypoint: server.py
+    - environment.required_vars: [ANTHROPIC_API_KEY]
+    - capabilities.types: [chat, streaming]
+    - capabilities.operations: [create, read, stream]
+    
+    - model_ids:
+      - claude-3-5-sonnet-20241022 (primary)
+      - claude-3-opus-20240229
+      - claude-3-haiku-20240307
+    
+    Generate ONLY the YAML content for providers/anthropic/config.yaml
+    Follow AICL provider config conventions exactly.
+  EOT
+}
+
+# Step 5: Generate streaming handler module
+resource "llm_completion" "generate_streaming_handler" {
+  provider    = provider.openai
+  model       = var.code_model
+  temperature = 0.2
+  max_tokens  = 4000
+  
+  prompt = <<-EOT
+    Generate a streaming handler module for the Anthropic provider.
+    
+    Create providers/anthropic/streaming.py with:
+    
+    1. **StreamingHandler class**:
+       - async def stream_response(client, messages, model, **params)
+       - Yields tokens as they arrive
+       - Handles Anthropic streaming events
+       - Aggregates usage data
+       - Error handling for stream interruptions
+    
+    2. **StreamBuffer class**:
+       - Buffers partial tokens
+       - Handles delta updates
+       - Tracks completion state
+    
+    3. **Production features**:
+       - Timeout handling
+       - Graceful cancellation
+       - Resource cleanup
+       - Metrics collection
+    
+    Use async generators, proper exception handling, and type hints.
+    
+    Reference: ${data.vector_query.streaming_patterns.results}
+    
+    Generate complete Python code.
+  EOT
+}
+
+# Step 6: Generate comprehensive test suite
+resource "llm_completion" "generate_tests" {
+  provider    = provider.openai
+  model       = var.code_model
+  temperature = 0.2
+  max_tokens  = 5000
+  
+  prompt = <<-EOT
+    Generate comprehensive pytest tests for the Anthropic provider.
+    
+    TESTS TO INCLUDE:
+    
+    1. **Basic Functionality** (test_anthropic_basic.py):
+       - test_basic_chat - Simple message exchange
+       - test_all_models - Test each model (Sonnet, Opus, Haiku)
+       - test_system_prompt - System message handling
+       - test_temperature - Temperature parameter
+       - test_max_tokens - Token limiting
+    
+    2. **Streaming Tests** (test_anthropic_streaming.py):
+       - test_streaming_enabled - Basic streaming works
+       - test_streaming_incremental - Tokens arrive incrementally
+       - test_streaming_completion - Full message assembled correctly
+       - test_streaming_cancellation - Graceful stream cancel
+       - test_streaming_errors - Error handling during stream
+    
+    3. **Cost Tracking Tests** (test_anthropic_costs.py):
+       - test_cost_calculation_sonnet - Verify Sonnet pricing
+       - test_cost_calculation_opus - Verify Opus pricing
+       - test_cost_calculation_haiku - Verify Haiku pricing
+       - test_token_usage_tracking - Token counts accurate
+    
+    4. **Error Handling Tests** (test_anthropic_errors.py):
+       - test_rate_limit_retry - Retry with backoff
+       - test_circuit_breaker - Circuit opens after failures
+       - test_invalid_api_key - Auth error handling
+       - test_timeout_handling - Request timeouts
+       - test_malformed_request - Input validation
+    
+    5. **Integration Tests** (test_anthropic_integration.py):
+       - test_provider_discovery - Auto-discovery works
+       - test_grpc_interface - gRPC communication
+       - test_resource_cleanup - No resource leaks
+       - test_concurrent_requests - Parallel execution
+    
+    Use pytest, pytest-asyncio, mocking for API calls, and comprehensive assertions.
+    Generate test code for all files.
+  EOT
+}
+
+# Step 7: Generate requirements.txt additions
+resource "llm_completion" "generate_requirements" {
+  provider    = provider.openai
+  model       = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens  = 500
+  
+  prompt = <<-EOT
+    List the Python package dependencies needed for the Anthropic provider:
+    
+    - Anthropic SDK
+    - Async libraries
+    - Testing libraries
+    
+    Format as requirements.txt entries with version constraints.
+  EOT
+}
+
+# Step 8: Judge the quality (Claude judges Claude provider!)
+resource "llm_completion" "judge_quality" {
+  provider    = provider.openrouter
+  model       = var.judge_model
+  temperature = 0.0
+  max_tokens  = 3000
+  
+  prompt = <<-EOT
+    You are an expert code reviewer evaluating an Anthropic Claude provider implementation.
+    This is META - you (Claude) are judging the quality of code that implements YOU as a provider!
+    
+    SPECIFICATION:
+    Complete Anthropic provider with:
+    - Multiple models (Sonnet, Opus, Haiku)
+    - Streaming support (async)
+    - Cost tracking (accurate pricing)
+    - Production patterns (retries, circuit breaker, cleanup)
+    - Comprehensive tests (5 test files)
+    
+    GENERATED PROVIDER CODE:
+    ${resource.llm_completion.generate_provider.content}
+    
+    GENERATED CONFIG:
+    ${resource.llm_completion.generate_config.content}
+    
+    GENERATED STREAMING HANDLER:
+    ${resource.llm_completion.generate_streaming_handler.content}
+    
+    GENERATED TESTS:
+    ${resource.llm_completion.generate_tests.content}
+    
+    DEPENDENCIES:
+    ${resource.llm_completion.generate_requirements.content}
+    
+    Evaluate on these criteria (100 points total):
+    
+    1. CORRECTNESS (40 points)
+       - Implements all required features
+       - Streaming works correctly
+       - Cost calculations accurate
+       - Error handling comprehensive
+       - All models supported
+    
+    2. CODE QUALITY (30 points)
+       - Production-grade patterns
+       - Proper async/await usage
+       - Type hints and docstrings
+       - Clean architecture
+       - No anti-patterns
+    
+    3. BEST PRACTICES (20 points)
+       - Circuit breaker implemented
+       - Rate limiting with backoff
+       - Resource cleanup (async context)
+       - Security (API key handling)
+       - Performance optimizations
+    
+    4. MAINTAINABILITY (10 points)
+       - Clear code structure
+       - Good variable names
+       - Comprehensive tests
+       - Easy to extend
+    
+    DECISION RULES:
+    - Score >= 90: ACCEPT (Excellent - production ready)
+    - Score 80-89: ACCEPT (Good - minor improvements needed)
+    - Score 70-79: REVISE (Significant issues to fix)
+    - Score < 70: REJECT (Not production ready)
+    
+    This is a HARD test. Be critical. This needs to be production-grade.
+    
+    Respond ONLY with valid JSON:
+    {
+      "overall_score": <0-100>,
+      "breakdown": {
+        "correctness": <0-40>,
+        "code_quality": <0-30>,
+        "best_practices": <0-20>,
+        "maintainability": <0-10>
+      },
+      "decision": "ACCEPT | REVISE | REJECT",
+      "reasoning": "<detailed technical explanation>",
+      "strengths": ["<what's good>", ...],
+      "weaknesses": ["<what's missing or wrong>", ...],
+      "improvements": ["<specific suggestions>", ...]
+    }
+  EOT
+}
+
+# Outputs
+output "generated_files" {
+  value = {
+    provider_code = resource.llm_completion.generate_provider.content
+    provider_config = resource.llm_completion.generate_config.content
+    streaming_handler = resource.llm_completion.generate_streaming_handler.content
+    test_code = resource.llm_completion.generate_tests.content
+    requirements = resource.llm_completion.generate_requirements.content
+  }
+}
+
+output "quality_evaluation" {
+  value = resource.llm_completion.judge_quality.content
+}
+
+output "file_statistics" {
+  value = {
+    provider_lines = length(split("\n", resource.llm_completion.generate_provider.content))
+    streaming_lines = length(split("\n", resource.llm_completion.generate_streaming_handler.content))
+    test_lines = length(split("\n", resource.llm_completion.generate_tests.content))
+    total_lines = (
+      length(split("\n", resource.llm_completion.generate_provider.content)) +
+      length(split("\n", resource.llm_completion.generate_streaming_handler.content)) +
+      length(split("\n", resource.llm_completion.generate_tests.content))
+    )
+  }
+}
+
+output "recommendation" {
+  value = <<-EOT
+    === ANTHROPIC CLAUDE PROVIDER - SELF-BUILD RESULTS ===
+    
+    🎯 CHALLENGE: Production-grade provider with streaming
+    
+    Generated Files:
+    1. providers/anthropic/server.py (${length(split("\n", resource.llm_completion.generate_provider.content))} lines)
+    2. providers/anthropic/config.yaml (${length(split("\n", resource.llm_completion.generate_config.content))} lines)
+    3. providers/anthropic/streaming.py (${length(split("\n", resource.llm_completion.generate_streaming_handler.content))} lines)
+    4. providers/anthropic/test_*.py (${length(split("\n", resource.llm_completion.generate_tests.content))} lines)
+    5. Additional requirements (${length(split("\n", resource.llm_completion.generate_requirements.content))} lines)
+    
+    📊 Quality Evaluation:
+    [See quality_evaluation output for Claude's self-assessment]
+    
+    ⚠️  This is a REAL provider implementation with:
+    - ✅ Async streaming (SSE)
+    - ✅ Multiple models (Sonnet, Opus, Haiku)
+    - ✅ Cost tracking (accurate pricing)
+    - ✅ Circuit breaker + retries
+    - ✅ Comprehensive tests (5 files)
+    
+    Next Steps IF score >= ${var.quality_threshold}:
+    1. Review all generated code carefully
+    2. Install dependencies: pip install [requirements]
+    3. Set ANTHROPIC_API_KEY environment variable
+    4. Create files:
+       mkdir -p providers/anthropic
+       # Copy each file from output above
+    5. Run tests: pytest providers/anthropic/
+    6. Verify streaming: Test with stream=true
+    7. Check cost tracking accuracy
+    
+    ⚡ VALIDATION CHECKLIST:
+    - [ ] All tests pass
+    - [ ] Streaming works correctly
+    - [ ] Cost calculations match Anthropic pricing
+    - [ ] Circuit breaker functions
+    - [ ] No resource leaks
+    - [ ] Provider auto-discovers
+    
+    === END RESULTS ===
+  EOT
+}
+
+output "cost_estimate" {
+  value = {
+    total_tokens = (
+      resource.llm_completion.generate_provider.usage.total_tokens +
+      resource.llm_completion.generate_config.usage.total_tokens +
+      resource.llm_completion.generate_streaming_handler.usage.total_tokens +
+      resource.llm_completion.generate_tests.usage.total_tokens +
+      resource.llm_completion.generate_requirements.usage.total_tokens +
+      resource.llm_completion.judge_quality.usage.total_tokens
+    )
+    generation_cost_usd = (
+      resource.llm_completion.generate_provider.cost +
+      resource.llm_completion.generate_streaming_handler.cost +
+      resource.llm_completion.generate_tests.cost
+    )
+    judging_cost_usd = resource.llm_completion.judge_quality.cost
+  }
+}
