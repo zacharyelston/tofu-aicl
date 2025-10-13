@@ -1,0 +1,28 @@
+Generate a complete AICL provider implementation.
+
+SPECIFICATION:
+Create an Echo provider that implements the AICL provider gRPC interface:
+
+Resource Type: echo_text
+- Input attributes:
+  - text (string): Text to echo back
+  - prefix (string): Prefix to add (default: "Echo: ")
+- Output attributes:
+  - echoed_text (string): The prefixed text
+  - original_length (int): Length of original text
+  - echoed_length (int): Length of echoed text
+
+REQUIREMENTS:
+1. Follow AICL provider patterns from the codebase
+2. Implement the ProviderServicer gRPC interface
+3. Use v2.runtime.create_provider_server for boilerplate
+4. Handle errors gracefully
+5. Include docstrings
+
+REFERENCE PATTERNS:
+{rag_context}
+
+Generate ONLY the Python code for providers/echo/server.py
+Include all necessary imports.
+
+CODE:

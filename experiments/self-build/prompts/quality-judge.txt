@@ -1,0 +1,54 @@
+Evaluate the generated Echo provider implementation.
+
+GENERATED PROVIDER CODE:
+{provider_code}
+
+GENERATED CONFIG:
+{config_code}
+
+GENERATED TESTS:
+{test_code}
+
+Evaluate on these criteria (100 points total):
+
+1. CORRECTNESS (40 points)
+   - Implements specification correctly
+   - gRPC interface proper
+   - Error handling present
+
+2. CODE QUALITY (30 points)
+   - Clean, readable code
+   - Follows Python conventions
+   - Good variable names
+
+3. BEST PRACTICES (20 points)
+   - Uses AICL patterns
+   - Proper imports
+   - Docstrings present
+
+4. MAINTAINABILITY (10 points)
+   - Easy to understand
+   - Well structured
+   - Tests comprehensive
+
+DECISION RULES:
+- Score >= 90: ACCEPT (Excellent)
+- Score 80-89: ACCEPT (Good)
+- Score 70-79: REVISE (Needs work)
+- Score < 70: REJECT (Not acceptable)
+
+Respond ONLY with valid JSON:
+{
+  "overall_score": <0-100>,
+  "breakdown": {
+    "correctness": <0-40>,
+    "code_quality": <0-30>,
+    "best_practices": <0-20>,
+    "maintainability": <0-10>
+  },
+  "decision": "ACCEPT | REVISE | REJECT",
+  "reasoning": "<detailed explanation>",
+  "strengths": ["<strength 1>", "<strength 2>", ...],
+  "weaknesses": ["<weakness 1>", "<weakness 2>", ...],
+  "improvements": ["<improvement 1>", "<improvement 2>", ...]
+}

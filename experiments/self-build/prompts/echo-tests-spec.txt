@@ -1,0 +1,12 @@
+Generate comprehensive pytest tests for the echo provider.
+
+TESTS TO INCLUDE:
+1. test_basic_echo - Basic functionality
+2. test_custom_prefix - Custom prefix parameter
+3. test_empty_input - Empty string handling
+4. test_special_characters - Unicode and special chars
+5. test_length_tracking - Verify length attributes
+
+Use pytest conventions and AICL testing patterns.
+
+Generate ONLY the Python code for providers/echo/test_echo.py
