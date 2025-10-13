@@ -240,6 +240,153 @@ class PostgresAdapter(StorageBackend):
 
 ---
 
+## PostgreSQL DocDB (v0.2.0+)
+
+### Document Database for Experiments
+
+The DocDB feature stores complete experiment results in PostgreSQL using JSONB format. This enables:
+- Flexible schema for experiment outputs
+- Rich metadata and tagging
+- Powerful querying and comparison
+- Integration with CLI output flags
+
+### Schema
+
+```sql
+CREATE TABLE IF NOT EXISTS experiment_runs (
+    id SERIAL PRIMARY KEY,
+    experiment_id TEXT NOT NULL,
+    config_path TEXT,
+    outputs JSONB NOT NULL,
+    metadata JSONB,
+    tags TEXT[],
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_experiment_id ON experiment_runs(experiment_id);
+CREATE INDEX idx_tags ON experiment_runs USING GIN(tags);
+CREATE INDEX idx_created_at ON experiment_runs(created_at DESC);
+```
+
+### Implementation
+
+```python
+class ExperimentDocDB:
+    """PostgreSQL document database for experiments"""
+    
+    def __init__(self, connection_string: str):
+        self.conn = psycopg2.connect(connection_string)
+        self._initialize_schema()
+    
+    def save_experiment(
+        self,
+        experiment_id: str,
+        outputs: Dict[str, Any],
+        metadata: Optional[Dict] = None,
+        tags: Optional[List[str]] = None,
+        config_path: Optional[str] = None
+    ) -> int:
+        """Save experiment outputs to DocDB"""
+        cursor = self.conn.cursor()
+        
+        cursor.execute("""
+            INSERT INTO experiment_runs 
+            (experiment_id, config_path, outputs, metadata, tags)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            experiment_id,
+            config_path,
+            json.dumps(outputs),
+            json.dumps(metadata) if metadata else None,
+            tags or []
+        ))
+        
+        run_id = cursor.fetchone()[0]
+        self.conn.commit()
+        return run_id
+    
+    def query_experiments(
+        self,
+        experiment_id: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 100
+    ) -> List[Dict]:
+        """Query experiments with optional filters"""
+        cursor = self.conn.cursor()
+        
+        query = "SELECT * FROM experiment_runs WHERE 1=1"
+        params = []
+        
+        if experiment_id:
+            query += " AND experiment_id = %s"
+            params.append(experiment_id)
+        
+        if tags:
+            query += " AND tags @> %s"
+            params.append(tags)
+        
+        query += " ORDER BY created_at DESC LIMIT %s"
+        params.append(limit)
+        
+        cursor.execute(query, params)
+        return cursor.fetchall()
+```
+
+### CLI Integration
+
+```bash
+# Save to DocDB only
+python run.py config.aicl --output-docdb --no-stdout
+
+# Save to DocDB with tags
+python run.py config.aicl \
+  --output-docdb \
+  --experiment-id rag-test-001 \
+  --tags rag,pinecone,production
+
+# Query DocDB
+psql $DATABASE_URL -c "
+  SELECT experiment_id, tags, created_at 
+  FROM experiment_runs 
+  WHERE 'rag' = ANY(tags)
+  ORDER BY created_at DESC 
+  LIMIT 10
+"
+```
+
+### JSONB Querying
+
+```sql
+-- Find experiments with specific output
+SELECT experiment_id, outputs->>'final_answer' 
+FROM experiment_runs 
+WHERE outputs->>'model' = 'gpt-4';
+
+-- Compare costs across experiments
+SELECT 
+  experiment_id,
+  (outputs->'cost'->>'total')::float as total_cost
+FROM experiment_runs
+WHERE tags @> ARRAY['comparison']
+ORDER BY total_cost ASC;
+
+-- Aggregate metrics by tag
+SELECT 
+  unnest(tags) as tag,
+  COUNT(*) as experiments,
+  AVG((outputs->'cost'->>'total')::float) as avg_cost
+FROM experiment_runs
+GROUP BY tag;
+```
+
+### Characteristics
+- **Pros**: Flexible schema, powerful queries, metadata/tagging, comparison ready
+- **Cons**: Requires PostgreSQL, more storage than relational
+- **Use Case**: Experiment tracking, A/B testing, performance comparison
+
+---
+
 ## Storage Strategy Pattern
 
 ### Tier Selection

@@ -11,6 +11,7 @@
 - **Want to build it?** → Read [11-implementation-guide.md](11-implementation-guide.md)
 - **Need API reference?** → Read [06-api-specifications.md](06-api-specifications.md)
 - **Want self-building?** → Read [13-self-modification-experiments.md](13-self-modification-experiments.md)
+- **See what's new?** → Read [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
@@ -257,11 +258,18 @@ See `experiments/self-build/` for self-modification examples.
 
 ## 🔄 Document Version
 
-**Version**: 1.0.0  
-**Last Updated**: October 11, 2025  
+**Version**: 1.1.0  
+**Last Updated**: October 13, 2025  
 **Status**: Complete & Production-Ready
 
-**Changes**:
+**Changes in v1.1.0** (October 13, 2025):
+- Added CLI output control: multiple destinations (file/DocDB/stdout)
+- Added PostgreSQL DocDB for experiment storage with metadata and tags
+- Added comprehensive CLI flags: --output-file, --output-docdb, --output-stdout, --quiet, --experiment-id, --tags
+- Updated storage layer specifications for DocDB integration
+- Updated implementation guide with CLI Phase 5 details
+
+**Changes in v1.0.0** (October 11, 2025):
 - Initial complete specification release
 - All 13 documents published
 - Self-building capability added

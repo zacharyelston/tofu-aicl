@@ -280,15 +280,62 @@ message Capabilities {
 Execute a single configuration file.
 
 **Flags**:
+
+*Core Options*:
 - `--var key=value`: Set variable values
 - `--state <path>`: State file location (default: `terraform.tfstate`)
 - `--auto-approve`: Skip confirmation prompts
 - `--parallelism <n>`: Max parallel operations (default: 10)
 
-**Example**:
+*Output Control (v0.2.0+)*:
+- `--output-file`: Save results to JSON state files (default: enabled)
+- `--output-docdb`: Save results to PostgreSQL document database
+- `--output-stdout`: Print results to console (default: enabled)
+- `--no-stdout`: Disable console output
+- `--quiet`: Minimal output (errors only)
+
+*Experiment Metadata (v0.2.0+)*:
+- `--experiment-id <id>`: Custom experiment identifier
+- `--tags <tags>`: Comma-separated tags (e.g., `rag,demo,v1`)
+
+*Execution*:
+- `--parallel`: Enable parallel resource execution (experimental)
+
+**Examples**:
 ```bash
+# Basic execution
 aicl run pipeline.aicl --var model=gpt-4o --auto-approve
+
+# Multiple output destinations
+aicl run pipeline.aicl --output-file --output-docdb --output-stdout
+
+# Quiet mode with custom ID and tags
+aicl run pipeline.aicl --quiet --experiment-id my-test --tags demo,v1
+
+# DocDB only (no file or stdout)
+aicl run pipeline.aicl --output-docdb --no-stdout --experiment-id prod-001
 ```
+
+**Output Destinations**:
+
+The CLI supports three independent output destinations:
+
+1. **JSON State Files** (`--output-file`):
+   - Saves to `terraform.tfstate.d/{experiment_id}.tfstate`
+   - Full resource state and metadata
+   - Default: enabled
+
+2. **PostgreSQL DocDB** (`--output-docdb`):
+   - Requires `DATABASE_URL` environment variable
+   - Stores in JSONB format with metadata and tags
+   - Enables querying and comparison
+   - Default: disabled
+
+3. **Stdout** (`--output-stdout`):
+   - Formatted console output
+   - Shows resource outputs and timing
+   - Use `--no-stdout` or `--quiet` to disable
+   - Default: enabled
 
 ---
 

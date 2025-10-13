@@ -349,7 +349,7 @@ This guide provides implementation patterns that can be adapted to any language.
 **Implementation**:
 ```
 1. CLI framework:
-   - Python: Click or Typer
+   - Python: argparse (stdlib) or Click/Typer
    - Go: Cobra
    - JavaScript: Commander.js
 
@@ -361,16 +361,145 @@ This guide provides implementation patterns that can be adapted to any language.
    aicl providers list
    aicl models list
 
-3. Flags and options:
+3. Core flags:
    - --var key=value
    - --state <path>
    - --auto-approve
-   - --db <path>
+   - --parallelism <n>
 
-4. Output formatting:
+4. Output control (v0.2.0+):
+   - --output-file (JSON state files)
+   - --output-docdb (PostgreSQL DocDB)
+   - --output-stdout (console output)
+   - --no-stdout (disable console)
+   - --quiet (errors only)
+
+5. Experiment metadata (v0.2.0+):
+   - --experiment-id <id>
+   - --tags <comma-separated>
+
+6. Output formatting:
    - Colored output (success/error)
-   - Progress bars
+   - Progress indicators
    - Tables for results
+```
+
+### Output Destination Routing (v0.2.0+)
+
+**Architecture**:
+```python
+class OutputManager:
+    """Routes outputs to multiple destinations"""
+    
+    def __init__(self, args):
+        self.destinations = []
+        
+        # Determine if any output flags were explicitly set
+        has_explicit_output = (
+            args.output_file or 
+            args.output_docdb or 
+            args.output_stdout or
+            args.no_output_file or
+            args.no_stdout
+        )
+        
+        # File output (default: enabled if no explicit outputs)
+        enable_file = (
+            args.output_file or 
+            (not has_explicit_output and not args.no_output_file)
+        ) and not args.no_output_file
+        
+        if enable_file:
+            self.destinations.append(
+                FileOutputHandler(args.state)
+            )
+        
+        # DocDB output
+        if args.output_docdb:
+            if os.getenv('DATABASE_URL'):
+                self.destinations.append(
+                    DocDBOutputHandler(
+                        os.getenv('DATABASE_URL'),
+                        args.experiment_id,
+                        args.tags
+                    )
+                )
+            else:
+                logging.warning("DATABASE_URL not set, DocDB disabled")
+        
+        # Stdout output (default: enabled if no explicit outputs)
+        enable_stdout = (
+            args.output_stdout or
+            (not has_explicit_output and not args.no_stdout)
+        ) and not args.no_stdout and not args.quiet
+        
+        if enable_stdout:
+            self.destinations.append(
+                StdoutOutputHandler()
+            )
+    
+    def write_outputs(self, outputs: Dict):
+        """Write to all configured destinations"""
+        for dest in self.destinations:
+            dest.write(outputs)
+```
+
+**CLI Argument Parsing**:
+```python
+import argparse
+
+parser = argparse.ArgumentParser(description='AICL Engine')
+parser.add_argument('config_path', help='Path to .aicl config file')
+
+# Output control
+output_group = parser.add_argument_group('Output Control')
+output_group.add_argument('--output-file', action='store_true',
+                         help='Save to JSON state files (default if no outputs specified)')
+output_group.add_argument('--no-output-file', action='store_true',
+                         help='Disable JSON state file output')
+output_group.add_argument('--output-docdb', action='store_true',
+                         help='Save to PostgreSQL DocDB')
+output_group.add_argument('--output-stdout', action='store_true',
+                         help='Print to console (default if no outputs specified)')
+output_group.add_argument('--no-stdout', action='store_true',
+                         help='Disable console output')
+output_group.add_argument('--quiet', action='store_true',
+                         help='Minimal output (errors only)')
+
+# Experiment metadata
+meta_group = parser.add_argument_group('Experiment Metadata')
+meta_group.add_argument('--experiment-id', type=str,
+                       help='Custom experiment identifier')
+meta_group.add_argument('--tags', type=str,
+                       help='Comma-separated tags')
+
+# Execution
+exec_group = parser.add_argument_group('Execution')
+exec_group.add_argument('--parallel', action='store_true',
+                       help='Enable parallel execution')
+
+args = parser.parse_args()
+```
+
+**Integration Example**:
+```python
+def main():
+    args = parser.parse_args()
+    
+    # Initialize output manager
+    output_mgr = OutputManager(args)
+    
+    # Run engine
+    engine = AICLEngine(
+        config_path=args.config_path,
+        experiment_id=args.experiment_id,
+        tags=args.tags.split(',') if args.tags else None
+    )
+    
+    outputs = engine.run()
+    
+    # Write to all destinations
+    output_mgr.write_outputs(outputs)
 ```
 
 ---

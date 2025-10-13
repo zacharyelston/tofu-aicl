@@ -118,6 +118,12 @@ These specifications are released under the same license as the tofu-aicl projec
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: October 11, 2025  
+**Version**: 1.1.0  
+**Last Updated**: October 13, 2025  
 **Status**: Complete & Production-Ready
+
+**What's New in v1.1.0**:
+- CLI output control with multiple destinations
+- PostgreSQL DocDB for experiment storage
+- Comprehensive CLI flags and options
+- Enhanced implementation guide
