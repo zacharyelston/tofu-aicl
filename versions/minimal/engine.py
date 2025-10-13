@@ -17,10 +17,27 @@ import proto.provider_pb2 as provider_pb2
 import proto.provider_pb2_grpc as provider_pb2_grpc
 
 from core.parser import HCLParser
-from core.state_manager import StateManager, ResourceState
 from core.evaluator import HCLEvaluator
 from core.planner import Planner
-from core.executor import Executor
+
+# Simple resource state object
+class ResourceState:
+    def __init__(self, id, type, provider, attributes, metadata, status):
+        self.id = id
+        self.type = type
+        self.provider = provider
+        self.attributes = attributes
+        self.metadata = metadata
+        self.status = status
+
+# Simple state container
+class SimpleState:
+    def __init__(self):
+        self.resources = {}
+    
+    def add_resource(self, resource_state):
+        """Add a ResourceState object"""
+        self.resources[resource_state.id] = resource_state
 
 class MinimalEngine:
     """Simplified AICL engine with just the essentials"""
@@ -29,7 +46,7 @@ class MinimalEngine:
         self.config_path = Path(config_path)
         self.provider_processes = {}
         self.provider_stubs = {}
-        self.state_manager = StateManager()
+        self.current_state = SimpleState()  # Simple in-memory state
         
         # Parse config
         parser = HCLParser(self.config_path)
@@ -99,7 +116,13 @@ class MinimalEngine:
         print(f"\n📋 Execution Plan: {len(sorted_resources)} resources\n")
         
         # 3. Execute resources
-        evaluator = HCLEvaluator(self.state_manager, self.parsed_config)
+        # Create a minimal evaluator-compatible state manager
+        class MinimalStateManager:
+            def __init__(self, state):
+                self.current_state = state
+        
+        state_mgr = MinimalStateManager(self.current_state)
+        evaluator = HCLEvaluator(state_mgr, self.parsed_config)
         
         for resource_id in sorted_resources:
             res_type, res_name, config_attrs = resource_map[resource_id]
@@ -141,7 +164,7 @@ class MinimalEngine:
             )
             
             # Update state
-            self.state_manager.update_resource(new_state)
+            self.current_state.add_resource(new_state)
             
             print(f"  ✓ {new_state.status}")
         
@@ -158,7 +181,7 @@ class MinimalEngine:
                     "attributes": rstate.attributes,
                     "status": rstate.status
                 }
-                for rid, rstate in self.state_manager.current_state.resources.items()
+                for rid, rstate in self.current_state.resources.items()
             }
         }
         
