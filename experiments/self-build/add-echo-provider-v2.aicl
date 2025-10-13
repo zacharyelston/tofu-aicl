@@ -1,0 +1,217 @@
+# Self-Building Experiment: Add Echo Provider (v2 - Simplified)
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    pinecone = { source = "aicl/pinecone" }
+  }
+}
+
+# Step 1: RAG Query - Embed the question
+resource "embedding" "rag_query" {
+  text = "How to implement a gRPC provider in AICL? Show provider implementation patterns with ProviderServicer interface, gRPC setup, and v2.runtime.create_provider_server usage."
+  model = "text-embedding-3-small"
+}
+
+# Step 2: RAG Query - Search Pinecone
+resource "query" "provider_patterns" {
+  vector = "${resource.embedding.rag_query.attributes.embedding}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+# Step 3: Generate provider implementation
+resource "openai_chat" "generate_provider" {
+  model = "gpt-4o"
+  temperature = 0.3
+  max_tokens = 4000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert Python developer. Generate complete AICL provider implementations following existing patterns."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Generate a complete AICL provider implementation for Echo functionality.
+
+        SPECIFICATION:
+        Create an Echo provider that implements the AICL provider gRPC interface:
+
+        Resource Type: echo_text
+        - Input attributes:
+          - text (string): Text to echo back
+          - prefix (string): Prefix to add (default: "Echo: ")
+        - Output attributes:
+          - echoed_text (string): The prefixed text
+          - original_length (int): Length of original text  
+          - echoed_length (int): Length of echoed text
+
+        REQUIREMENTS:
+        1. Follow AICL provider patterns from the codebase
+        2. Implement the ProviderServicer gRPC interface from proto/provider.proto
+        3. Use v2.runtime.create_provider_server for boilerplate (thread-safe gRPC setup)
+        4. Handle errors gracefully with proper error responses
+        5. Include comprehensive docstrings
+        6. Use type hints throughout
+
+        REFERENCE PATTERNS FROM CODEBASE:
+        ${resource.query.provider_patterns.attributes.results}
+
+        Generate ONLY the Python code for providers/echo/server.py
+        Include all necessary imports (grpc, proto files, etc).
+        Make it production-ready.
+
+        CODE:
+      EOT
+    }
+  ]
+  aiclResourceName = "generate_provider"
+}
+
+# Step 4: Generate provider config  
+resource "openai_chat" "generate_config" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate config.yaml for the echo provider following AICL conventions.
+
+        REQUIREMENTS:
+        - provider.name: echo
+        - provider.display_name: Echo Provider
+        - provider.version: 1.0.0
+        - provider.source: aicl/echo
+        - provider.description: Simple echo provider for testing and examples
+        - runtime.entrypoint: server.py
+        - runtime.default_port: 50060 (next available port after existing providers)
+        - runtime.mode: subprocess
+        - capabilities.types: [utility, testing]
+        - capabilities.operations: [create, read, echo]
+        - environment.required_vars: [] (no API keys needed)
+        - health.endpoint: ValidateConfig
+        - health.timeout_ms: 5000
+
+        Generate ONLY the YAML content for providers/echo/config.yaml
+        Follow the exact structure of other provider configs.
+      EOT
+    }
+  ]
+  aiclResourceName = "generate_config"
+}
+
+# Step 5: Generate tests
+resource "openai_chat" "generate_tests" {
+  model = "gpt-4o"
+  temperature = 0.3
+  max_tokens = 3000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate comprehensive pytest tests for the echo provider.
+
+        TESTS TO INCLUDE:
+        1. test_basic_echo - Basic echo functionality with default prefix
+        2. test_custom_prefix - Custom prefix parameter
+        3. test_empty_input - Empty string handling (should work)
+        4. test_special_characters - Unicode and special characters
+        5. test_length_tracking - Verify original_length and echoed_length attributes
+        6. test_error_handling - Test invalid inputs if applicable
+
+        Use pytest conventions, async/await if needed, and AICL testing patterns.
+        Mock gRPC where appropriate.
+
+        Generate ONLY the Python code for providers/echo/test_echo.py
+        Include all necessary imports and fixtures.
+      EOT
+    }
+  ]
+  aiclResourceName = "generate_tests"
+}
+
+# Step 6: Judge the quality
+resource "openai_chat" "judge_quality" {
+  model = "gpt-4o"
+  temperature = 0.0
+  max_tokens = 2000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer. Evaluate code quality objectively and provide numerical scores."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Evaluate the generated Echo provider implementation.
+
+        GENERATED PROVIDER CODE:
+        ---
+        ${resource.openai_chat.generate_provider.attributes.content}
+        ---
+
+        GENERATED CONFIG:
+        ---
+        ${resource.openai_chat.generate_config.attributes.content}
+        ---
+
+        GENERATED TESTS:
+        ---
+        ${resource.openai_chat.generate_tests.attributes.content}
+        ---
+
+        Evaluate on these criteria (100 points total):
+
+        1. CORRECTNESS (40 points)
+           - Implements specification correctly
+           - gRPC interface implemented properly
+           - Error handling present and appropriate
+
+        2. CODE QUALITY (30 points)
+           - Clean, readable code
+           - Follows Python PEP 8 conventions
+           - Good variable/function names
+
+        3. BEST PRACTICES (20 points)
+           - Uses AICL patterns correctly
+           - Proper imports and dependencies
+           - Comprehensive docstrings
+
+        4. MAINTAINABILITY (10 points)
+           - Easy to understand and modify
+           - Well structured and organized
+           - Tests are comprehensive
+
+        DECISION RULES:
+        - Score >= 90: ACCEPT (Excellent, production-ready)
+        - Score 80-89: ACCEPT (Good, minor improvements possible)
+        - Score 70-79: REVISE (Needs improvements)
+        - Score < 70: REJECT (Not acceptable)
+
+        Respond ONLY with valid JSON (no markdown, no extra text):
+        {
+          "overall_score": 85,
+          "breakdown": {
+            "correctness": 38,
+            "code_quality": 25,
+            "best_practices": 15,
+            "maintainability": 7
+          },
+          "decision": "ACCEPT",
+          "reasoning": "detailed explanation here",
+          "strengths": ["strength 1", "strength 2"],
+          "weaknesses": ["weakness 1", "weakness 2"],
+          "improvements": ["improvement 1", "improvement 2"]
+        }
+      EOT
+    }
+  ]
+  aiclResourceName = "judge_quality"
+}

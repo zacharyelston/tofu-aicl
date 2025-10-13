@@ -1,147 +1,61 @@
-# tofu-aicl - Declarative AI Infrastructure
+# TerraMISO - Multi-In Single-Out AI Framework
 
-## Project Overview
-A declarative, container-based framework for defining and provisioning AI infrastructure (RAG pipelines, agents, etc.) using HCL syntax. Think "Terraform for AI workflows."
+## Overview
+**TerraMISO** extends Terraform and OpenTofu with AI-powered optimization using the **MISO pattern** (Multi-In Single-Out). Multiple LLM providers analyze problems, compete with solutions, and the best answer is selected through LLM-as-Judge evaluation.
 
-**Repository**: https://github.com/zacharyelston/tofu-aicl
-**License**: GPL-3.0
+**MISO = Multi-In Single-Out**: A reusable competitive optimization pattern where multiple AI providers compete and the optimal solution wins. This framework enables:
+- Terraform configuration optimization (Azure, AWS, GCP)
+- RAG pipeline evaluation with provider competition
+- Self-healing infrastructure
+- Cost optimization through multi-provider analysis
 
-## Core Concepts
-- **Declarative AI Infrastructure**: Define AI systems as code using HCL
-- **Provider Architecture**: Modular gRPC services for LLMs, Vector DBs, file loaders, etc.
-- **Ephemeral & Just-In-Time**: Spin up AI infrastructure on-demand and tear down automatically
-- **Test-Driven AI**: Algorithmic experimentation with multiple configurations
+The project extends (not competes with) Terraform/OpenTofu, providing a declarative AI infrastructure layer using HCL/AICL syntax. It's designed as a self-constructing tool system that other systems can adopt by including our templates and methods.
 
-## Replit Setup (October 5, 2025)
+## User Preferences
+I prefer simple language and clear explanations. I want iterative development with frequent, small updates. Ask for confirmation before making major architectural changes or introducing new external dependencies. I prefer detailed explanations for complex features. Do not make changes to files outside the explicitly defined project scope.
 
-### Architecture Adaptation
-The project originally used Docker containers for provider isolation. In Replit (no Docker support), providers now run as **Python subprocesses** with gRPC communication maintained.
+## Recent Updates (October 13, 2025)
+**✅ Multiple Output Destinations with CLI Switches**
+- Added flexible output configuration via command-line flags
+- Supports JSON state files, PostgreSQL DocDB, and stdout independently
+- CLI flags: `--output-file`, `--output-docdb`, `--output-stdout`, `--quiet`, `--tags`, `--experiment-id`
+- Comprehensive test suite: 20 CLI tests covering all output modes and configurations
+- See `docs/CLI_USAGE.md` for complete usage guide
 
-### Environment Configuration
-- **Runtime**: Python 3.11
-- **Provider Mode**: Subprocess (set via `AICL_SUBPROCESS_MODE=true`, default)
-- **Dependencies**: python-hcl2, grpcio, grpcio-tools, protobuf, requests, python-dotenv
+**✅ RAG Pipeline Dimension Mismatch Fixed**
+- Resolved Pinecone 1024-dim vs OpenAI 1536-dim embedding issue
+- Added `dimensions` parameter support to all embedding resources
+- Fixed HCL float-to-int type conversion for OpenAI API compatibility
 
-### API Secrets (Stored in Replit Secrets)
-- `OPENAI_API_KEY`: For OpenAI embeddings API
-- `OPENROUTER_API_KEY`: For AI model access via OpenRouter
-- `PINECONE_API_KEY`: Vector database authentication
-- `PINECONE_HOST_URL`: Pinecone index endpoint
-- `AZURE_OPENAI_API_KEY`: (Optional) For Azure OpenAI embeddings
-- `AZURE_OPENAI_ENDPOINT`: (Optional) Azure OpenAI endpoint URL
-- `AZURE_OPENAI_API_VERSION`: (Optional) Azure API version (default: 2024-02-01)
+**✅ Transparent Error Handling**
+- Enhanced error logging with full API response details
+- System now "fails loudly" instead of masking errors with fallbacks
+- Improved debugging with detailed Pinecone and OpenAI error messages
 
-### Available Providers
-1. **file_loader** - Load documents from filesystem
-2. **text_splitter** - Chunk text for embeddings
-3. **openai** - OpenAI embeddings (text-embedding-3-small)
-4. **azure_openai** - Azure OpenAI embeddings
-5. **openrouter** - AI models via OpenRouter (chat, completions)
-6. **pinecone** - Vector database for RAG
-7. **command_assertion** - Validation and testing
+**✅ Test Coverage**
+- Added `tests/test_cli.py` with 20 comprehensive tests (all passing)
+- Tests cover output flags, DocDB integration, quiet mode, and argparse
 
-### Running the Engine
-```bash
-python run.py <config_file.aicl>
-```
+## System Architecture
+The core architecture revolves around declarative AI infrastructure defined in HCL. It uses a provider architecture where each AI component (LLMs, Vector DBs, file loaders, etc.) runs as a modular gRPC service, implemented as Python subprocesses.
 
-Example: `python run.py rag_pipeline_test.aicl`
+Key architectural components include:
+-   **Parser**: Handles HCL configuration parsing.
+-   **Provider Registry**: Manages centralized provider metadata.
+-   **Evaluator**: Resolves HCL interpolation and expressions.
+-   **Planner**: Manages dependency resolution and topological sorting of resources.
+-   **Executor**: Oversees resource provisioning and state management.
+-   **State Manager**: Ensures persistent state tracking (in-memory, SQLite, PostgreSQL).
+-   **Engine**: Orchestrates the overall lifecycle management of AI workflows.
 
-### Workflow
-The "AICL Engine" workflow runs the RAG pipeline test configuration, demonstrating:
-1. Provider startup (subprocess mode)
-2. Resource provisioning (file loading → text splitting)
-3. Execution with interpolation resolution
-4. Automatic cleanup/teardown
+The system supports test-driven AI through a matrix experiment system, allowing template-based experiments, comprehensive metrics collection (token usage, timing, cost), and comparative analysis using LLM-as-Judge evaluations. OpenTelemetry is integrated for distributed tracing and metrics. A centralized `ModelCatalog` manages all model metadata, pricing, and capabilities. Configuration is managed using a "Configuration-as-Data" pattern with schema validation. The architecture includes modular code, storage abstraction with an abstract interface, and a clear split between CLI (free tier with in-memory/SQLite storage) and a future web-based platform (paid tier with PostgreSQL). Experiment results are stored in a PostgreSQL JSONB document database for organized management, querying, and comparison.
 
-## Matrix Experiment System (October 9, 2025)
-
-### Performance Metrics & Analysis
-Built a comprehensive matrix experiment system for running multiple AICL configurations with different variables and analyzing performance metrics:
-
-**Features:**
-- ✅ **Template-based experiments**: Use `{{ variable }}` placeholders in .aicl templates (lowercase with spaces)
-- ✅ **Comprehensive metrics**: Token usage, response timing, throughput, and cost tracking
-- ✅ **Model-specific pricing**: Accurate cost estimates per model (Claude, GPT-4, GPT-4o, etc.)
-- ✅ **Centralized storage**: All state files stored in `experiments/*/` directories
-- ✅ **Comparative analysis**: Built-in tools for comparing model performance
-
-**Available Tools:**
-```bash
-# Run experiments
-python run_matrix.py          # Simple chat experiments
-python run_code_matrix.py     # Code analysis experiments
-
-# View results
-python final_performance_report.py  # Comprehensive comparison
-python compare_matrix.py            # State file analysis
-```
-
-**Metrics Captured:**
-- **Token Usage**: Prompt tokens, completion tokens, total tokens
-- **Performance**: Response time (ms), latency, tokens/second
-- **Cost**: Accurate estimates with model-specific pricing (shows source: estimated/actual)
-- **Quality**: Response length, content preview
-
-**Example Results (Code Analysis):**
-- Claude 3.5 Sonnet: 116% faster, 75% cheaper than GPT-4
-- GPT-4: Higher cost but better token efficiency
-- All metrics stored in state files for custom analysis
-
-**Pricing Map (per 1M tokens):**
-- Claude 3.5 Sonnet: $3 input / $15 output
-- GPT-4: $30 input / $60 output
-- GPT-4o: $2.50 input / $10 output
-- GPT-4o-mini: $0.15 input / $0.60 output
-- Claude 3 Opus: $15 input / $75 output
-- Claude 3 Haiku: $0.25 input / $1.25 output
-
-## Recent Changes (October 5, 2025)
-
-### Core Framework
-- **Provider Registry System**: Centralized provider metadata (images, versions, sources) in `provider_registry.py`, eliminating need for container blocks in .aicl files
-- **HCL Evaluator**: Native interpolation resolution for `${resource.type.name.attributes.field}` syntax with proper support for complex nested data structures (lists of dicts)
-- **Protobuf Serialization**: Updated to use `ParseDict`/`MessageToDict` for correct handling of nested structures between engine and providers
-- **Subprocess Provider Mode**: Replaced Docker containers with Python subprocess execution
-- **PYTHONPATH Configuration**: Added workspace root to allow providers to import proto modules
-- **Provider Name Resolution**: Fixed source field parsing (e.g., "aicl/file_loader" → "file_loader")
-- **Secrets Integration**: Using Replit Secrets for API key management
-- **Proto Compilation**: Generated gRPC stubs from provider.proto
-
-### RAG Implementation
-- **OpenRouter Provider Enhanced**: Added embedding generation (single text & arrays) and chat completion support
-- **Pinecone Provider Enhanced**: Added vector upsert and query operations with metadata
-- **Resource-to-Provider Mapping**: Clean resource types (embedding, chat, query) map to providers (openrouter, pinecone)
-- **RAG Pipelines Created**:
-  - `rag_index.aicl`: Index AICL source code into vector database
-  - `rag_query.aicl`: Query indexed code and generate answers
-
-### Framework Validation (October 5, 2025)
-**Status: Architecture FULLY FUNCTIONAL ✅**
-
-Through comprehensive debugging, validated:
-- ✅ Provider gRPC communication and lifecycle management
-- ✅ Resource dependency resolution and topological sorting
-- ✅ HCL interpolation and state management
-- ✅ Resource ID generation using aiclResourceName from configs
-- ✅ Error handling and diagnostic propagation
-- ✅ Chat completion resources work correctly
-
-**Solution Implemented** (October 5, 2025):
-- ✅ Created dedicated OpenAI provider for embeddings (text-embedding-3-small)
-- ✅ Created Azure OpenAI provider for enterprise embeddings
-- ✅ Updated RAG pipelines to use OpenAI embeddings instead of OpenRouter
-- ✅ End-to-end RAG pipeline now fully functional
-- ✅ All resources created and destroyed successfully
-
-**Known Issues**:
-- OpenRouter doesn't support `/embeddings` endpoint (documented in `problems/rag-api-integration-issues.md`)
-
-## Architecture Components
-- **Parser** (`parser.py`): HCL configuration parsing
-- **Provider Registry** (`provider_registry.py`): Centralized provider metadata
-- **Evaluator** (`evaluator.py`): HCL interpolation and expression resolution
-- **Planner** (`planner.py`): Dependency resolution and topological sorting
-- **Executor** (`executor.py`): Resource provisioning and state management
-- **State Manager** (`state/manager.py`): Persistent state tracking
-- **Engine** (`core/engine.py`): Orchestration and lifecycle management
+## External Dependencies
+The project integrates with several external services and APIs:
+-   **OpenAI API**: For embeddings and chat.
+-   **OpenRouter API**: For various AI models.
+-   **Pinecone**: A vector database.
+-   **Azure OpenAI**: For enterprise embeddings and chat (API version 2023-05-15).
+-   **Naga.ai**: An OpenAI-compatible AI provider.
+-   **Ragie.io**: A fully managed RAG-as-a-Service platform.
+-   **Python Libraries**: `python-hcl2`, `grpcio`, `grpcio-tools`, `protobuf`, `requests`, `python-dotenv`.

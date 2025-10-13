@@ -1,0 +1,325 @@
+# Self-Building Challenge: Add Replit Provider
+# This enables AICL to manage Replit deployments, databases, and agents!
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    openrouter = { source = "aicl/openrouter" }
+    pinecone = { source = "aicl/pinecone" }
+  }
+}
+
+variable "quality_threshold" {
+  type    = number
+  default = 85
+  description = "High threshold for production-grade provider"
+}
+
+variable "code_model" {
+  type    = string
+  default = "gpt-4o"
+  description = "Best model for complex code generation"
+}
+
+variable "judge_model" {
+  type    = string
+  default = "anthropic/claude-3.5-sonnet"
+  description = "Claude judges the Replit provider"
+}
+
+# Step 1: RAG Query for provider patterns - Embed
+resource "embedding" "patterns_query" {
+  text = "How to implement AICL provider with multiple resource types: Provider class structure, resource type handling, gRPC interface implementation, config schema, error handling and validation. Show examples from providers with multiple resources."
+  model = "text-embedding-3-small"
+}
+
+# Step 2: RAG Query for provider patterns - Search
+resource "query" "provider_patterns" {
+  vector = "${resource.embedding.patterns_query.attributes.embedding}"
+  top_k = 10
+  namespace = "aicl-source"
+}
+
+# Step 3: RAG Query for API patterns - Embed  
+resource "embedding" "api_query" {
+  text = "REST API integration, GraphQL queries, authentication headers, async HTTP requests in Python"
+  model = "text-embedding-3-small"
+}
+
+# Step 4: RAG Query for API patterns - Search
+resource "query" "api_patterns" {
+  vector = "${resource.embedding.api_query.attributes.embedding}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+# Step 5: Generate comprehensive Replit provider specification
+resource "chat" "generate_spec" {
+  model = "gpt-4o"
+  temperature = 0.3
+  max_tokens = 3000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        You are designing a Replit provider for the AICL framework.
+        
+        Based on Replit's 2025 capabilities, create a specification for THREE resource types:
+        
+        ### 1. replit_deployment
+        - name (string): Deployment name
+        - type (string): "autoscale" | "reserved_vm" | "scheduled" | "static"
+        - environment (map): Environment variables
+        
+        ### 2. replit_database
+        - name (string): Database name
+        - type (string): "postgresql"
+        - max_size_gb (int): Max storage
+        
+        ### 3. replit_agent
+        - name (string): Agent name
+        - integration (string): "slack" | "telegram" | "email"
+        - prompt (string): Agent instructions
+        
+        Create a detailed technical specification including resource schemas, API endpoints, auth flow, and error scenarios.
+      EOT
+    }
+  ]
+}
+
+# Step 6: Generate main provider implementation
+resource "chat" "generate_provider" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 8000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are implementing a production-grade Replit provider for AICL."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        SPECIFICATION:
+        ${resource.chat.generate_spec.attributes.content}
+        
+        REFERENCE PATTERNS:
+        ${resource.query.provider_patterns.attributes.results}
+        
+        API PATTERNS:
+        ${resource.query.api_patterns.attributes.results}
+        
+        Create providers/replit/server.py with:
+        1. ReplitProvider class (ProviderServicer)
+        2. Resource handlers for all 3 types
+        3. Replit API client with GraphQL
+        4. Production patterns (circuit breaker, retries)
+        5. v2.runtime.create_provider_server
+        
+        Generate complete Python code.
+      EOT
+    }
+  ]
+}
+
+# Step 7: Generate provider config
+resource "chat" "generate_config" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate config.yaml for Replit provider:
+        - name: replit
+        - display_name: Replit Platform
+        - version: 1.0.0
+        - default_port: 50062
+        - mode: subprocess
+        - resource_types: [replit_deployment, replit_database, replit_agent]
+        - capabilities.operations: [create, read, update, delete]
+        
+        YAML only.
+      EOT
+    }
+  ]
+}
+
+# Step 8: Generate API client module
+resource "chat" "generate_api_client" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 4000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate providers/replit/api_client.py:
+        
+        - ReplitAPIClient class
+        - GraphQL query methods
+        - Async HTTP with aiohttp
+        - Auth with REPLIT_TOKEN
+        - Error handling (retries, circuit breaker)
+        
+        Complete Python code with type hints.
+      EOT
+    }
+  ]
+}
+
+# Step 9: Generate tests
+resource "chat" "generate_tests" {
+  model = var.code_model
+  temperature = 0.2
+  max_tokens = 6000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate comprehensive pytest tests for Replit provider:
+        
+        1. test_replit_deployments.py - All deployment types
+        2. test_replit_database.py - Database lifecycle
+        3. test_replit_agent.py - Agent creation
+        4. test_replit_api_client.py - API mocking
+        5. test_replit_integration.py - End-to-end
+        
+        Include pytest-asyncio, mocking, assertions.
+      EOT
+    }
+  ]
+}
+
+# Step 10: Generate requirements
+resource "chat" "generate_requirements" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 500
+  
+  messages = [
+    {
+      role = "user"
+      content = "List Python dependencies for Replit provider: aiohttp, GraphQL client, testing libs. Format as requirements.txt with versions."
+    }
+  ]
+}
+
+# Step 11: Generate example usage
+resource "chat" "generate_example" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1500
+  
+  messages = [
+    {
+      role = "user"
+      content = "Create examples/replit-deployment-example.aicl showing: 1) Create PostgreSQL database, 2) Deploy autoscale web app with DB connection, 3) Create Slack bot agent. Real AICL syntax."
+    }
+  ]
+}
+
+# Step 12: Judge quality
+resource "chat" "judge_quality" {
+  model = var.judge_model
+  temperature = 0.0
+  max_tokens = 3500
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer evaluating a Replit provider implementation."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        SPECIFICATION:
+        ${resource.chat.generate_spec.attributes.content}
+        
+        PROVIDER CODE:
+        ${resource.chat.generate_provider.attributes.content}
+        
+        CONFIG:
+        ${resource.chat.generate_config.attributes.content}
+        
+        API CLIENT:
+        ${resource.chat.generate_api_client.attributes.content}
+        
+        TESTS:
+        ${resource.chat.generate_tests.attributes.content}
+        
+        Evaluate (100 points):
+        1. CORRECTNESS (40) - All 3 resource types, GraphQL, state mgmt
+        2. CODE QUALITY (30) - Architecture, async, types
+        3. BEST PRACTICES (20) - Circuit breaker, retries, security
+        4. MAINTAINABILITY (10) - Structure, tests, extensibility
+        
+        Decision: >= 90 ACCEPT (Excellent), 80-89 ACCEPT (Good), 70-79 REVISE, < 70 REJECT
+        
+        Respond with JSON:
+        {
+          "overall_score": <0-100>,
+          "breakdown": {"correctness": <0-40>, "code_quality": <0-30>, "best_practices": <0-20>, "maintainability": <0-10>},
+          "decision": "ACCEPT | REVISE | REJECT",
+          "reasoning": "<details>",
+          "strengths": ["<...>"],
+          "weaknesses": ["<...>"],
+          "improvements": ["<...>"],
+          "replit_specific_notes": "<notes>"
+        }
+      EOT
+    }
+  ]
+}
+
+# Outputs
+output "generated_files" {
+  value = {
+    specification = resource.chat.generate_spec.attributes.content
+    provider_code = resource.chat.generate_provider.attributes.content
+    provider_config = resource.chat.generate_config.attributes.content
+    api_client = resource.chat.generate_api_client.attributes.content
+    test_code = resource.chat.generate_tests.attributes.content
+    requirements = resource.chat.generate_requirements.attributes.content
+    example_usage = resource.chat.generate_example.attributes.content
+  }
+}
+
+output "quality_evaluation" {
+  value = resource.chat.judge_quality.attributes.content
+}
+
+output "recommendation" {
+  value = <<-EOT
+    === REPLIT PROVIDER - SELF-BUILD RESULTS ===
+    
+    🎯 CHALLENGE: Production provider with 3 resource types
+    
+    Generated Files:
+    1. Specification (${length(split("\n", resource.chat.generate_spec.attributes.content))} lines)
+    2. providers/replit/server.py (${length(split("\n", resource.chat.generate_provider.attributes.content))} lines)
+    3. providers/replit/config.yaml (${length(split("\n", resource.chat.generate_config.attributes.content))} lines)
+    4. providers/replit/api_client.py (${length(split("\n", resource.chat.generate_api_client.attributes.content))} lines)
+    5. providers/replit/test_*.py (${length(split("\n", resource.chat.generate_tests.attributes.content))} lines)
+    6. requirements.txt (${length(split("\n", resource.chat.generate_requirements.attributes.content))} lines)
+    7. examples/replit-deployment-example.aicl (${length(split("\n", resource.chat.generate_example.attributes.content))} lines)
+    
+    Quality: [See quality_evaluation output]
+    
+    IF score >= ${var.quality_threshold}:
+    1. Review generated code
+    2. mkdir -p providers/replit examples
+    3. Copy files from output
+    4. pip install [requirements]
+    5. pytest providers/replit/ -v
+    6. python run.py examples/replit-deployment-example.aicl
+    
+    === END RESULTS ===
+  EOT
+}

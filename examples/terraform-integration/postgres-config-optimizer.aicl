@@ -1,0 +1,182 @@
+# TerraMISO Configuration Optimizer
+# Analyzes workload requirements and recommends optimal Azure Postgres config
+# Output feeds directly into Terraform variables
+
+# Workload specification (could come from terraform.tfvars or user input)
+variable "app_profile" {
+  type = string
+  default = "E-commerce application with 10K daily active users, peak traffic 2-8pm EST, transaction-heavy workload, compliance requires 30-day retention"
+}
+
+variable "budget_constraint" {
+  type = string
+  default = "$500/month maximum"
+}
+
+variable "availability_requirement" {
+  type = string
+  default = "99.9% uptime SLA, disaster recovery in different region"
+}
+
+# Multi-provider AI analysis to determine optimal configuration
+# Test 3 providers and select best recommendation
+
+resource "openai_chat" "config_recommendation" {
+  model = "gpt-4"
+  temperature = 0.3
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an Azure database optimization expert. Analyze workload requirements and recommend optimal PostgreSQL configuration. Return ONLY valid JSON."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Analyze this workload and recommend optimal Azure PostgreSQL configuration:
+        
+        Application: ${var.app_profile}
+        Budget: ${var.budget_constraint}
+        Availability: ${var.availability_requirement}
+        
+        Return JSON with these exact fields:
+        {
+          "sku_name": "B_Gen5_2|GP_Gen5_4|MO_Gen5_8|etc",
+          "storage_mb": number,
+          "backup_retention_days": number,
+          "geo_redundant_backup": boolean,
+          "reasoning": "explanation",
+          "estimated_monthly_cost": "$XXX"
+        }
+      EOT
+    }
+  ]
+  
+  response_format = {
+    type = "json_object"
+  }
+  
+  aiclResourceName = "openai_recommendation"
+}
+
+resource "openrouter_chat" "config_recommendation" {
+  model = "anthropic/claude-3.5-sonnet"
+  temperature = 0.3
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Analyze this Azure PostgreSQL workload and recommend optimal configuration:
+        
+        Application: ${var.app_profile}
+        Budget: ${var.budget_constraint}
+        Availability: ${var.availability_requirement}
+        
+        Return ONLY valid JSON:
+        {
+          "sku_name": "B_Gen5_2|GP_Gen5_4|MO_Gen5_8|etc",
+          "storage_mb": number,
+          "backup_retention_days": number,
+          "geo_redundant_backup": boolean,
+          "reasoning": "explanation",
+          "estimated_monthly_cost": "$XXX"
+        }
+      EOT
+    }
+  ]
+  
+  aiclResourceName = "claude_recommendation"
+}
+
+resource "openrouter_chat" "config_recommendation_gemini" {
+  model = "google/gemini-2.0-flash-exp:free"
+  temperature = 0.3
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        As an Azure database expert, recommend optimal PostgreSQL configuration:
+        
+        Workload: ${var.app_profile}
+        Budget: ${var.budget_constraint}
+        SLA: ${var.availability_requirement}
+        
+        Return JSON only:
+        {
+          "sku_name": "B_Gen5_2|GP_Gen5_4|etc",
+          "storage_mb": number,
+          "backup_retention_days": number,
+          "geo_redundant_backup": boolean,
+          "reasoning": "brief explanation",
+          "estimated_monthly_cost": "$XXX"
+        }
+      EOT
+    }
+  ]
+  
+  aiclResourceName = "gemini_recommendation"
+}
+
+# LLM-as-Judge: Evaluate all 3 recommendations and select the best
+resource "openai_chat" "final_decision" {
+  model = "gpt-4"
+  temperature = 0.1
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an infrastructure decision engine. Evaluate multiple AI recommendations and select the optimal one. Return ONLY valid JSON."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Three AI models analyzed our Azure PostgreSQL requirements:
+        
+        OpenAI GPT-4 recommendation:
+        ${resource.openai_chat.config_recommendation.content}
+        
+        Claude 3.5 recommendation:
+        ${resource.openrouter_chat.config_recommendation.content}
+        
+        Gemini recommendation:
+        ${resource.openrouter_chat.config_recommendation_gemini.content}
+        
+        Evaluate all three and select the BEST recommendation considering:
+        1. Cost-effectiveness (within $500/month budget)
+        2. Performance for transaction-heavy workload
+        3. Compliance (30-day retention)
+        4. Availability (99.9% SLA, geo-redundancy)
+        
+        Return the winning configuration plus brief explanation:
+        {
+          "selected_provider": "openai|claude|gemini",
+          "sku_name": "...",
+          "storage_mb": number,
+          "backup_retention_days": number,
+          "geo_redundant_backup": boolean,
+          "decision_reasoning": "why this config was chosen",
+          "terraform_vars": {
+            "db_sku_name": "...",
+            "db_storage_mb": number,
+            "backup_retention_days": number,
+            "geo_redundant_backup": boolean
+          }
+        }
+      EOT
+    }
+  ]
+  
+  response_format = {
+    type = "json_object"
+  }
+  
+  aiclResourceName = "final_config"
+}
+
+# Output: Terraform-ready variables
+output "terraform_variables" {
+  value = resource.openai_chat.final_decision.content
+  description = "AI-optimized configuration to feed into terraform.tfvars"
+}

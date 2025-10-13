@@ -1,8 +1,61 @@
-# tofu-aicl
+# TerraMISO
 
-## 🎯 **Real RAG Evaluation Output**
+## Multi-In Single-Out AI Framework for Terraform/OpenTofu
 
-Here's what the system actually produces when you run it:
+**TerraMISO** extends Terraform and OpenTofu with AI-powered optimization using the **MISO pattern** (Multi-In Single-Out): multiple LLM providers compete, and the best solution wins.
+
+```
+Multiple Providers (Multi-In)    →    Optimal Solution (Single-Out)
+    GPT-4         ─┐
+    Claude        ─┼──→  Competition  →  🏆 Best Answer
+    Gemini        ─┘
+```
+
+**Repository**: https://github.com/zacharyelston/terramiso  
+**License**: GPL-3.0
+
+---
+
+## 🎯 What is MISO?
+
+**MISO = Multi-In Single-Out** - A reusable competitive optimization pattern:
+
+1. **Multi-In**: Multiple AI providers analyze the same problem
+2. **Competition**: Each provider proposes a solution
+3. **Selection**: LLM-as-Judge picks the optimal solution
+4. **Single-Out**: One best answer emerges
+
+This isn't just for AI - **any system can adopt MISO** for competitive optimization by including our templates and methods.
+
+---
+
+## 🚀 Quick Start: Terraform Integration
+
+### Traditional Terraform Problem:
+```hcl
+resource "azurerm_postgresql_server" "main" {
+  sku_name = "GP_Gen5_4"   # Is this optimal? 🤷
+  storage_mb = 102400       # Guesswork! 🤷
+}
+```
+
+### With TerraMISO:
+```bash
+# 1. AI analyzes your workload (3 providers compete)
+python run.py postgres-optimizer.aicl
+
+# 2. Best config automatically selected
+# 3. Terraform deploys with optimal settings ✨
+terraform apply -var-file=ai-optimized.tfvars
+```
+
+See `examples/terraform-integration/README.md` for complete walkthrough.
+
+---
+
+## 💡 Real RAG Evaluation Output
+
+Here's what the system produces with MISO pattern:
 
 ```
 🔍 Testing 1 question(s)
@@ -22,7 +75,7 @@ Here's what the system actually produces when you run it:
 🤖 GPT-4...
    ✅ Response: 1559 chars, 16370ms
 
-📊 LLM Judge Evaluation:
+📊 LLM Judge Evaluation (MISO Selection):
   claude-3.5-sonnet:
     Accuracy: 8/10
     Completeness: 7/10
@@ -37,387 +90,421 @@ Here's what the system actually produces when you run it:
     Code Specificity: 9/10
     Total: 34/40
 
-  🏆 Winner: gpt-4
+  🏆 Winner: gpt-4  (Single-Out)
 ```
-
-**Generated Report**: [View Full Report](experiments/rag_test_results.md)
 
 ---
 
 ## Overview
 
-Declarative AI Infrastructure
+**TerraMISO** is a declarative AI infrastructure framework that extends Terraform/OpenTofu with intelligent optimization.
 
-A declarative, framework for defining and provisioning AI infrastructure (RAG pipelines, agents, etc.) using HCL syntax. Think "Terraform for AI workflows."
+### Core Concepts
 
-**Repository**: https://github.com/zacharyelston/tofu-aicl  
-**License**: GPL-3.0
+- **MISO Pattern**: Multi-In Single-Out competitive optimization
+- **Terraform Extension**: Works with existing `.tf` files, no migration needed
+- **Declarative AI Infrastructure**: Define AI systems as code using HCL/AICL
+- **Provider Architecture**: Modular gRPC services for LLMs, Vector DBs, file loaders
+- **Ephemeral & Just-In-Time**: Spin up AI infrastructure on-demand
+- **Matrix Experiments**: Run multiple configurations with performance tracking
 
-## Core Concepts
+---
 
-- **Declarative AI Infrastructure**: Define AI systems as code using HCL
-- **Provider Architecture**: Modular gRPC services for LLMs, Vector DBs, file loaders, etc.
-- **Ephemeral & Just-In-Time**: Spin up AI infrastructure on-demand and tear down automatically
-- **Matrix Experiments**: Run multiple configurations with performance tracking and comparative analysis
+## 🏗️ Use Cases
+
+### 1. Terraform Configuration Optimization
+```bash
+# Analyze workload, 3 LLMs compete, optimal config selected
+python run.py azure-postgres-optimizer.aicl
+terraform apply -var-file=optimized.tfvars
+```
+
+### 2. RAG Pipeline Evaluation
+```bash
+# Test multiple LLMs, best answer selected via MISO
+python run.py rag-pipeline.aicl --output-docdb --tags rag,production
+```
+
+### 3. Cost Optimization
+```bash
+# Compare 3 providers on price/performance
+python run.py cost-optimizer.aicl --experiment-id cost-analysis
+```
+
+### 4. Self-Healing Infrastructure
+```bash
+# AI detects issues, proposes fixes, selects best solution
+python run.py self-heal.aicl --parallel
+```
+
+---
 
 ## Quick Start
 
-### 1. Set up API Keys (Replit Secrets)
-Configure these secrets in your Replit environment:
-- `OPENAI_API_KEY` - For embeddings
-- `OPENROUTER_API_KEY` - For LLM access
-- `PINECONE_API_KEY` - For vector database
-- `PINECONE_HOST_URL` - Pinecone endpoint
+### 1. Set up API Keys
 
-### 2. Run a Simple Configuration
+Configure these environment variables:
+```bash
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-..."
+export PINECONE_API_KEY="..."
+export PINECONE_HOST_URL="https://..."
+export DATABASE_URL="postgresql://..."  # Optional: for DocDB
+```
+
+### 2. Run a Simple MISO Example
 
 ```bash
+# Basic usage
 python run.py config.aicl
+
+# With multiple output destinations
+python run.py config.aicl --output-file --output-docdb --output-stdout
+
+# Quiet mode with custom ID and tags
+python run.py config.aicl --quiet --experiment-id my-test --tags demo,v1
 ```
 
 Example config (`config.aicl`):
 ```hcl
-resource "chat" "greeting" {
-  provider = "aicl/openrouter"
-  config = {
-    model = "anthropic/claude-3.5-sonnet"
-    messages = [
-      {
-        role = "user"
-        content = "Explain how declarative AI infrastructure works."
-      }
-    ]
-  }
+# MISO Pattern: Test 3 providers, pick best answer
+resource "openai_chat" "answer_gpt" {
+  model = "gpt-4"
+  messages = [
+    {
+      role = "user"
+      content = "Explain Terraform best practices"
+    }
+  ]
+  aiclResourceName = "gpt_answer"
+}
+
+resource "openrouter_chat" "answer_claude" {
+  model = "anthropic/claude-3.5-sonnet"
+  messages = [
+    {
+      role = "user"
+      content = "Explain Terraform best practices"
+    }
+  ]
+  aiclResourceName = "claude_answer"
+}
+
+# LLM-as-Judge: Select best answer
+resource "openai_chat" "judge" {
+  model = "gpt-4"
+  messages = [
+    {
+      role = "user"
+      content = "Compare these answers and select the best: ${resource.openai_chat.answer_gpt.content} vs ${resource.openrouter_chat.answer_claude.content}"
+    }
+  ]
+  aiclResourceName = "final_answer"
 }
 ```
 
-### 3. Run Matrix Experiments
+### 3. CLI Flags
 
-Test multiple models and configurations:
+- `--output-file` - Save to JSON state files (default)
+- `--output-docdb` - Save to PostgreSQL database
+- `--output-stdout` - Print to console (default)
+- `--no-stdout` - Disable console output
+- `--quiet` - Minimal output (errors only)
+- `--experiment-id ID` - Custom experiment identifier
+- `--tags TAGS` - Comma-separated tags (e.g., `rag,demo,v1`)
+- `--parallel` - Enable parallel execution (experimental)
+
+See `docs/CLI_USAGE.md` for complete documentation.
+
+---
+
+## 🔧 Terraform Integration
+
+### Seamless Extension
+
+TerraMISO works **with** your existing Terraform code:
+
+```hcl
+# main.tf (existing Terraform - no changes!)
+variable "db_sku_name" { }
+
+resource "azurerm_postgresql_server" "main" {
+  sku_name = var.db_sku_name  # TerraMISO optimizes this
+  ...
+}
+```
 
 ```bash
-# Run code analysis comparison
-python run_code_matrix.py
+# TerraMISO analyzes and optimizes
+python run.py optimizer.aicl --output-file
 
-# View comprehensive performance report
-python final_performance_report.py
+# Extract AI recommendations
+jq '.terraform_vars' state.json > terraform.tfvars
+
+# Deploy with Terraform
+terraform apply -var-file=terraform.tfvars
 ```
 
-## Matrix Experiment System
+### Example: Azure Postgres Optimization
 
-Run multiple AICL configurations with different variables and analyze performance:
+```bash
+cd examples/terraform-integration
+./deploy.sh
 
-**Features:**
-- Template-based experiments with `{{ variable }}` substitution (lowercase with spaces)
-- Comprehensive metrics: tokens, timing, costs, throughput
-- Model-specific pricing (Claude, GPT-4, GPT-4o, etc.)
-- Centralized state storage and analysis tools
-
-**Example Matrix Template:**
-```hcl
-resource "chat" "analysis" {
-  provider = "aicl/openrouter"
-  config = {
-    model = "{{ model }}"
-    messages = [
-      {
-        role = "user"
-        content = "{{ question }}"
-      }
-    ]
-  }
-}
+# Output:
+# ✓ GPT-4: $475/mo, GP_Gen5_4
+# ✓ Claude: $450/mo, GP_Gen5_4 + geo-redundant
+# ✓ Gemini: $420/mo, GP_Gen5_2
+# 🏆 Winner: Claude (best balance of cost + compliance)
+# → Terraform deploys optimal config
 ```
 
-Variables are defined in the runner script (e.g., `{"model": "anthropic/claude-3.5-sonnet", "question": "Your question"}`)
+See `examples/terraform-integration/README.md` for details.
 
-**Performance Metrics:**
-- Token usage (prompt/completion/total)
-- Response time and latency (ms)
-- Throughput (tokens/second)
-- Cost with model-specific pricing
-- Cost source transparency (estimated/actual)
-
-## Available Providers
-
-1. **file_loader** - Load documents from filesystem
-2. **text_splitter** - Chunk text for embeddings
-3. **openai** - OpenAI embeddings (text-embedding-3-small)
-4. **azure_openai** - Azure OpenAI embeddings
-5. **openrouter** - AI models via OpenRouter (chat, completions)
-6. **pinecone** - Vector database for RAG
-7. **command_assertion** - Validation and testing
-
-## RAG Pipeline Example
-
-**Index documents:**
-```hcl
-resource "file_source" "docs" {
-  provider = "aicl/file_loader"
-  config = {
-    file_paths = ["docs/guide.md", "docs/api.md"]
-  }
-}
-
-resource "chunks" "split" {
-  provider = "aicl/text_splitter"
-  config = {
-    text = "${resource.file_source.docs.attributes.content}"
-    chunk_size = 1000
-  }
-}
-
-resource "embedding" "vectors" {
-  provider = "aicl/openai"
-  config = {
-    texts = "${resource.chunks.split.attributes.chunks}"
-  }
-}
-
-resource "vector_store" "indexed" {
-  provider = "aicl/pinecone"
-  config = {
-    operation = "upsert"
-    vectors = "${resource.embedding.vectors.attributes.embeddings}"
-    namespace = "my-docs"
-  }
-}
-```
-
-**Query with RAG:**
-```hcl
-resource "embedding" "query_vec" {
-  provider = "aicl/openai"
-  config = {
-    text = "How do I use the API?"
-  }
-}
-
-resource "search_results" "relevant" {
-  provider = "aicl/pinecone"
-  config = {
-    operation = "query"
-    vector = "${resource.embedding.query_vec.attributes.embedding}"
-    top_k = 3
-    namespace = "my-docs"
-  }
-}
-
-resource "answer" "response" {
-  provider = "aicl/openrouter"
-  config = {
-    model = "anthropic/claude-3.5-sonnet"
-    messages = [
-      {
-        role = "user"
-        content = "Context: ${resource.search_results.relevant.attributes.matches}\n\nQuestion: How do I use the API?"
-      }
-    ]
-  }
-}
-```
+---
 
 ## Architecture
 
-- **Parser** (`parser.py`): HCL configuration parsing
-- **Provider Registry** (`provider_registry.py`): Centralized provider metadata
-- **Evaluator** (`evaluator.py`): HCL interpolation and expression resolution
-- **Planner** (`planner.py`): Dependency resolution and topological sorting
-- **Executor** (`executor.py`): Resource provisioning and state management
-- **State Manager** (`state/manager.py`): Persistent state tracking
-- **Engine** (`core/engine.py`): Orchestration and lifecycle management
+### MISO Engine Flow
 
-## Development Setup (Replit)
+```
+Input Specification
+    ↓
+┌─────────────────────────────────────┐
+│  Multi-In: Provider Competition     │
+│                                     │
+│  GPT-4     → Analysis 1             │
+│  Claude    → Analysis 2             │
+│  Gemini    → Analysis 3             │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│  LLM-as-Judge Selection             │
+│  Evaluates all → Picks best         │
+└─────────────────────────────────────┘
+    ↓
+Single-Out: Optimal Solution
+    ↓
+Terraform Variables / Outputs
+```
 
-The project runs in Replit with providers as Python subprocesses (no Docker needed):
+### Core Components
 
-- **Runtime**: Python 3.11
-- **Provider Mode**: Subprocess (via `AICL_SUBPROCESS_MODE=true`)
-- **Dependencies**: python-hcl2, grpcio, grpcio-tools, protobuf, requests, python-dotenv
+- **Parser**: HCL/AICL configuration parsing
+- **Evaluator**: Variable resolution and interpolation
+- **Planner**: Dependency graph and topological sorting
+- **Executor**: Resource provisioning with MISO pattern
+- **State Manager**: Persistent state (in-memory/SQLite/PostgreSQL)
+- **Provider Registry**: Modular gRPC services
 
-## Model Pricing (per 1M tokens)
+---
 
-| Model | Input | Output |
-|-------|-------|--------|
-| Claude 3.5 Sonnet | $3 | $15 |
-| GPT-4 | $30 | $60 |
-| GPT-4o | $2.50 | $10 |
-| GPT-4o-mini | $0.15 | $0.60 |
-| Claude 3 Opus | $15 | $75 |
-| Claude 3 Haiku | $0.25 | $1.25 |
+## 📊 Experiment System
 
-## RAG Testing & Evaluation System
+Create and run declarative AI experiments:
 
-### Overview
-
-The RAG testing system evaluates retrieval quality and model performance with **LLM-as-a-Judge** evaluation:
-
-- **Code-Prioritized Retrieval**: Automatically prioritizes `.py` files over documentation
-- **Multi-Model Comparison**: Tests Claude 3.5 Sonnet vs GPT-4
-- **Automated Evaluation**: Claude judges answers on accuracy, completeness, clarity, and code specificity
-- **Comprehensive Reports**: JSON + Markdown outputs with unique run IDs
-
-### Quick Start
-
-**1. Load your codebase into Pinecone:**
 ```bash
-export $(grep -v '^#' .env | xargs)
-python scripts/load_codebase_to_pinecone.py
+# Run complete RAG demo with MISO
+python run.py experiments/rag-demo/rag-demo-live.aicl
+
+# With PostgreSQL output and tags
+python run.py experiments/rag-demo/rag-demo-live.aicl \
+  --output-docdb \
+  --experiment-id rag-demo-$(date +%Y%m%d) \
+  --tags rag,demo,pinecone
 ```
 
-**2. Create a questions file (`questions.txt`):**
-```
-# RAG Test Questions
-# One question per line, lines starting with # are ignored
+### Matrix Experiments
 
-How does the HCL evaluator resolve interpolations?
-What is the role of the StateManager?
-Explain the parsing flow from HCL input to executable plan.
-```
+Test multiple configurations systematically:
 
-**3. Run RAG evaluation:**
-```bash
-python scripts/test_rag_query.py questions.txt
-```
-
-### Example Output
-
-**Console Output:**
-```
-🔍 Testing 1 question(s)
-🆔 Test Run ID: 551730223cde
-📅 Timestamp: 2025-10-09T10:47:54
-
-📄 Retrieved chunks:
-  [1] src/aicl/parser.py (score: 0.404)
-  [2] src/aicl/planner.py (score: 0.371)
-  [3] src/aicl/evaluator.py (score: 0.347)
-
-✅ Using 3 code chunks + 0 doc chunks
-
-🤖 Claude 3.5 Sonnet...
-   ✅ Response: 1247 chars, 9127ms
-
-🤖 GPT-4...
-   ✅ Response: 1559 chars, 16370ms
-
-📊 LLM Judge Evaluation:
-  claude-3.5-sonnet:
-    Accuracy: 8/10
-    Completeness: 7/10
-    Clarity: 9/10
-    Code Specificity: 6/10
-    Total: 30/40
-
-  gpt-4:
-    Accuracy: 9/10
-    Completeness: 8/10
-    Clarity: 8/10
-    Code Specificity: 9/10
-    Total: 34/40
-
-  🏆 Winner: gpt-4
-```
-
-### Generated Reports
-
-**Markdown Report (`experiments/rag_test_{run_id}.md`):**
-```markdown
-# RAG Test Report
-
-**Run ID:** `551730223cde`
-**Total Questions:** 1
-
-## Summary
-
-| Question | Winner | Claude Score | GPT-4 Score |
-|----------|--------|--------------|-------------|
-| Q1: Explain the parsing flow... | gpt-4 | 30/40 | 34/40 |
-
-## Question 1
-
-**Question:** Explain the parsing flow from HCL input to executable plan
-
-### Answers
-
-#### claude-3.5-sonnet
-- **Response Time:** 9127ms
-- **Tokens:** 800
-
-[Full answer with technical details...]
-
-#### gpt-4
-- **Response Time:** 16370ms
-- **Tokens:** 697
-
-[Full answer with code references...]
-
-### LLM Judge Evaluation
-
-| Model | Accuracy | Completeness | Clarity | Code Specificity | Total |
-|-------|----------|--------------|---------|------------------|-------|
-| claude-3.5-sonnet | 8/10 | 7/10 | 9/10 | 6/10 | **30/40** |
-| gpt-4 | 9/10 | 8/10 | 8/10 | 9/10 | **34/40** |
-
-**Winner:** 🏆 gpt-4
-```
-
-**JSON Report (`experiments/rag_test_{run_id}.json`):**
-```json
-{
-  "run_id": "551730223cde",
-  "timestamp": "2025-10-09T10:47:54.719091",
-  "questions_file": "questions.txt",
-  "total_questions": 1,
-  "models_tested": ["anthropic/claude-3.5-sonnet", "openai/gpt-4"],
-  "questions": [
-    {
-      "question": "Explain the parsing flow...",
-      "context_chunks": 10,
-      "code_chunks_used": 3,
-      "doc_chunks_used": 0,
-      "results": [...],
-      "evaluation": {
-        "evaluations": [...],
-        "winner": "gpt-4",
-        "summary": "GPT-4's answer better bridges conceptual explanation with actual implementation..."
-      }
-    }
-  ]
+```hcl
+# Template with variables
+resource "openai_chat" "analysis" {
+  model = "{{ model }}"
+  temperature = {{ temperature }}
+  messages = [...]
 }
 ```
 
-### Evaluation Criteria
+Run matrix:
+```bash
+# Tests: gpt-4 @ 0.3, 0.5, 0.7 + gpt-4o @ 0.3, 0.5, 0.7
+python run.py matrix-config.aicl --tags matrix,comparison
+```
 
-The LLM judge (Claude 3.5 Sonnet) scores each answer on:
+---
 
-1. **Accuracy (0-10)**: Technical correctness based on code context
-2. **Completeness (0-10)**: How thoroughly the question is answered
-3. **Clarity (0-10)**: Explanation quality and readability
-4. **Code Specificity (0-10)**: References to actual files, classes, and methods
+## 🎯 Why TerraMISO?
 
-**Total Score:** /40 points
+### For Terraform Users
+✅ **Optimize configurations** - AI determines best settings  
+✅ **Reduce costs** - Avoid over/under-provisioning  
+✅ **Improve reliability** - Multi-provider validation  
+✅ **No migration** - Works with existing `.tf` files  
 
-### Key Features
+### For AI Engineers
+✅ **MISO pattern** - Reusable competitive optimization  
+✅ **Provider flexibility** - Easy to add new LLMs  
+✅ **Built-in evaluation** - LLM-as-Judge selection  
+✅ **Experiment tracking** - PostgreSQL DocDB storage  
 
-- ✅ **Code-First Retrieval**: Prioritizes `.py` files over `.md` files
-- ✅ **Unique Run IDs**: Track experiments over time
-- ✅ **Dual Output**: JSON (machine-readable) + Markdown (human-readable)
-- ✅ **Cost Tracking**: Actual API costs from OpenRouter
-- ✅ **Performance Metrics**: Response time, tokens, throughput
-- ✅ **Automated Judging**: Unbiased LLM evaluation with detailed reasoning
+### For DevOps Teams
+✅ **Self-healing** - AI detects and fixes issues  
+✅ **Declarative** - Infrastructure as Code principles  
+✅ **Observable** - OpenTelemetry integration  
+✅ **Adoptable** - Include our templates in your systems  
 
-### Files Indexed
+---
 
-The system indexes these core implementation files:
-- `src/aicl/parser.py` - HCL parsing
-- `src/aicl/evaluator.py` - Interpolation resolution
-- `src/aicl/planner.py` - Dependency graph
-- `src/aicl/executor.py` - Resource provisioning
-- `src/aicl/core/engine.py` - Orchestration
-- `src/aicl/state/manager.py` - State tracking
-- `src/aicl/provider_registry.py` - Provider management
+## 📁 Project Structure
 
-## License
+```
+terramiso/
+├── src/aicl/              # Core engine
+│   ├── core/
+│   │   ├── engine.py      # MISO orchestration
+│   │   ├── parser.py      # HCL parsing
+│   │   ├── evaluator.py   # Variable resolution
+│   │   ├── planner.py     # Dependency graph
+│   │   └── executor.py    # Resource execution
+│   ├── state/             # State management
+│   └── observability/     # OpenTelemetry
+│
+├── providers/             # gRPC providers
+│   ├── openai/           # OpenAI provider
+│   ├── openrouter/       # OpenRouter provider
+│   ├── pinecone/         # Pinecone vector DB
+│   └── ...
+│
+├── experiments/           # Example experiments
+│   ├── terraform-integration/  # Terraform examples
+│   ├── rag-demo/              # RAG pipeline
+│   └── self-build/            # Self-modification
+│
+├── docs/                  # Documentation
+├── outline/               # Technical specs
+└── tests/                 # Test suite
+```
 
-GPL-3.0 - See LICENSE file for details.
+---
+
+## 📖 Documentation
+
+- **[Setup Guide](docs/SETUP.md)** - Installation and configuration
+- **[CLI Usage](docs/CLI_USAGE.md)** - Command-line reference
+- **[Terraform Integration](examples/terraform-integration/README.md)** - Terraform examples
+- **[Experiment Builder](docs/EXPERIMENT_BUILDER_GUIDE.md)** - Create experiments
+- **[Architecture](docs/architecture/01_overview.md)** - System design
+- **[Contributing](CONTRIBUTING.md)** - Development guide
+- **[Outline Specs](outline/README.md)** - Complete technical specifications
+
+---
+
+## 🔬 Advanced Features
+
+### Multi-Provider Testing
+```aicl
+# Test 3 providers simultaneously
+resource "openai_chat" "test_gpt" { ... }
+resource "openrouter_chat" "test_claude" { ... }
+resource "openrouter_chat" "test_gemini" { ... }
+
+# Judge selects winner
+resource "openai_chat" "judge" { ... }
+```
+
+### Self-Healing Infrastructure
+```aicl
+# Monitor → Detect issue → AI proposes fix → Apply
+resource "monitor" "health_check" { ... }
+resource "openai_chat" "diagnosis" { ... }
+resource "terraform_apply" "auto_fix" { ... }
+```
+
+### Cost Optimization
+```aicl
+# Compare configurations on cost/performance
+resource "openai_chat" "cost_analysis" { ... }
+# Outputs optimal price/performance ratio
+```
+
+---
+
+## 🚢 Deployment
+
+### CLI (Free Tier)
+- In-memory or SQLite storage
+- Local execution
+- All core features
+
+### Web Platform (Future - Paid Tier)
+- PostgreSQL storage
+- Multi-user support
+- Team collaboration
+- Advanced analytics
+
+---
+
+## 🤝 Adopting MISO in Your System
+
+The **MISO pattern** is designed to be reusable:
+
+1. **Include our templates** - Use our `.aicl` configurations
+2. **Use our methods** - Competitive selection logic
+3. **Offload optimization** - Let TerraMISO handle Multi-In Single-Out
+
+Example integration:
+```python
+from terramiso import MISO
+
+# Your system calls TerraMISO
+optimizer = MISO(providers=['gpt-4', 'claude', 'gemini'])
+best_solution = optimizer.compete(your_problem)
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# With coverage
+pytest --cov=src/aicl --cov-report=html
+
+# CLI tests
+pytest tests/test_cli.py -v
+```
+
+---
+
+## 📜 License
+
+GPL-3.0 - See [LICENSE](LICENSE)
+
+---
+
+## 🌟 Key Innovations
+
+1. **MISO Pattern**: Multi-In Single-Out competitive optimization
+2. **Terraform Extension**: Augments existing Terraform workflows
+3. **Self-Constructing**: Can modify its own code
+4. **Adoptable**: Other systems can use our MISO templates
+5. **LLM-as-Judge**: Automated quality evaluation
+
+---
+
+## 🔗 Links
+
+- **Repository**: https://github.com/zacharyelston/terramiso
+- **Issues**: https://github.com/zacharyelston/terramiso/issues
+- **Discussions**: https://github.com/zacharyelston/terramiso/discussions
+- **Documentation**: [docs/README.md](docs/README.md)
+
+---
+
+**TerraMISO**: Extending Terraform/OpenTofu with AI-powered MISO optimization 🧠✨
+
+**Remember**: We don't compete with Terraform - we extend it!

@@ -1,0 +1,54 @@
+{
+  "timestamp": "2025-10-11T02:57:32.020209",
+  "chat_model": {
+    "name": "GPT-4o",
+    "id": "gpt-4o-2024-08-06",
+    "provider": "naga",
+    "resource_type": "naga_chat"
+  },
+  "judge_model": "mistralai/mistral-large",
+  "total_experiments": 4,
+  "successful": 0,
+  "results": [
+    {
+      "experiment_id": "text-embedding-3-small-q1",
+      "embedding_model": "OpenAI Text Embedding 3 Small",
+      "embedding_id": "text-embedding-3-small",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 23.912914991378784
+    },
+    {
+      "experiment_id": "text-embedding-3-small-q2",
+      "embedding_model": "OpenAI Text Embedding 3 Small",
+      "embedding_id": "text-embedding-3-small",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/workspace/run.py\", line 7, in <module>\n    engine.run()\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 317, in run\n    self.apply()\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 289, in apply\n    executor.execute_node(node_id, resource_map)\n  File \"/home/runner/workspace/src/aicl/executor.py\", line 61, in execute_node\n    response = provider.stub.ApplyResourceChange(req)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/grpc/_channel.py\", line 1181, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/grpc/_channel.py\", line 1009, in _end_unary_response_blocking\n    raise _InactiveRpcError(state)  # pytype: disable=not-instantiable\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.UNAVAILABLE\n\tdetails = \"Socket closed\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer  {grpc_message:\"Socket closed\", grpc_status:14}\"\n>\n",
+      "elapsed_time": 9.813225269317627
+    },
+    {
+      "experiment_id": "text-embedding-3-large-q1",
+      "embedding_model": "OpenAI Text Embedding 3 Large",
+      "embedding_id": "text-embedding-3-large",
+      "chat_model": "GPT-4o",
+      "question": "What is the role of the Evaluator component in the AICL framework?",
+      "success": false,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/workspace/run.py\", line 7, in <module>\n    engine.run()\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 317, in run\n    self.apply()\n  File \"/home/runner/workspace/src/aicl/core/engine.py\", line 289, in apply\n    executor.execute_node(node_id, resource_map)\n  File \"/home/runner/workspace/src/aicl/executor.py\", line 61, in execute_node\n    response = provider.stub.ApplyResourceChange(req)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/grpc/_channel.py\", line 1181, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/grpc/_channel.py\", line 1009, in _end_unary_response_blocking\n    raise _InactiveRpcError(state)  # pytype: disable=not-instantiable\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.UNAVAILABLE\n\tdetails = \"Socket closed\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer  {grpc_status:14, grpc_message:\"Socket closed\"}\"\n>\n",
+      "elapsed_time": 12.806931972503662
+    },
+    {
+      "experiment_id": "text-embedding-3-large-q2",
+      "embedding_model": "OpenAI Text Embedding 3 Large",
+      "embedding_id": "text-embedding-3-large",
+      "chat_model": "GPT-4o",
+      "question": "How does the Planner handle resource dependencies?",
+      "success": false,
+      "error": "State file not found",
+      "elapsed_time": 17.10657811164856
+    }
+  ]
+}

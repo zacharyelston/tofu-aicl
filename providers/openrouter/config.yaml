@@ -1,0 +1,44 @@
+# OpenRouter Provider Configuration
+
+provider:
+  name: openrouter
+  display_name: OpenRouter
+  version: 1.0.0
+  source: aicl/openrouter
+  description: Access 100+ AI models through a single API (embeddings, chat, query)
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50055
+    mode: both
+  
+  docker:
+    image: aicl/openrouter:1.0.0
+    internal_port: 50051
+  
+  environment:
+    required_vars:
+      - OPENROUTER_API_KEY
+    optional_vars:
+      - OPENROUTER_BASE_URL
+  
+  capabilities:
+    types:
+      - llm
+      - embeddings
+    operations:
+      - chat
+      - embed
+      - query
+  
+  # Models are now referenced from centralized ModelCatalog (v2/config/models.yaml)
+  model_ids:
+    - openrouter-gpt-4o
+    - openrouter-claude-sonnet
+    - openrouter-claude-haiku
+    - openrouter-mistral-large
+    - judge-mistral-large
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

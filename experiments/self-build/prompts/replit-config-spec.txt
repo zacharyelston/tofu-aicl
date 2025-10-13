@@ -1,0 +1,21 @@
+Generate config.yaml for Replit provider:
+
+REQUIREMENTS:
+- name: replit
+- display_name: Replit Platform
+- version: 1.0.0
+- default_port: 50062
+- mode: subprocess
+- runtime.entrypoint: server.py
+- environment.required_vars: [] (REPLIT_TOKEN optional, may auto-detect)
+- environment.optional_vars: [REPLIT_TOKEN]
+- capabilities.types: [deployment, database, agent, infrastructure]
+- capabilities.operations: [create, read, update, delete]
+
+- resource_types:
+  - replit_deployment (manage deployments)
+  - replit_database (PostgreSQL)
+  - replit_agent (spawn agents)
+
+Generate ONLY the YAML content for providers/replit/config.yaml
+Follow AICL provider config conventions exactly.

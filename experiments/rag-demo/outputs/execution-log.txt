@@ -1,0 +1,142 @@
+Starting providers in subprocess mode...
+Starting subprocess for provider 'loader'...
+Connecting to provider on 127.0.0.1:50056
+Provider 'loader' is running on port 50056
+Starting subprocess for provider 'splitter'...
+Connecting to provider on 127.0.0.1:50057
+Provider 'splitter' is running on port 50057
+Starting subprocess for provider 'openai'...
+{
+    "name": "start_provider.loader",
+    "context": {
+        "trace_id": "0x9cf8b7299213738aa423a6af514ae112",
+        "span_id": "0xb8ca0ef95d6aa3de",
+        "trace_state": "[]"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": "0x9d5e4d60549d8c3d",
+    "start_time": "2025-10-13T13:47:27.129265Z",
+    "end_time": "2025-10-13T13:47:29.150841Z",
+    "status": {
+        "status_code": "UNSET"
+    },
+    "attributes": {
+        "provider.name": "loader",
+        "provider.port": 50056,
+        "provider.status": "running"
+    },
+    "events": [],
+    "links": [],
+    "resource": {
+        "attributes": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "1.37.0",
+            "service.name": "aicl-engine",
+            "service.version": "1.0.0"
+        },
+        "schema_url": ""
+    }
+}
+{
+    "name": "start_provider.splitter",
+    "context": {
+        "trace_id": "0x9cf8b7299213738aa423a6af514ae112",
+        "span_id": "0x19b3a5f7abbce580",
+        "trace_state": "[]"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": "0x9d5e4d60549d8c3d",
+    "start_time": "2025-10-13T13:47:29.150976Z",
+    "end_time": "2025-10-13T13:47:31.165092Z",
+    "status": {
+        "status_code": "UNSET"
+    },
+    "attributes": {
+        "provider.name": "splitter",
+        "provider.port": 50057,
+        "provider.status": "running"
+    },
+    "events": [],
+    "links": [],
+    "resource": {
+        "attributes": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "1.37.0",
+            "service.name": "aicl-engine",
+            "service.version": "1.0.0"
+        },
+        "schema_url": ""
+    }
+}
+Connecting to provider on 127.0.0.1:50051
+Provider 'openai' is running on port 50051
+Starting subprocess for provider 'pinecone'...
+Connecting to provider on 127.0.0.1:50054
+Provider 'pinecone' is running on port 50054
+Starting subprocess for provider 'openrouter'...
+{
+    "name": "start_provider.openai",
+    "context": {
+        "trace_id": "0x9cf8b7299213738aa423a6af514ae112",
+        "span_id": "0xd31d8a43c214f2fe",
+        "trace_state": "[]"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": "0x9d5e4d60549d8c3d",
+    "start_time": "2025-10-13T13:47:31.165328Z",
+    "end_time": "2025-10-13T13:47:33.197806Z",
+    "status": {
+        "status_code": "UNSET"
+    },
+    "attributes": {
+        "provider.name": "openai",
+        "provider.port": 50051,
+        "provider.status": "running"
+    },
+    "events": [],
+    "links": [],
+    "resource": {
+        "attributes": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "1.37.0",
+            "service.name": "aicl-engine",
+            "service.version": "1.0.0"
+        },
+        "schema_url": ""
+    }
+}
+{
+    "name": "start_provider.pinecone",
+    "context": {
+        "trace_id": "0x9cf8b7299213738aa423a6af514ae112",
+        "span_id": "0x51f0355d92aeead1",
+        "trace_state": "[]"
+    },
+    "kind": "SpanKind.INTERNAL",
+    "parent_id": "0x9d5e4d60549d8c3d",
+    "start_time": "2025-10-13T13:47:33.197983Z",
+    "end_time": "2025-10-13T13:47:35.217686Z",
+    "status": {
+        "status_code": "UNSET"
+    },
+    "attributes": {
+        "provider.name": "pinecone",
+        "provider.port": 50054,
+        "provider.status": "running"
+    },
+    "events": [],
+    "links": [],
+    "resource": {
+        "attributes": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "1.37.0",
+            "service.name": "aicl-engine",
+            "service.version": "1.0.0"
+        },
+        "schema_url": ""
+    }
+}

@@ -1,0 +1,53 @@
+Generate comprehensive pytest tests for Replit provider:
+
+1. **Deployment Tests** (test_replit_deployments.py):
+   - test_create_autoscale_deployment
+   - test_create_reserved_vm_deployment
+   - test_create_scheduled_deployment
+   - test_create_static_deployment
+   - test_deployment_status_check
+   - test_deployment_update
+   - test_deployment_delete
+   - test_custom_domain
+
+2. **Database Tests** (test_replit_database.py):
+   - test_create_postgresql_database
+   - test_database_connection_string
+   - test_database_size_limits
+   - test_database_status_ready
+   - test_database_delete
+   - test_concurrent_database_operations
+
+3. **Agent Tests** (test_replit_agent.py):
+   - test_create_slack_agent
+   - test_create_telegram_agent
+   - test_create_email_agent
+   - test_scheduled_agent
+   - test_agent_webhook_url
+   - test_agent_pause_resume
+   - test_agent_delete
+
+4. **API Client Tests** (test_replit_api_client.py):
+   - test_graphql_query_success
+   - test_graphql_query_auth_error
+   - test_retry_on_network_error
+   - test_quota_exceeded_handling
+   - test_connection_pooling
+   - test_timeout_handling
+
+5. **Integration Tests** (test_replit_integration.py):
+   - test_provider_discovery
+   - test_grpc_interface
+   - test_resource_lifecycle (create→read→update→delete)
+   - test_multi_resource_coordination
+   - test_error_propagation
+
+6. **Security Tests** (test_replit_security.py):
+   - test_token_validation
+   - test_environment_var_sanitization
+   - test_connection_string_encryption
+   - test_no_token_leakage_in_logs
+
+Include pytest-asyncio, mocking, assertions.
+Mock Replit GraphQL responses.
+Test both success and failure scenarios.

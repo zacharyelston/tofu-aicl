@@ -1,0 +1,224 @@
+# SQLite Schema and Query Configuration
+# All SQL statements for the experiment storage system
+
+schema:
+  version: "1.0.0"
+  description: "Initial schema with experiments, configurations, results, quality_scores"
+
+tables:
+  schema_version: |
+    CREATE TABLE IF NOT EXISTS schema_version (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      version TEXT NOT NULL,
+      applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      description TEXT
+    )
+
+  experiments: |
+    CREATE TABLE IF NOT EXISTS experiments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      experiment_id TEXT UNIQUE NOT NULL,
+      timestamp DATETIME NOT NULL,
+      config_file TEXT,
+      description TEXT,
+      status TEXT DEFAULT 'pending',
+      version INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+
+  configurations: |
+    CREATE TABLE IF NOT EXISTS configurations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      experiment_id TEXT NOT NULL,
+      chat_model TEXT,
+      embedding_model TEXT,
+      temperature REAL,
+      max_tokens INTEGER,
+      top_k INTEGER,
+      provider TEXT,
+      rerank BOOLEAN,
+      other_params TEXT,
+      FOREIGN KEY (experiment_id) REFERENCES experiments(experiment_id)
+    )
+
+  results: |
+    CREATE TABLE IF NOT EXISTS results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      experiment_id TEXT NOT NULL,
+      total_cost_usd REAL,
+      embedding_cost_usd REAL,
+      chat_cost_usd REAL,
+      total_tokens INTEGER,
+      prompt_tokens INTEGER,
+      completion_tokens INTEGER,
+      latency_ms REAL,
+      end_to_end_ms REAL,
+      chunks_retrieved INTEGER,
+      success BOOLEAN,
+      error_message TEXT,
+      FOREIGN KEY (experiment_id) REFERENCES experiments(experiment_id)
+    )
+
+  quality_scores: |
+    CREATE TABLE IF NOT EXISTS quality_scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      experiment_id TEXT NOT NULL,
+      judge_model TEXT,
+      judge_score REAL,
+      accuracy_score REAL,
+      completeness_score REAL,
+      clarity_score REAL,
+      relevance_score REAL,
+      judge_feedback TEXT,
+      FOREIGN KEY (experiment_id) REFERENCES experiments(experiment_id)
+    )
+
+indexes:
+  - CREATE INDEX IF NOT EXISTS idx_exp_timestamp ON experiments(timestamp)
+  - CREATE INDEX IF NOT EXISTS idx_config_exp_id ON configurations(experiment_id)
+  - CREATE INDEX IF NOT EXISTS idx_config_model ON configurations(chat_model)
+  - CREATE INDEX IF NOT EXISTS idx_results_exp_id ON results(experiment_id)
+  - CREATE INDEX IF NOT EXISTS idx_results_cost ON results(total_cost_usd)
+  - CREATE INDEX IF NOT EXISTS idx_quality_exp_id ON quality_scores(experiment_id)
+  - CREATE INDEX IF NOT EXISTS idx_quality_score ON quality_scores(judge_score)
+
+queries:
+  # Schema version queries
+  get_schema_version: |
+    SELECT version FROM schema_version ORDER BY id DESC LIMIT 1
+
+  count_schema_versions: |
+    SELECT COUNT(*) FROM schema_version
+
+  insert_schema_version: |
+    INSERT INTO schema_version (version, description) VALUES (?, ?)
+
+  # Metadata queries
+  upsert_experiment: |
+    INSERT OR REPLACE INTO experiments 
+    (experiment_id, timestamp, config_file, description, status)
+    VALUES (?, ?, ?, ?, ?)
+
+  get_experiment_metadata: |
+    SELECT experiment_id, timestamp, version 
+    FROM experiments WHERE experiment_id = ?
+
+  # Configuration queries
+  check_config_exists: |
+    SELECT id FROM configurations WHERE experiment_id = ?
+
+  insert_configuration: |
+    INSERT INTO configurations 
+    (experiment_id, chat_model, embedding_model, temperature, max_tokens, 
+     top_k, provider, rerank, other_params)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+  update_configuration: |
+    UPDATE configurations 
+    SET chat_model=?, embedding_model=?, temperature=?, max_tokens=?, 
+        top_k=?, provider=?, rerank=?, other_params=?
+    WHERE experiment_id=?
+
+  # Results queries
+  check_results_exists: |
+    SELECT id FROM results WHERE experiment_id = ?
+
+  insert_results: |
+    INSERT INTO results 
+    (experiment_id, total_cost_usd, embedding_cost_usd, chat_cost_usd,
+     total_tokens, prompt_tokens, completion_tokens, latency_ms, 
+     end_to_end_ms, chunks_retrieved, success, error_message)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+  update_results: |
+    UPDATE results 
+    SET total_cost_usd=?, embedding_cost_usd=?, chat_cost_usd=?,
+        total_tokens=?, prompt_tokens=?, completion_tokens=?,
+        latency_ms=?, end_to_end_ms=?, chunks_retrieved=?,
+        success=?, error_message=?
+    WHERE experiment_id=?
+
+  # Quality scores queries
+  check_quality_exists: |
+    SELECT id FROM quality_scores WHERE experiment_id = ?
+
+  insert_quality: |
+    INSERT INTO quality_scores 
+    (experiment_id, judge_model, judge_score, accuracy_score, 
+     completeness_score, clarity_score, relevance_score, judge_feedback)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+
+  update_quality: |
+    UPDATE quality_scores 
+    SET judge_model=?, judge_score=?, accuracy_score=?, 
+        completeness_score=?, clarity_score=?, relevance_score=?, 
+        judge_feedback=?
+    WHERE experiment_id=?
+
+  # Retrieval queries
+  get_full_experiment: |
+    SELECT 
+      e.experiment_id, e.timestamp, e.config_file, e.description,
+      c.chat_model, c.embedding_model, c.temperature, c.max_tokens, 
+      c.top_k, c.provider, c.rerank, c.other_params,
+      r.total_cost_usd, r.embedding_cost_usd, r.chat_cost_usd,
+      r.total_tokens, r.prompt_tokens, r.completion_tokens,
+      r.latency_ms, r.end_to_end_ms, r.chunks_retrieved,
+      r.success, r.error_message,
+      q.judge_model, q.judge_score, q.accuracy_score,
+      q.completeness_score, q.clarity_score, q.relevance_score,
+      q.judge_feedback
+    FROM experiments e
+    LEFT JOIN configurations c ON e.experiment_id = c.experiment_id
+    LEFT JOIN results r ON e.experiment_id = r.experiment_id
+    LEFT JOIN quality_scores q ON e.experiment_id = q.experiment_id
+    WHERE e.experiment_id = ?
+
+  get_all_experiments: |
+    SELECT 
+      e.experiment_id, e.timestamp, e.config_file,
+      c.chat_model, c.embedding_model, c.temperature,
+      r.total_cost_usd, r.latency_ms,
+      q.judge_score
+    FROM experiments e
+    LEFT JOIN configurations c ON e.experiment_id = c.experiment_id
+    LEFT JOIN results r ON e.experiment_id = r.experiment_id
+    LEFT JOIN quality_scores q ON e.experiment_id = q.experiment_id
+    ORDER BY e.timestamp DESC
+    LIMIT ?
+
+  get_best_configs: |
+    SELECT 
+      e.experiment_id, e.timestamp,
+      c.chat_model, c.embedding_model, c.temperature, c.max_tokens,
+      r.total_cost_usd, r.latency_ms,
+      q.judge_score
+    FROM experiments e
+    JOIN configurations c ON e.experiment_id = c.experiment_id
+    JOIN results r ON e.experiment_id = r.experiment_id
+    JOIN quality_scores q ON e.experiment_id = q.experiment_id
+    WHERE q.judge_score >= ? AND r.total_cost_usd <= ?
+    ORDER BY q.judge_score DESC, r.total_cost_usd ASC
+    LIMIT ?
+
+  get_cost_analysis: |
+    SELECT 
+      COUNT(*) as total_experiments,
+      SUM(total_cost_usd) as total_spent,
+      AVG(total_cost_usd) as avg_cost,
+      MIN(total_cost_usd) as min_cost,
+      MAX(total_cost_usd) as max_cost
+    FROM results
+
+  get_model_performance: |
+    SELECT 
+      chat_model,
+      COUNT(*) as experiment_count,
+      AVG(r.total_cost_usd) as avg_cost,
+      AVG(r.latency_ms) as avg_latency,
+      AVG(q.judge_score) as avg_quality
+    FROM configurations c
+    JOIN results r ON c.experiment_id = r.experiment_id
+    JOIN quality_scores q ON c.experiment_id = q.experiment_id
+    GROUP BY chat_model
+    ORDER BY avg_quality DESC

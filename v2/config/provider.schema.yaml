@@ -1,0 +1,96 @@
+# Provider Configuration Schema
+# Defines the structure for provider config.yaml files
+
+# This schema serves as documentation for how provider configs should be structured
+# All providers must follow this format
+
+ProviderConfig:
+  provider:
+    # Basic metadata
+    name: string                    # Provider identifier (e.g., "openai", "naga")
+    display_name: string            # Human-readable name (e.g., "OpenAI")
+    version: string                 # Semantic version (e.g., "1.0.0")
+    source: string                  # Registry source (e.g., "aicl/openai")
+    description: string             # Brief description of capabilities
+    
+    # Runtime configuration
+    runtime:
+      entrypoint: string            # Relative path to server script (e.g., "server.py")
+      default_port: integer         # Default port (50051-50060), can be overridden
+      mode: string                  # "subprocess" or "docker" or "both"
+      
+    # Docker configuration (optional, for docker mode)
+    docker:
+      image: string                 # Container image (e.g., "aicl/openai:1.0.0")
+      internal_port: integer        # Container port (typically 50051)
+      
+    # Environment requirements
+    environment:
+      required_vars: list[string]   # Required env vars (e.g., ["OPENAI_API_KEY"])
+      optional_vars: list[string]   # Optional env vars
+      
+    # Capabilities and features
+    capabilities:
+      types: list[string]           # Provider types (e.g., ["llm", "embeddings"])
+      operations: list[string]      # Supported operations (e.g., ["chat", "embed"])
+      
+    # Supported models (optional, for LLM/embedding providers)
+    models:
+      - name: string                # Model identifier
+        type: string                # "chat" or "embedding" or "completion"
+        context_window: integer     # Max tokens
+        cost_per_1k_input: float    # Cost per 1K input tokens (USD)
+        cost_per_1k_output: float   # Cost per 1K output tokens (USD)
+        quality_score: float        # Estimated quality (1-10 scale)
+        
+    # Health check (optional)
+    health:
+      endpoint: string              # gRPC method for health check
+      timeout_ms: integer           # Health check timeout
+
+# Example provider config:
+#
+# provider:
+#   name: openai
+#   display_name: OpenAI
+#   version: 1.0.0
+#   source: aicl/openai
+#   description: OpenAI embeddings and chat models
+#   
+#   runtime:
+#     entrypoint: server.py
+#     default_port: 50051
+#     mode: both
+#   
+#   docker:
+#     image: aicl/openai:1.0.0
+#     internal_port: 50051
+#   
+#   environment:
+#     required_vars:
+#       - OPENAI_API_KEY
+#     optional_vars:
+#       - OPENAI_ORG_ID
+#   
+#   capabilities:
+#     types:
+#       - llm
+#       - embeddings
+#     operations:
+#       - chat
+#       - embed
+#   
+#   models:
+#     - name: gpt-4o
+#       type: chat
+#       context_window: 128000
+#       cost_per_1k_input: 0.0025
+#       cost_per_1k_output: 0.010
+#       quality_score: 9.5
+#     
+#     - name: text-embedding-3-small
+#       type: embedding
+#       context_window: 8192
+#       cost_per_1k_input: 0.00002
+#       cost_per_1k_output: 0
+#       quality_score: 7.0

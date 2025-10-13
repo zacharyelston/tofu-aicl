@@ -1,0 +1,27 @@
+Generate a streaming handler module for the Anthropic provider.
+
+Create providers/anthropic/streaming.py with:
+
+1. **StreamingHandler class**:
+   - async def stream_response(client, messages, model, **params)
+   - Yields tokens as they arrive
+   - Handles Anthropic streaming events
+   - Aggregates usage data
+   - Error handling for stream interruptions
+
+2. **StreamBuffer class**:
+   - Buffers partial tokens
+   - Handles delta updates
+   - Tracks completion state
+
+3. **Production features**:
+   - Timeout handling
+   - Graceful cancellation
+   - Resource cleanup
+   - Metrics collection
+
+Use async generators, proper exception handling, and type hints.
+
+Reference: {rag_streaming_context}
+
+Generate complete Python code.

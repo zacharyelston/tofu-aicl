@@ -1,0 +1,61 @@
+You are an expert Python developer implementing production-grade AI providers.
+
+SPECIFICATION:
+Create a complete Anthropic Claude provider for the AICL framework with these requirements:
+
+## Core Functionality
+1. **Multiple Model Support**:
+   - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+   - Claude 3 Opus (claude-3-opus-20240229)
+   - Claude 3 Haiku (claude-3-haiku-20240307)
+
+2. **Resource Type: anthropic_chat**
+   - Input attributes:
+     - messages (list): Message history [{"role": "user", "content": "..."}]
+     - model (string): Model ID
+     - max_tokens (int): Max response tokens (default: 4096)
+     - temperature (float): 0.0-1.0 (default: 1.0)
+     - system (string, optional): System prompt
+     - stream (bool, optional): Enable streaming (default: false)
+   
+   - Output attributes:
+     - content (string): Response text
+     - usage.input_tokens (int): Input tokens used
+     - usage.output_tokens (int): Output tokens used
+     - cost (float): Estimated cost in USD
+     - stop_reason (string): "end_turn" | "max_tokens" | "stop_sequence"
+
+3. **Streaming Support**:
+   - Implement async streaming using Anthropic's streaming API
+   - Yield tokens incrementally for stream=true
+   - Proper async generator pattern
+   - Handle connection errors gracefully
+
+4. **Production Patterns**:
+   - Rate limiting with exponential backoff
+   - Circuit breaker (3 failures -> open circuit for 30s)
+   - Retry logic with jitter
+   - Proper resource cleanup (async context managers)
+   - Token counting for cost tracking
+
+5. **Cost Tracking**:
+   - Claude 3.5 Sonnet: $3/1M input, $15/1M output
+   - Claude 3 Opus: $15/1M input, $75/1M output
+   - Claude 3 Haiku: $0.25/1M input, $1.25/1M output
+
+## Implementation Requirements
+- Use anthropic Python SDK (pip install anthropic)
+- Implement ProviderServicer gRPC interface
+- Use v2.runtime.create_provider_server for boilerplate
+- Async/await for streaming
+- Comprehensive error handling with typed exceptions
+- Docstrings for all public methods
+- Type hints throughout
+
+## Reference Patterns
+{rag_context}
+
+Generate ONLY the Python code for providers/anthropic/server.py
+Include all necessary imports and make it production-ready.
+
+CODE:

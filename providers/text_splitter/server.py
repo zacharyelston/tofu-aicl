@@ -31,6 +31,10 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
             print(f"DEBUG: Documents type: {type(documents)}, length: {len(documents) if hasattr(documents, '__len__') else 'N/A'}")
             chunk_size = int(config.get('chunk_size', 1000))
             chunk_overlap = int(config.get('chunk_overlap', 200))
+            
+            # Get resource name from AICL config for consistent ID generation
+            resource_name = config.get('aiclResourceName', 'default')
+            resource_id = f"{request.type_name}-{resource_name}"
 
             all_chunks = []
             for i, doc in enumerate(documents):
@@ -50,7 +54,7 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
         ParseDict(output_attributes, output_struct)
 
         new_state = provider_pb2.ResourceState(
-            id="text-splitter",
+            id=resource_id,
             type=request.type_name,
             attributes=output_struct
         )
@@ -78,14 +82,6 @@ class TextSplitterProvider(provider_pb2_grpc.ProviderServicer):
     def HealthCheck(self, request, context):
         return provider_pb2.HealthCheckResponse(healthy=True, version="0.1.0")
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(TextSplitterProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"Text Splitter provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(TextSplitterProvider())

@@ -1,0 +1,106 @@
+# Simple Multi-Provider Comparison
+# Compare OpenAI models and judge the quality
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+  }
+}
+
+variable "test_question" {
+  type    = string
+  default = "Explain quantum entanglement in simple terms that a high school student would understand."
+}
+
+# Test 1: GPT-4o (expensive, highest quality)
+resource "openai_chat" "gpt4o" {
+  model = "gpt-4o"
+  temperature = 0.7
+  max_tokens = 300
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "gpt4o"
+}
+
+# Test 2: GPT-4o-mini (cheaper, good quality)
+resource "openai_chat" "gpt4o_mini" {
+  model = "gpt-4o-mini"
+  temperature = 0.7
+  max_tokens = 300
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "gpt4o_mini"
+}
+
+# Test 3: GPT-4o with higher temperature (more creative)
+resource "openai_chat" "gpt4o_creative" {
+  model = "gpt-4o"
+  temperature = 1.2
+  max_tokens = 300
+  
+  messages = [
+    {
+      role = "user"
+      content = var.test_question
+    }
+  ]
+  aiclResourceName = "gpt4o_creative"
+}
+
+# Judge all responses
+resource "openai_chat" "judge" {
+  model = "gpt-4o"
+  temperature = 0.0
+  max_tokens = 1500
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert science educator. Evaluate explanations for clarity and accuracy."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Question: ${var.test_question}
+        
+        RESPONSE 1 (GPT-4o, temp=0.7):
+        ${resource.openai_chat.gpt4o.attributes.content}
+        
+        RESPONSE 2 (GPT-4o-mini, temp=0.7):
+        ${resource.openai_chat.gpt4o_mini.attributes.content}
+        
+        RESPONSE 3 (GPT-4o, temp=1.2, creative):
+        ${resource.openai_chat.gpt4o_creative.attributes.content}
+        
+        Evaluate each on:
+        - Scientific Accuracy (40 pts)
+        - Clarity for Target Audience (30 pts)
+        - Engagement/Interest (20 pts)
+        - Conciseness (10 pts)
+        
+        Return JSON only:
+        {
+          "winner": "Response 1/2/3",
+          "rankings": [
+            {"response": 1, "score": 88, "model": "GPT-4o"},
+            {"response": 2, "score": 82, "model": "GPT-4o-mini"},
+            {"response": 3, "score": 85, "model": "GPT-4o creative"}
+          ],
+          "reasoning": "why the winner is best",
+          "best_for_cost": "which gives best value"
+        }
+      EOT
+    }
+  ]
+  aiclResourceName = "judge"
+}

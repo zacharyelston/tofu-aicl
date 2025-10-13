@@ -1,149 +1,152 @@
-# Contributing to tofu-aicl
+# Contributing to TerraMISO
 
-## Commit Messages
+Thank you for your interest in contributing to TerraMISO! This guide will help you get started.
 
-All commit messages **MUST** follow the [Conventional Commits 1.0.0](https://conventionalcommits.org/) specification.
+**TerraMISO** = Multi-In Single-Out AI framework extending Terraform/OpenTofu
 
-**Format:**
-```
-type[optional scope]: <description>
+## 🚀 Quick Start for Contributors
 
-[optional body]
-
-[optional footer(s)]
-```
-
-### Types
-
-The commit type **MUST** be one of the following:
-
-| Type | Description |
-|------|-------------|
-| **feat** | A new feature |
-| **fix** | A bug fix |
-| **docs** | Documentation only changes |
-| **style** | Changes that do not affect the meaning of the code |
-| **refactor** | A code change that neither fixes a bug nor adds a feature |
-| **test** | Adding missing tests or correcting existing tests |
-| **chore** | Changes to the build process or auxiliary tools |
-| **ci** | Changes to our CI configuration files and scripts |
-| **build** | Changes that affect the build system |
-| **perf** | A code change that improves performance |
-| **revert** | Reverts a previous commit |
-
-### Examples
-
-**Simple commits:**
-```
-feat: add dependency resolution for HCL interpolations
-fix: correct executor import for ResourceState
-docs: update bootstrap instructions
-```
-
-**With scope:**
-```
-feat(executor): add HCL interpolation parsing
-fix(planner): strip ${} wrapper from dependencies
-refactor(state): use exact type+name matching
-```
-
-**With breaking change:**
-```
-feat!: change service connection naming convention
-feat(api)!: update provider protocol to v2
-
-BREAKING CHANGE: service connections now use project-specific names
-```
-
-## Git Hooks
-
-This repository includes git hooks that automatically validate commit message format:
-
-- **`commit-msg` hook**: Validates commit message format (Conventional Commits 1.0.0)
-- **`pre-commit` hook**: Checks Python syntax and trailing whitespace
-
-### Setup Git Hooks
+### 1. Setup Development Environment
 
 ```bash
-# Configure git to use .githooks directory
-git config core.hooksPath .githooks
+# Clone the repository
+git clone https://github.com/zacharyelston/terramiso.git
+cd terramiso
 
-# Make hooks executable
-chmod +x .githooks/*
+# Install dependencies
+pip install -e .
+
+# Install development dependencies
+pip install pytest pytest-cov pytest-asyncio
+
+# Run tests to verify setup
+pytest
 ```
 
-### Skip Validation
+### 2. Set Up API Keys
 
-**To skip validation for a specific commit:**
-Add `skip validation` anywhere in your commit message.
+Create a `.env` file in the project root:
 
-**To bypass hooks temporarily:**
 ```bash
-git commit --no-verify -m "your message"
+# Core providers
+OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-...
+PINECONE_API_KEY=...
+PINECONE_HOST_URL=https://...
+
+# Optional providers
+AZURE_OPENAI_API_KEY=...
+NAGA_API_KEY=...
+RAGIE_API_KEY=...
+
+# PostgreSQL (for --output-docdb feature)
+DATABASE_URL=postgresql://localhost/aicl_experiments
 ```
 
-## Development Workflow
+## 📋 Development Workflow
 
-1. **Create a feature branch:**
+### Making Changes
+
+1. **Create a branch**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-2. **Make your changes** following the coding standards
+2. **Make your changes**
+   - Write code following our style guide (see below)
+   - Add tests for new functionality
+   - Update documentation
 
-3. **Test locally:**
+3. **Run tests**
    ```bash
-   # Build provider containers
-   ./scripts/build_providers.sh
-
-   # Run tests
-   PYTHONPATH=./src python3 run.py file_loader_test.aicl
+   # All tests
+   pytest
+   
+   # With coverage
+   pytest --cov=src/aicl --cov-report=html
    ```
 
-4. **Commit with conventional commits:**
+4. **Commit your changes**
    ```bash
    git add .
-   git commit -m "feat(provider): add new provider functionality"
+   git commit -m "feat: add new feature description"
    ```
 
-5. **Push and create PR:**
-   ```bash
-   git push -u origin feature/your-feature-name
-   ```
+## 🧪 Testing Guidelines
 
-## Code Quality
+### Test Requirements
 
-- Follow PEP 8 for Python code
-- Add type hints where appropriate
-- Write docstrings for public functions
-- Keep functions focused and small
-- Avoid duplicate code
+- All new features must have tests
+- Maintain >80% code coverage
+- Tests should be independent (no shared state)
+- Use fixtures for common setup (`tests/conftest.py`)
+- Mock external API calls
 
-## Testing
+### Writing Tests
 
-- Test provider containers independently
-- Verify dependency resolution works
-- Check state management
-- Validate HCL parsing
+**Unit Test Example:**
+```python
+import pytest
+from src.aicl.core.parser import HCLParser
 
-## Documentation
+class TestHCLParser:
+    def test_parse_basic_config(self):
+        parser = HCLParser('test.aicl')
+        result = parser.parse()
+        assert 'resource' in result
+```
 
-- Update README.md for user-facing changes
-- Add ADRs for architectural decisions
-- Document new providers in `docs/providers/`
-- Keep CHANGELOG.md updated
+## 📝 Documentation Standards
 
-## Pull Request Process
+### Code Documentation
 
-1. Ensure all tests pass locally
-2. Update documentation as needed
-3. Follow conventional commit format
-4. Link to relevant Redmine issues
-5. Request review from team members
-6. Address review feedback
-7. Squash commits if needed
-8. Merge after approval
+- Add docstrings to all public functions/classes
+- Include type hints
+- Provide examples where helpful
 
----
+### Markdown Documentation
 
-**Questions?** Check the [Design Review](docs/DESIGN_REVIEW_2025-10-04.md) or ask in the team channel.
+- Keep line length <100 characters
+- Include code examples
+- Link to related documentation
+- Update `docs/README.md` index when adding new docs
+
+## 🎨 Code Style
+
+- Follow PEP 8
+- Use type hints for function signatures
+- Maximum line length: 100 characters
+- Use meaningful variable names
+
+## 🔄 Git Workflow
+
+### Commit Messages
+
+Follow conventional commits:
+
+```
+feat: add PostgreSQL DocDB support
+fix: resolve dimension mismatch in embeddings
+docs: update CLI usage guide
+test: add tests for output configuration
+```
+
+### Branch Naming
+
+```
+feature/cli-output-destinations
+fix/pinecone-dimensions
+docs/setup-guide
+```
+
+## 📄 License
+
+By contributing, you agree that your contributions will be licensed under GPL-3.0.
+
+## 💬 Questions?
+
+Open a GitHub issue or discussion.
+
+## 🙏 Thank You
+
+Every contribution makes TerraMISO better!

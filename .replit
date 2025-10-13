@@ -28,4 +28,4 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python run.py rag_pipeline_test.aicl"
+args = "python run.py experiments/rag-demo/rag-demo-live.aicl"

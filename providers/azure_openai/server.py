@@ -89,6 +89,10 @@ class AzureOpenAIProvider(provider_pb2_grpc.ProviderServicer):
         # Handle embeddings
         if request.type_name in ["embedding", "azure_openai_embedding"]:
             return self._generate_embeddings(resource_id, config, request.type_name)
+        
+        # Handle chat completions
+        if request.type_name in ["chat", "azure_openai_chat"]:
+            return self._generate_chat_completion(resource_id, config, request.type_name)
 
         # Default: just store config
         self.resources[resource_id] = {
@@ -222,21 +226,117 @@ class AzureOpenAIProvider(provider_pb2_grpc.ProviderServicer):
             )
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
+    def _generate_chat_completion(self, resource_id, config, type_name):
+        """Generate chat completion using Azure OpenAI API"""
+        deployment = config.get('deployment')
+        messages = config.get('messages', [])
+        prompt = config.get('prompt')
+        
+        # Support both prompt and messages format
+        if prompt and not messages:
+            messages = [{"role": "user", "content": prompt}]
+        
+        if not deployment:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                "Deployment name is required for Azure OpenAI chat"
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        if not messages:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                "No messages or prompt provided for chat completion"
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        
+        try:
+            # Build Azure OpenAI URL for chat completions
+            url = f"{self.endpoint}/openai/deployments/{deployment}/chat/completions?api-version={self.api_version}"
+            
+            # Prepare request payload
+            payload = {
+                "messages": messages
+            }
+            
+            # Add optional parameters
+            if config.get('temperature') is not None:
+                payload['temperature'] = config['temperature']
+            if config.get('max_tokens'):
+                payload['max_tokens'] = config['max_tokens']
+            if config.get('top_p') is not None:
+                payload['top_p'] = config['top_p']
+            if config.get('frequency_penalty') is not None:
+                payload['frequency_penalty'] = config['frequency_penalty']
+            if config.get('presence_penalty') is not None:
+                payload['presence_penalty'] = config['presence_penalty']
+            
+            # Call Azure OpenAI API
+            response = requests.post(
+                url,
+                headers={
+                    "api-key": self.api_key,
+                    "Content-Type": "application/json"
+                },
+                json=payload,
+                timeout=120
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            # Extract completion
+            choice = result.get('choices', [{}])[0]
+            message = choice.get('message', {})
+            
+            result_data = {
+                'content': message.get('content', ''),
+                'role': message.get('role', 'assistant'),
+                'deployment': deployment,
+                'model': result.get('model', deployment),
+                'usage': result.get('usage', {}),
+                'finish_reason': choice.get('finish_reason', 'stop')
+            }
+            
+            self.resources[resource_id] = {
+                "id": resource_id,
+                "type_name": type_name,
+                "attributes": result_data
+            }
+            
+            # Create response
+            new_state_struct = Struct()
+            ParseDict(result_data, new_state_struct)
+            
+            new_state = provider_pb2.ResourceState(
+                id=resource_id,
+                type=type_name,
+                attributes=new_state_struct,
+                status='ready'
+            )
+            
+            return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
+        
+        except requests.exceptions.RequestException as e:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                f"Azure chat completion failed: {str(e)}",
+                str(e)
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+        except Exception as e:
+            diag = self._create_diagnostic(
+                provider_pb2.Diagnostic.ERROR,
+                f"Unexpected error: {str(e)}",
+                str(e)
+            )
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
+    
     def DeleteResource(self, request, context):
         resource_id = request.id
         if resource_id in self.resources:
             del self.resources[resource_id]
         return provider_pb2.DeleteResourceResponse()
 
-def serve(port=50051):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(AzureOpenAIProvider(), server)
-    server.add_insecure_port(f'[::]:{port}')
-    server.start()
-    print(f"Azure OpenAI Provider started on port {port}")
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 50051
-    serve(port)
+    from v2.runtime import create_provider_server
+    create_provider_server(AzureOpenAIProvider())

@@ -1,0 +1,310 @@
+# Centralized Model Catalog
+# Single source of truth for all AI models across AICL
+
+# =============================================================================
+# CHAT / COMPLETION MODELS
+# =============================================================================
+chat_models:
+  # OpenAI Models
+  - id: gpt-4o
+    name: "gpt-4o"
+    display_name: "GPT-4o"
+    provider: openai
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.0025
+    cost_per_1k_output: 0.010
+    quality_score: 9.5
+    capabilities: [function_calling, vision, json_mode]
+    
+  - id: gpt-4o-2024-08-06
+    name: "gpt-4o-2024-08-06"
+    display_name: "GPT-4o (Aug 2024)"
+    provider: openai
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.0025
+    cost_per_1k_output: 0.010
+    quality_score: 9.5
+    capabilities: [function_calling, vision, json_mode]
+    
+  - id: gpt-4o-mini
+    name: "gpt-4o-mini"
+    display_name: "GPT-4o Mini"
+    provider: openai
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.00015
+    cost_per_1k_output: 0.0006
+    quality_score: 8.5
+    capabilities: [function_calling, vision, json_mode]
+    
+  # Naga.ai Models (OpenAI-compatible, 50% cost savings)
+  - id: naga-gpt-4o
+    name: "gpt-4o-2024-08-06"
+    display_name: "GPT-4o (Naga)"
+    provider: naga
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.00125  # 50% savings
+    cost_per_1k_output: 0.005
+    quality_score: 9.5
+    capabilities: [function_calling, json_mode]
+    
+  - id: naga-gpt-4o-mini
+    name: "gpt-4o-mini"
+    display_name: "GPT-4o Mini (Naga)"
+    provider: naga
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.000075
+    cost_per_1k_output: 0.0003
+    quality_score: 8.5
+    capabilities: [function_calling, json_mode]
+    
+  - id: naga-qwen-72b
+    name: "naga/qwen-2.5-72b"
+    display_name: "Qwen 2.5 72B (Naga)"
+    provider: naga
+    type: chat
+    context_window: 32000
+    cost_per_1k_input: 0.00125
+    cost_per_1k_output: 0.005
+    quality_score: 8.5
+    capabilities: [multilingual, coding]
+    
+  - id: naga-llama-70b
+    name: "naga/llama-3.1-70b"
+    display_name: "Llama 3.1 70B (Naga)"
+    provider: naga
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.0009
+    cost_per_1k_output: 0.0009
+    quality_score: 8.0
+    capabilities: [open_source, multilingual]
+    
+  # OpenRouter Models
+  - id: openrouter-gpt-4o
+    name: "openai/gpt-4o"
+    display_name: "GPT-4o (OpenRouter)"
+    provider: openrouter
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.0025
+    cost_per_1k_output: 0.010
+    quality_score: 9.5
+    capabilities: [function_calling, vision, json_mode]
+    
+  - id: openrouter-claude-sonnet
+    name: "anthropic/claude-3.5-sonnet"
+    display_name: "Claude 3.5 Sonnet"
+    provider: openrouter
+    type: chat
+    context_window: 200000
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+    quality_score: 9.7
+    capabilities: [function_calling, vision, long_context]
+    
+  - id: openrouter-claude-haiku
+    name: "anthropic/claude-3-haiku"
+    display_name: "Claude 3 Haiku"
+    provider: openrouter
+    type: chat
+    context_window: 200000
+    cost_per_1k_input: 0.00025
+    cost_per_1k_output: 0.00125
+    quality_score: 8.0
+    capabilities: [fast, cost_effective]
+    
+  - id: openrouter-mistral-large
+    name: "mistralai/mistral-large-2411"
+    display_name: "Mistral Large"
+    provider: openrouter
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.002
+    cost_per_1k_output: 0.006
+    quality_score: 9.0
+    capabilities: [function_calling, multilingual]
+
+# =============================================================================
+# EMBEDDING MODELS
+# =============================================================================
+embedding_models:
+  # OpenAI Embeddings
+  - id: text-embedding-3-small
+    name: "text-embedding-3-small"
+    display_name: "OpenAI Embedding 3 Small"
+    provider: openai
+    type: embedding
+    dimensions: 1536
+    context_window: 8192
+    cost_per_1k_input: 0.00002
+    cost_per_1k_output: 0
+    quality_score: 7.0
+    capabilities: [dimensionality_reduction]
+    
+  - id: text-embedding-3-large
+    name: "text-embedding-3-large"
+    display_name: "OpenAI Embedding 3 Large"
+    provider: openai
+    type: embedding
+    dimensions: 3072
+    context_window: 8192
+    cost_per_1k_input: 0.00013
+    cost_per_1k_output: 0
+    quality_score: 9.0
+    capabilities: [dimensionality_reduction, high_quality]
+    
+  - id: text-embedding-ada-002
+    name: "text-embedding-ada-002"
+    display_name: "OpenAI Ada 002"
+    provider: openai
+    type: embedding
+    dimensions: 1536
+    context_window: 8192
+    cost_per_1k_input: 0.0001
+    cost_per_1k_output: 0
+    quality_score: 6.0
+    capabilities: [legacy]
+    
+  # Naga Embeddings (50% cost savings)
+  - id: naga-text-embedding-3-small
+    name: "text-embedding-3-small"
+    display_name: "OpenAI Embedding 3 Small (Naga)"
+    provider: naga
+    type: embedding
+    dimensions: 1536
+    context_window: 8192
+    cost_per_1k_input: 0.00001  # 50% savings
+    cost_per_1k_output: 0
+    quality_score: 7.0
+    capabilities: [cost_effective, dimensionality_reduction]
+    
+  - id: naga-text-embedding-3-large
+    name: "text-embedding-3-large"
+    display_name: "OpenAI Embedding 3 Large (Naga)"
+    provider: naga
+    type: embedding
+    dimensions: 3072
+    context_window: 8192
+    cost_per_1k_input: 0.000065  # 50% savings
+    cost_per_1k_output: 0
+    quality_score: 9.0
+    capabilities: [cost_effective, dimensionality_reduction, high_quality]
+    
+  - id: gemini-embedding-001
+    name: "gemini-embedding-001"
+    display_name: "Gemini Embedding 001"
+    provider: naga
+    type: embedding
+    dimensions: 3072
+    context_window: 8192
+    cost_per_1k_input: 0.0  # Included in Naga
+    cost_per_1k_output: 0
+    quality_score: 7.0
+    capabilities: [free, multilingual]
+    
+  # Azure OpenAI Embeddings
+  - id: azure-text-embedding-3-small
+    name: "text-embedding-3-small"
+    display_name: "Azure OpenAI Embedding 3 Small"
+    provider: azure_openai
+    type: embedding
+    dimensions: 1536
+    context_window: 8192
+    cost_per_1k_input: 0.00002
+    cost_per_1k_output: 0
+    quality_score: 7.0
+    capabilities: [enterprise, deployment_based]
+
+# =============================================================================
+# LLM-AS-JUDGE MODELS (for quality evaluation)
+# =============================================================================
+judge_models:
+  - id: judge-mistral-large
+    name: "mistralai/mistral-large"
+    display_name: "Mistral Large (Judge)"
+    provider: openrouter
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.002
+    cost_per_1k_output: 0.006
+    quality_score: 9.0
+    reliability_score: 9.7  # Best for judging
+    capabilities: [reasoning, evaluation, multilingual]
+    
+  - id: judge-gpt-4o
+    name: "gpt-4o-2024-08-06"
+    display_name: "GPT-4o (Judge)"
+    provider: naga
+    type: chat
+    context_window: 128000
+    cost_per_1k_input: 0.00125
+    cost_per_1k_output: 0.005
+    quality_score: 9.5
+    reliability_score: 9.5
+    capabilities: [reasoning, evaluation, cost_effective]
+    
+  - id: judge-claude-sonnet
+    name: "anthropic/claude-3.5-sonnet"
+    display_name: "Claude 3.5 Sonnet (Judge)"
+    provider: openrouter
+    type: chat
+    context_window: 200000
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+    quality_score: 9.7
+    reliability_score: 9.8
+    capabilities: [reasoning, evaluation, long_context]
+
+# =============================================================================
+# MODEL CATEGORIES (for filtering and recommendations)
+# =============================================================================
+categories:
+  cost_effective:
+    - naga-gpt-4o-mini
+    - naga-text-embedding-3-small
+    - openrouter-claude-haiku
+    - gemini-embedding-001
+    
+  high_quality:
+    - gpt-4o
+    - openrouter-claude-sonnet
+    - text-embedding-3-large
+    - naga-text-embedding-3-large
+    
+  best_value:  # Quality score >= 7, lowest cost in category
+    - naga-gpt-4o
+    - naga-qwen-72b
+    - naga-text-embedding-3-large
+    
+  recommended_chat:
+    - naga-gpt-4o  # Best balance of cost/quality
+    - openrouter-claude-sonnet  # Highest quality
+    - naga-gpt-4o-mini  # Most cost-effective
+    
+  recommended_embedding:
+    - naga-text-embedding-3-large  # Best balance (winner from tests)
+    - text-embedding-3-small  # Baseline
+    - gemini-embedding-001  # Free option
+    
+  recommended_judge:
+    - judge-mistral-large  # Best reliability (9.7/10)
+    - judge-claude-sonnet  # Highest quality (9.8/10)
+    - judge-gpt-4o  # Most cost-effective
+
+# =============================================================================
+# METADATA
+# =============================================================================
+metadata:
+  version: "1.0.0"
+  last_updated: "2025-10-11"
+  total_models: 25
+  sources:
+    - "Provider config files"
+    - "test-variables.yaml"
+    - "Experimental results"
+    - "Provider documentation"

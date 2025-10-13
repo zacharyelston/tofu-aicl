@@ -1,7 +1,7 @@
 [project]
-name = "tofu-aicl"
-version = "0.1.0"
-description = "A declarative framework for ephemeral AI infrastructure."
+name = "terramiso"
+version = "0.2.0"
+description = "Multi-In Single-Out AI framework extending Terraform/OpenTofu with intelligent optimization."
 dependencies = [
     "python-hcl2>=4.0.0",
     "docker>=5.0.0",
@@ -10,7 +10,38 @@ dependencies = [
     "protobuf>=3.19.0",
     "python-dotenv>=1.1.1",
     "requests>=2.32.5",
+    "psycopg2-binary>=2.9.0",  # PostgreSQL DocDB support
+    "opentelemetry-exporter-otlp>=1.37.0",
+    "opentelemetry-api>=1.37.0",
+    "opentelemetry-sdk>=1.37.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pytest-asyncio>=1.2.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+
+[tool.coverage.run]
+source = ["src/aicl"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/proto/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false

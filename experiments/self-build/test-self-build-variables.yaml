@@ -1,0 +1,206 @@
+# Test Variables for Self-Building Experiments
+# These define the parameter space for testing AICL's ability to modify itself
+
+experiment:
+  name: Self-Building Capability Test
+  description: Systematic testing of code generation and self-modification
+  tags: [self-build, meta-learning, code-generation]
+
+# Code generation models to test
+code_generation:
+  models:
+    - name: "gpt-4o"
+      provider: "openai"
+      quality_score: 9.5
+      cost_per_1k_output: 0.01
+      best_for: "complex code, full features"
+    
+    - name: "gpt-4o-mini"
+      provider: "openai"
+      quality_score: 8.5
+      cost_per_1k_output: 0.0006
+      best_for: "simple code, configs, tests"
+    
+    - name: "openrouter-claude-sonnet"
+      provider: "openrouter"
+      quality_score: 9.7
+      cost_per_1k_output: 0.003
+      best_for: "high-quality code, complex logic"
+  
+  # Code generation parameters
+  temperature:
+    min: 0.0
+    max: 0.5
+    step: 0.25
+    note: "Lower temps for deterministic code"
+  
+  max_tokens:
+    values: [2000, 4000, 8000]
+    note: "Varies by code complexity"
+
+# Judge models for code quality evaluation
+judge_models:
+  models:
+    - name: "gpt-4o"
+      provider: "openai"
+      reliability_score: 9.0
+      cost_per_1k_input: 0.0025
+    
+    - name: "openrouter-claude-sonnet"
+      provider: "openrouter"
+      reliability_score: 9.7
+      cost_per_1k_input: 0.003
+      note: "More thorough code review"
+
+# Types of code to generate
+feature_types:
+  - id: "provider"
+    description: "New provider implementation"
+    complexity: "medium"
+    files: ["server.py", "config.yaml", "test_*.py"]
+    
+  - id: "resource_type"
+    description: "New resource in existing provider"
+    complexity: "low"
+    files: ["resource_handler.py", "test_*.py"]
+    
+  - id: "utility_function"
+    description: "Helper function in utils"
+    complexity: "low"
+    files: ["utils/*.py", "test_*.py"]
+    
+  - id: "bug_fix"
+    description: "Fix failing test or known issue"
+    complexity: "medium"
+    files: ["*.py"]
+    
+  - id: "optimization"
+    description: "Performance improvement"
+    complexity: "high"
+    files: ["*.py", "test_*.py", "benchmarks/*.py"]
+    
+  - id: "feature"
+    description: "Complete feature from spec"
+    complexity: "high"
+    files: ["multiple"]
+
+# Quality thresholds
+quality:
+  minimum_score: 80
+  excellent_score: 90
+  test_pass_required: true
+  coverage_minimum: 70
+
+# Safety settings
+safety:
+  sandbox_execution: true
+  human_review_required_below: 95
+  auto_apply_threshold: 95
+  rollback_on_test_failure: true
+  max_code_lines: 500
+
+# Test suite: Simple Provider Addition
+test_suites:
+  simple_provider:
+    name: "Simple Provider Addition"
+    description: "Add echo provider (2-5 minutes)"
+    experiments:
+      - code_model: "gpt-4o-mini"
+        judge_model: "gpt-4o"
+        feature_type: "provider"
+        specification: "Echo provider with prefix support"
+        temperature: 0.3
+        max_tokens: 4000
+      
+      - code_model: "gpt-4o"
+        judge_model: "openrouter-claude-sonnet"
+        feature_type: "provider"
+        specification: "Echo provider with prefix support"
+        temperature: 0.0
+        max_tokens: 4000
+  
+  # Test suite: Resource Type Extension
+  resource_extension:
+    name: "Resource Type Extension"
+    description: "Add resource to existing provider (5-10 minutes)"
+    experiments:
+      - code_model: "gpt-4o"
+        judge_model: "gpt-4o"
+        feature_type: "resource_type"
+        target_provider: "openai"
+        specification: "Add batch_completion resource for parallel requests"
+        temperature: 0.3
+        max_tokens: 3000
+  
+  # Test suite: Bug Fix
+  bug_fix:
+    name: "Bug Fix Test"
+    description: "Fix known issues (5-10 minutes)"
+    experiments:
+      - code_model: "gpt-4o"
+        judge_model: "openrouter-claude-sonnet"
+        feature_type: "bug_fix"
+        target_test: "test_parse_config"
+        specification: "Fix temp file handling in test"
+        temperature: 0.0
+        max_tokens: 2000
+  
+  # Test suite: Code Quality Model Comparison
+  quality_comparison:
+    name: "Code Quality Model Comparison"
+    description: "Compare code generation quality (15-30 minutes)"
+    experiments:
+      # Test each code model with best judge
+      - code_model: "gpt-4o"
+        judge_model: "openrouter-claude-sonnet"
+        feature_type: "utility_function"
+        specification: "Add retry decorator with exponential backoff"
+        temperature: 0.0
+      
+      - code_model: "gpt-4o-mini"
+        judge_model: "openrouter-claude-sonnet"
+        feature_type: "utility_function"
+        specification: "Add retry decorator with exponential backoff"
+        temperature: 0.0
+      
+      - code_model: "openrouter-claude-sonnet"
+        judge_model: "gpt-4o"
+        feature_type: "utility_function"
+        specification: "Add retry decorator with exponential backoff"
+        temperature: 0.0
+
+# Expected outputs for grading
+expected_behaviors:
+  echo_provider:
+    description: "Echo provider should work correctly"
+    tests:
+      - name: "basic_functionality"
+        input: {text: "hello", prefix: "Echo: "}
+        expected_output: {echoed_text: "Echo: hello"}
+      
+      - name: "custom_prefix"
+        input: {text: "world", prefix: ">> "}
+        expected_output: {echoed_text: ">> world"}
+      
+      - name: "empty_input"
+        input: {text: "", prefix: "Echo: "}
+        expected_output: {echoed_text: "Echo: "}
+
+# Grading criteria weights
+grading:
+  criteria:
+    correctness:
+      weight: 40
+      description: "Implements spec, tests pass, no errors"
+    
+    code_quality:
+      weight: 30
+      description: "Follows patterns, clean, proper error handling"
+    
+    best_practices:
+      weight: 20
+      description: "Language idioms, security, performance"
+    
+    maintainability:
+      weight: 10
+      description: "Documentation, clarity, intent"

@@ -1,0 +1,48 @@
+SPECIFICATION:
+{replit_spec}
+
+REFERENCE PATTERNS:
+{rag_provider_context}
+
+API PATTERNS:
+{rag_api_context}
+
+Create providers/replit/server.py with:
+
+1. **ReplitProvider class (ProviderServicer)**:
+   - Implement CreateResource for all 3 resource types
+   - Implement ReadResource for status checks
+   - Implement UpdateResource for modifications
+   - Implement DeleteResource for cleanup
+
+2. **Resource Handlers**:
+   - DeploymentHandler (manage deployments)
+   - DatabaseHandler (create PostgreSQL DBs)
+   - AgentHandler (spawn Replit agents)
+
+3. **Replit API Client**:
+   - GraphQL query support
+   - REST API calls (if needed)
+   - Authentication with REPLIT_TOKEN
+   - Error handling with retries
+
+4. **Production Patterns**:
+   - Circuit breaker for API failures
+   - Exponential backoff with jitter
+   - Resource state validation
+   - Proper async handling
+   - Comprehensive logging
+
+5. **Security**:
+   - Token validation
+   - Environment variable sanitization
+   - Safe shell execution (if using Shell API)
+   - Connection string encryption
+
+Use v2.runtime.create_provider_server for boilerplate.
+Type hints throughout, docstrings for all public methods.
+
+Generate ONLY the Python code for providers/replit/server.py
+Make it production-ready and comprehensive.
+
+CODE:

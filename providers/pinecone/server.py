@@ -93,11 +93,17 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
         vectors = config.get('vectors', [])
         namespace = config.get('namespace', '')
 
+        print(f"[PINECONE UPSERT] Called with namespace: {namespace}")
+        print(f"[PINECONE UPSERT] Number of vectors: {len(vectors)}")
+        print(f"[PINECONE UPSERT] Config keys: {list(config.keys())}")
+
         if not vectors:
+            print(f"[PINECONE UPSERT] ERROR: No vectors provided!")
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No vectors provided for upsert")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
         try:
+            print(f"[PINECONE UPSERT] Formatting {len(vectors)} vectors...")
             # Format vectors for Pinecone API
             formatted_vectors = []
             for vec in vectors:
@@ -111,6 +117,9 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             if namespace:
                 payload['namespace'] = namespace
 
+            print(f"[PINECONE UPSERT] Sending to: {self.host_url}/vectors/upsert")
+            print(f"[PINECONE UPSERT] Payload has {len(formatted_vectors)} vectors")
+            
             response = requests.post(
                 f"{self.host_url}/vectors/upsert",
                 headers={"Api-Key": self.api_key, "Content-Type": "application/json"},
@@ -118,6 +127,9 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
+            
+            print(f"[PINECONE UPSERT] SUCCESS! Upserted: {result.get('upsertedCount', 0)} vectors")
+            print(f"[PINECONE UPSERT] Response: {result}")
 
             output_attributes = {
                 'upserted_count': result.get('upsertedCount', len(vectors)),
@@ -139,7 +151,21 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Upsert failed: {str(e)}"
+            if e.response is not None:
+                try:
+                    error_body = e.response.json()
+                    error_detail += f" | Response: {error_body}"
+                except:
+                    error_detail += f" | Response text: {e.response.text[:500]}"
+            print(f"[PINECONE UPSERT] ERROR: {error_detail}")
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, error_detail)
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
         except Exception as e:
+            print(f"[PINECONE UPSERT] ERROR: {str(e)}")
+            import traceback
+            print(f"[PINECONE UPSERT] Traceback: {traceback.format_exc()}")
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Upsert failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
@@ -150,11 +176,16 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
         namespace = config.get('namespace', '')
         include_metadata = config.get('include_metadata', True)
 
+        print(f"[PINECONE QUERY] Called with namespace: {namespace}, top_k: {top_k}")
+        print(f"[PINECONE QUERY] Vector length: {len(vector) if vector else 0}")
+
         if not vector:
+            print(f"[PINECONE QUERY] ERROR: No query vector provided!")
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, "No query vector provided")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
 
         try:
+            print(f"[PINECONE QUERY] Querying {self.host_url}/query...")
             payload = {
                 'vector': vector,
                 'topK': top_k,
@@ -170,6 +201,10 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             response.raise_for_status()
             result = response.json()
+            
+            print(f"[PINECONE QUERY] SUCCESS! Got {len(result.get('matches', []))} matches")
+            if result.get('matches'):
+                print(f"[PINECONE QUERY] Top match score: {result['matches'][0].get('score', 0)}")
 
             # Extract matches
             matches = []
@@ -209,6 +244,16 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
             )
             return provider_pb2.ApplyResourceChangeResponse(new_state=new_state)
 
+        except requests.exceptions.HTTPError as e:
+            error_detail = f"Query failed: {str(e)}"
+            if e.response is not None:
+                try:
+                    error_body = e.response.json()
+                    error_detail += f" | Response: {error_body}"
+                except:
+                    error_detail += f" | Response text: {e.response.text[:500]}"
+            diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, error_detail)
+            return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
         except Exception as e:
             diag = self._create_diagnostic(provider_pb2.Diagnostic.ERROR, f"Query failed: {str(e)}")
             return provider_pb2.ApplyResourceChangeResponse(diagnostics=[diag])
@@ -231,14 +276,6 @@ class PineconeProvider(provider_pb2_grpc.ProviderServicer):
 
     # Other methods remain the same...
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    provider_pb2_grpc.add_ProviderServicer_to_server(PineconeProvider(), server)
-    port = os.getenv("PORT", "50051")
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"Pinecone provider listening on port {port}...")
-    server.start()
-    server.wait_for_termination()
-
 if __name__ == '__main__':
-    serve()
+    from v2.runtime import create_provider_server
+    create_provider_server(PineconeProvider())

@@ -1,0 +1,126 @@
+# AICL Configuration File
+# Location: ~/.aicl/config.yaml or specify with --config flag
+# 
+# Configuration precedence (highest to lowest):
+#   1. Command line arguments
+#   2. Environment variables (AICL_*)
+#   3. This config file
+#   4. Built-in defaults
+
+# Runtime configuration
+runtime:
+  # Mode: 'local' or 'docker'
+  mode: local
+  
+  # Docker image to use (if mode is 'docker')
+  docker_image: tofu-aicl:latest
+  
+  # Provider execution mode: 'subprocess' or 'docker'
+  provider_mode: subprocess
+
+# Path configuration
+paths:
+  # Directory for state files
+  state_dir: ./terraform.tfstate.d
+  
+  # Directory for experiment results
+  experiments_dir: ./experiments
+  
+  # Directory for provider implementations
+  providers_dir: ./providers
+  
+  # Directory for temporary files
+  temp_dir: /tmp/aicl
+
+# Docker-specific settings
+docker:
+  # Automatically pull image if not present
+  auto_pull: false
+  
+  # Remove container after execution
+  remove_after: true
+  
+  # Additional volume mounts (Docker mode)
+  mounts:
+    - ./data:/app/data:ro
+    # - ./custom_providers:/app/custom_providers:ro
+  
+  # Docker network mode
+  network: bridge
+  
+  # Resource limits
+  resources:
+    memory: 4g
+    cpus: 2
+
+# Observability configuration
+observability:
+  # Enable telemetry and tracing
+  enabled: true
+  
+  # Export format: 'json', 'otlp', 'jaeger'
+  export_format: json
+  
+  # Metrics server port (if enabled)
+  metrics_port: 8000
+  
+  # Log level: 'DEBUG', 'INFO', 'WARNING', 'ERROR'
+  log_level: INFO
+
+# Provider defaults
+providers:
+  # Default timeout for provider startup (seconds)
+  startup_timeout: 30
+  
+  # Default timeout for provider operations (seconds)
+  operation_timeout: 300
+  
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
+
+# Experiment configuration
+experiments:
+  # Auto-generate experiment IDs
+  auto_id: true
+  
+  # ID format: 'timestamp', 'uuid', 'sequential'
+  id_format: timestamp
+  
+  # Keep experiment history
+  keep_history: true
+  
+  # Maximum history entries
+  max_history: 100
+
+# Security settings
+security:
+  # Validate provider signatures
+  validate_providers: false
+  
+  # Allowed provider sources
+  allowed_sources:
+    - aicl/*
+    - custom/*
+  
+  # Restrict file system access
+  restrict_fs: false
+
+# Development settings
+development:
+  # Enable hot reload for local providers
+  hot_reload: false
+  
+  # Enable debug mode
+  debug: false
+  
+  # Show provider stdout/stderr
+  show_provider_logs: false
+
+# API keys (alternative to .env file)
+# Note: .env file takes precedence over these
+# api_keys:
+#   openai: ${OPENAI_API_KEY}
+#   anthropic: ${ANTHROPIC_API_KEY}
+#   pinecone: ${PINECONE_API_KEY}

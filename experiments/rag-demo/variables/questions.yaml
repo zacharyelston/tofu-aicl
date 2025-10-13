@@ -1,0 +1,40 @@
+# Questions for RAG Demo
+
+questions:
+  - id: "q1"
+    text: "What are the main architectural components of the AICL engine and how do they work together?"
+    category: "architecture"
+    difficulty: "medium"
+    expected_topics:
+      - "Parser"
+      - "Evaluator"
+      - "Planner"
+      - "Executor"
+      - "State Manager"
+  
+  - id: "q2"
+    text: "How does AICL handle matrix experiments and what are the benefits of this approach?"
+    category: "features"
+    difficulty: "medium"
+    expected_topics:
+      - "Template expansion"
+      - "Cartesian product"
+      - "Variable combinations"
+      - "Cost comparison"
+  
+  - id: "q3"
+    text: "Explain how the provider system works in AICL and what types of providers are available"
+    category: "providers"
+    difficulty: "easy"
+    expected_topics:
+      - "gRPC services"
+      - "Provider types"
+      - "File loader"
+      - "OpenAI, Azure"
+      - "Vector databases"
+
+# For this demo, we'll use question 1
+demo_question: "q1"
+
+# Retrieval validation query (simpler, for testing)
+validation_query: "What is AICL and what problem does it solve?"

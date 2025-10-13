@@ -1,0 +1,12 @@
+Generate config.yaml for the echo provider following AICL conventions.
+
+REQUIREMENTS:
+- name: echo
+- display_name: Echo Provider
+- version: 1.0.0
+- default_port: 50060 (next available port)
+- mode: subprocess
+- resource_types: [echo_text]
+- operations: [create, read]
+
+Generate ONLY the YAML content for providers/echo/config.yaml

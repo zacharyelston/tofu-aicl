@@ -1,0 +1,72 @@
+SPECIFICATION:
+{specification}
+
+PROVIDER CODE:
+{provider_code}
+
+CONFIG:
+{config_code}
+
+API CLIENT:
+{api_client_code}
+
+TESTS:
+{test_code}
+
+DEPENDENCIES:
+{requirements}
+
+EXAMPLE USAGE:
+{example_code}
+
+Evaluate (100 points):
+
+1. CORRECTNESS (40 points)
+   - All resource types implemented correctly
+   - API integration functional
+   - State management proper
+   - Error handling comprehensive
+   - Authentication works
+
+2. CODE QUALITY (30 points)
+   - Clean architecture (separation of concerns)
+   - Proper async/await patterns
+   - Type hints and docstrings
+   - No code duplication
+   - Follows AICL conventions
+
+3. BEST PRACTICES (20 points)
+   - Circuit breaker for API calls
+   - Retry logic with backoff
+   - Security (token handling, no leaks)
+   - Resource cleanup
+   - Comprehensive error types
+
+4. MAINTAINABILITY (10 points)
+   - Clear code structure
+   - Good naming conventions
+   - Comprehensive tests
+   - Easy to extend
+
+DECISION RULES:
+- Score >= 90: ACCEPT (Excellent - production ready)
+- Score 80-89: ACCEPT (Good - ready with minor notes)
+- Score 70-79: REVISE (Issues need fixing)
+- Score < 70: REJECT (Not production ready)
+
+Respond ONLY with valid JSON:
+{
+  "overall_score": <0-100>,
+  "breakdown": {
+    "correctness": <0-40>,
+    "code_quality": <0-30>,
+    "best_practices": <0-20>,
+    "maintainability": <0-10>
+  },
+  "decision": "ACCEPT | REVISE | REJECT",
+  "reasoning": "<detailed technical explanation>",
+  "strengths": ["<what's good>", ...],
+  "weaknesses": ["<what's missing or wrong>", ...],
+  "improvements": ["<specific suggestions>", ...],
+  "platform_specific_notes": "<notes about platform integration>"
+}

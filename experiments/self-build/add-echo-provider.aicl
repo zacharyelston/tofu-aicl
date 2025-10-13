@@ -1,0 +1,250 @@
+# Self-Building Experiment: Add Echo Provider
+# This experiment demonstrates AICL modifying its own source code
+
+terraform {
+  required_providers {
+    openai = { source = "aicl/openai" }
+    pinecone = { source = "aicl/pinecone" }
+  }
+}
+
+variable "quality_threshold" {
+  type    = number
+  default = 80
+  description = "Minimum quality score to accept generated code"
+}
+
+variable "code_model" {
+  type    = string
+  default = "gpt-4o"
+  description = "Model for code generation"
+}
+
+variable "judge_model" {
+  type    = string
+  default = "gpt-4o"
+  description = "Model for code quality judging"
+}
+
+# Step 1: RAG Query - Embed the question
+resource "embedding" "rag_query" {
+  text = "How to implement a gRPC provider in AICL? Show provider implementation patterns and examples."
+  model = "text-embedding-3-small"
+}
+
+# Step 2: RAG Query - Search Pinecone
+resource "query" "provider_patterns" {
+  vector = "${resource.embedding.rag_query.attributes.embedding}"
+  top_k = 5
+  namespace = "aicl-source"
+}
+
+# Step 3: Generate provider implementation
+resource "chat" "generate_provider" {
+  model = var.code_model
+  temperature = 0.3
+  max_tokens = 4000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert Python developer. Generate complete AICL provider implementations following existing patterns."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Generate a complete AICL provider implementation.
+        
+        SPECIFICATION:
+        Create an Echo provider that implements the AICL provider gRPC interface:
+        
+        Resource Type: echo_text
+        - Input attributes:
+          - text (string): Text to echo back
+          - prefix (string): Prefix to add (default: "Echo: ")
+        - Output attributes:
+          - echoed_text (string): The prefixed text
+          - original_length (int): Length of original text
+          - echoed_length (int): Length of echoed text
+        
+        REQUIREMENTS:
+        1. Follow AICL provider patterns from the codebase
+        2. Implement the ProviderServicer gRPC interface
+        3. Use v2.runtime.create_provider_server for boilerplate
+        4. Handle errors gracefully
+        5. Include docstrings
+        
+        REFERENCE PATTERNS:
+        ${resource.query.provider_patterns.attributes.results}
+        
+        Generate ONLY the Python code for providers/echo/server.py
+        Include all necessary imports.
+        
+        CODE:
+      EOT
+    }
+  ]
+}
+
+# Step 4: Generate provider config
+resource "chat" "generate_config" {
+  model = "gpt-4o-mini"
+  temperature = 0.0
+  max_tokens = 1000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate config.yaml for the echo provider following AICL conventions.
+        
+        REQUIREMENTS:
+        - name: echo
+        - display_name: Echo Provider
+        - version: 1.0.0
+        - default_port: 50060 (next available port)
+        - mode: subprocess
+        - resource_types: [echo_text]
+        - operations: [create, read]
+        
+        Generate ONLY the YAML content for providers/echo/config.yaml
+      EOT
+    }
+  ]
+}
+
+# Step 5: Generate tests
+resource "chat" "generate_tests" {
+  model = var.code_model
+  temperature = 0.3
+  max_tokens = 3000
+  
+  messages = [
+    {
+      role = "user"
+      content = <<-EOT
+        Generate comprehensive pytest tests for the echo provider.
+        
+        TESTS TO INCLUDE:
+        1. test_basic_echo - Basic functionality
+        2. test_custom_prefix - Custom prefix parameter
+        3. test_empty_input - Empty string handling
+        4. test_special_characters - Unicode and special chars
+        5. test_length_tracking - Verify length attributes
+        
+        Use pytest conventions and AICL testing patterns.
+        
+        Generate ONLY the Python code for providers/echo/test_echo.py
+      EOT
+    }
+  ]
+}
+
+# Step 6: Judge the quality
+resource "chat" "judge_quality" {
+  model = var.judge_model
+  temperature = 0.0
+  max_tokens = 2000
+  
+  messages = [
+    {
+      role = "system"
+      content = "You are an expert code reviewer. Evaluate code quality objectively and provide scores out of 100."
+    },
+    {
+      role = "user"
+      content = <<-EOT
+        Evaluate the generated Echo provider implementation.
+        
+        GENERATED PROVIDER CODE:
+        ${resource.chat.generate_provider.attributes.content}
+        
+        GENERATED CONFIG:
+        ${resource.chat.generate_config.attributes.content}
+        
+        GENERATED TESTS:
+        ${resource.chat.generate_tests.attributes.content}
+        
+        Evaluate on these criteria (100 points total):
+        
+        1. CORRECTNESS (40 points)
+           - Implements specification correctly
+           - gRPC interface proper
+           - Error handling present
+        
+        2. CODE QUALITY (30 points)
+           - Clean, readable code
+           - Follows Python conventions
+           - Good variable names
+        
+        3. BEST PRACTICES (20 points)
+           - Uses AICL patterns
+           - Proper imports
+           - Docstrings present
+        
+        4. MAINTAINABILITY (10 points)
+           - Easy to understand
+           - Well structured
+           - Tests comprehensive
+        
+        DECISION RULES:
+        - Score >= 90: ACCEPT (Excellent)
+        - Score 80-89: ACCEPT (Good)
+        - Score 70-79: REVISE (Needs work)
+        - Score < 70: REJECT (Not acceptable)
+        
+        Respond ONLY with valid JSON:
+        {
+          "overall_score": <0-100>,
+          "breakdown": {
+            "correctness": <0-40>,
+            "code_quality": <0-30>,
+            "best_practices": <0-20>,
+            "maintainability": <0-10>
+          },
+          "decision": "ACCEPT | REVISE | REJECT",
+          "reasoning": "<detailed explanation>",
+          "strengths": ["<strength 1>", "<strength 2>", ...],
+          "weaknesses": ["<weakness 1>", "<weakness 2>", ...],
+          "improvements": ["<improvement 1>", "<improvement 2>", ...]
+        }
+      EOT
+    }
+  ]
+}
+
+# Outputs
+output "generated_files" {
+  value = {
+    provider_code = resource.chat.generate_provider.attributes.content
+    provider_config = resource.chat.generate_config.attributes.content
+    test_code = resource.chat.generate_tests.attributes.content
+  }
+}
+
+output "quality_evaluation" {
+  value = resource.chat.judge_quality.attributes.content
+}
+
+output "recommendation" {
+  value = <<-EOT
+    === ECHO PROVIDER - SELF-BUILD RESULTS ===
+    
+    Generated Files:
+    1. providers/echo/server.py (${length(split("\n", resource.chat.generate_provider.attributes.content))} lines)
+    2. providers/echo/config.yaml (${length(split("\n", resource.chat.generate_config.attributes.content))} lines)
+    3. providers/echo/test_echo.py (${length(split("\n", resource.chat.generate_tests.attributes.content))} lines)
+    
+    Quality Evaluation:
+    [See quality_evaluation output for detailed assessment]
+    
+    Next Steps IF score >= ${var.quality_threshold}:
+    1. Review generated code carefully
+    2. Create provider directory: mkdir -p providers/echo
+    3. Copy files from output above
+    4. Run tests: pytest providers/echo/test_echo.py -v
+    5. Verify auto-discovery works
+    
+    === END RESULTS ===
+  EOT
+}

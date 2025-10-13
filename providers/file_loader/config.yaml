@@ -1,0 +1,34 @@
+# File Loader Provider Configuration
+
+provider:
+  name: file_loader
+  display_name: File Loader
+  version: 1.0.0
+  source: aicl/file_loader
+  description: Load documents from filesystem for RAG pipelines
+  
+  runtime:
+    entrypoint: server.py
+    default_port: 50056
+    mode: subprocess  # File loader is local, subprocess only
+  
+  environment:
+    required_vars: []
+    optional_vars: []
+  
+  capabilities:
+    types:
+      - file_processing
+    operations:
+      - load
+      - read
+  
+  supported_formats:
+    - txt
+    - md
+    - pdf
+    - docx
+  
+  health:
+    endpoint: ValidateConfig
+    timeout_ms: 5000

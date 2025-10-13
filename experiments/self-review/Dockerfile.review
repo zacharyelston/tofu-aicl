@@ -1,0 +1,33 @@
+# Dockerfile for AICL Self-Review
+# Isolated environment for running self-assessment
+
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only what's needed for review
+COPY pyproject.toml /app/
+COPY src/ /app/src/
+COPY cli/ /app/cli/
+COPY tests/ /app/tests/
+COPY docs/ /app/docs/
+COPY experiments/self-review/ /app/experiments/self-review/
+
+# Copy .env if it exists (optional)
+RUN touch /app/.env
+
+# Install AICL
+RUN pip install --upgrade pip && \
+    pip install -e . && \
+    pip install typer loguru dynaconf
+
+# Set up entry point
+WORKDIR /app/experiments/self-review
+
+CMD ["bash"]
