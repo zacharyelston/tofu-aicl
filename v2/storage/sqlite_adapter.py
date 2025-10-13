@@ -245,7 +245,7 @@ class SQLiteStorage(ExperimentStorage):
                         limit: int = 10) -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(self.sql_config['queries']['get_best_configs'], (min_quality, max_cost))
+            cursor.execute(self.sql_config['queries']['get_best_configs'], (min_quality, max_cost, limit))
             return [dict(row) for row in cursor.fetchall()]
     
     def get_cost_analysis(self) -> Dict[str, Any]:

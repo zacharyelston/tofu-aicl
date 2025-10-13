@@ -199,6 +199,7 @@ queries:
     JOIN quality_scores q ON e.experiment_id = q.experiment_id
     WHERE q.judge_score >= ? AND r.total_cost_usd <= ?
     ORDER BY q.judge_score DESC, r.total_cost_usd ASC
+    LIMIT ?
 
   get_cost_analysis: |
     SELECT 

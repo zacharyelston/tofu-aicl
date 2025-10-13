@@ -115,7 +115,7 @@ class InMemoryStorage(ExperimentStorage):
             key=lambda x: (-x.get('judge_score', 0), x.get('total_cost_usd', 0))
         )
         
-        return candidates[:limit]
+        return candidates[:limit] if limit else candidates
     
     def get_cost_analysis(self) -> Dict[str, Any]:
         costs = [r.get('total_cost_usd', 0) for r in self.results.values() if r.get('total_cost_usd')]
