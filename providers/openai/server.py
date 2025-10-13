@@ -132,16 +132,29 @@ class OpenAIProvider(provider_pb2_grpc.ProviderServicer):
             response.raise_for_status()
             result = response.json()
 
-            # Extract embeddings
+            # Extract embeddings in Pinecone-compatible format
             embeddings = []
             for i, item in enumerate(result.get('data', [])):
+                # Generate unique ID
+                vector_id = f"{resource_id}-{i}"
+                
                 embedding_data = {
-                    'index': i,
-                    'embedding': item.get('embedding', [])
+                    'id': vector_id,  # Pinecone requires 'id'
+                    'values': item.get('embedding', []),  # Pinecone requires 'values' not 'embedding'
+                    'metadata': {}
                 }
+                
                 # Preserve metadata from input if available
                 if isinstance(texts[i], dict):
                     embedding_data['metadata'] = texts[i].get('metadata', {})
+                    # Add content to metadata for retrieval
+                    if 'content' in texts[i]:
+                        embedding_data['metadata']['content'] = texts[i]['content']
+                
+                # Also keep 'embedding' for backward compatibility
+                embedding_data['embedding'] = item.get('embedding', [])
+                embedding_data['index'] = i
+                
                 embeddings.append(embedding_data)
 
             # Store result
